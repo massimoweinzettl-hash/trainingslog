@@ -1,0 +1,47 @@
+TRAININGSLOG – Web-App einrichten
+=================================
+
+Die App besteht aus den Dateien in diesem Ordner. Damit dein iPhone sie
+installieren kann, müssen sie unter einer https-Adresse im Internet liegen.
+Kostenlos geht das mit GitHub Pages.
+
+1. Konto anlegen
+   Auf github.com ein kostenloses Konto erstellen.
+
+2. Repository anlegen
+   Oben rechts "+" > "New repository".
+   Name: trainingslog
+   Sichtbarkeit: Public (bei kostenlosen Konten Voraussetzung für GitHub Pages)
+   "Add README" einschalten, dann "Create repository".
+
+3. Dateien hochladen
+   Im Repository: "Add file" > "Upload files".
+   ALLE Dateien aus diesem Ordner hineinziehen (die einzelnen Dateien,
+   nicht den Ordner und nicht die ZIP-Datei), dann "Commit changes".
+   index.html muss danach direkt auf der obersten Ebene liegen.
+
+4. GitHub Pages einschalten
+   "Settings" > links "Pages".
+   Unter "Build and deployment": Source = "Deploy from a branch",
+   Branch = "main", Ordner = "/ (root)", dann "Save".
+
+5. Warten
+   Nach bis zu 10 Minuten ist die App erreichbar unter
+   https://DEIN-BENUTZERNAME.github.io/trainingslog/
+
+6. Auf dem iPhone installieren
+   Die Adresse in Safari öffnen (nicht in Chrome).
+   "Teilen" antippen > "Zum Home-Bildschirm" > "Hinzufügen".
+   Die App ab jetzt über das Icon öffnen und erst dort Daten eintragen:
+   Safari und die installierte App speichern getrennt.
+
+WICHTIG
+-------
+- Deine Einträge liegen nur auf dem jeweiligen Gerät, nicht bei GitHub.
+  Im Tab "Daten" regelmäßig ein Backup speichern (z. B. in iCloud Drive).
+- Auf dem PC dieselbe Adresse öffnen und das Backup im Tab "Daten"
+  einspielen, um die Daten dort zu sehen.
+- App aktualisieren: geänderte Dateien wieder über "Upload files" hochladen.
+  Die neue Fassung erscheint beim übernächsten Öffnen der App.
+- Das Repository ist öffentlich: Jeder kann den Programmcode sehen und die
+  leere App öffnen, aber niemand deine Trainingsdaten.
