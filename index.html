@@ -51,6 +51,8 @@ p { margin: 0 }
 .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap }
 .sync { font-size: 12px; color: var(--muted) }
 .sync.err { color: var(--bad) }
+.profrow { flex-direction: row; align-items: center; gap: 10px; font-size: 13px }
+.profrow select { width: auto; flex: 0 1 240px }
 
 .tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; gap: 4px; background: var(--bg); padding-block: 6px; overflow-x: auto }
 .tabs button { flex: 1 1 auto; white-space: nowrap; border-radius: 0; padding: 10px 6px; border: 0; border-bottom: 2px solid var(--line); background: none; color: var(--muted);
@@ -124,6 +126,7 @@ button, select, input { touch-action: manipulation }
     <h1>Trainingslog</h1>
     <span class="sync" id="sync" role="status">Lade deine Daten …</span>
   </div>
+  <label class="profrow" id="profrow" hidden>Profil<select id="profsel"></select></label>
 
   <div class="tabs" role="tablist">
     <button role="tab" data-tab="train" aria-selected="true">Training</button>
@@ -155,32 +158,47 @@ button, select, input { touch-action: manipulation }
   var rid = function (p) { return p + Math.random().toString(36).slice(2, 8); };
   var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
 
-  var S = { ready: false, plan: null, workouts: {}, body: {}, phases: [], tab: "train", date: today(), dayId: null, exSel: null, metric: "e1rm", bodyMetric: "weight" };
+  var S = { ready: false, plan: null, workouts: {}, body: {}, phases: [], person: null, tab: "train", date: today(), dayId: null, exSel: null, metric: "e1rm", bodyMetric: "weight" };
   var draft = null, dirty = false, saveTimer = null, planTimer = null;
   var DOCS = {}, persistAsked = false;
+  /* Profile: mehrere Personen auf einem Gerät. Das erste Profil ("main") nutzt die ursprünglichen Speicherschlüssel. */
+  var PROF = { active: "main", list: [{ id: "main", name: "Profil 1" }] };
+  var keyFor = function (kind, id) { id = id || PROF.active; return id === "main" ? (kind === "data" ? "trainingslog" : "trainingslog-backup") : "trainingslog-" + kind + "-" + id; };
+  var profName = function () { var n = ""; PROF.list.forEach(function (p) { if (p.id === PROF.active) n = p.name; }); return n; };
 
   /* ---------- Speicher ---------- */
   function setSync(t, err) { var el = $("sync"); el.textContent = t; el.classList.toggle("err", !!err); }
   function notice(t) { var el = $("notice"); el.hidden = !t; el.textContent = t || ""; }
   function applyDocs(list) {
-    var w = {}, b = {}, plan = null, ph = [];
+    var w = {}, b = {}, plan = null, ph = [], pe = null;
     list.forEach(function (d) {
       if (d.id === "plan") plan = d.data;
-      else if (d.id === "settings") ph = d.data.phases || [];
+      else if (d.id === "settings") { ph = d.data.phases || []; pe = d.data.person || null; }
       else if (d.data.kind === "workout") w[d.id] = d.data;
       else if (d.data.kind === "body") b[d.id] = d.data;
     });
-    S.workouts = w; S.body = b; S.phases = ph;
+    S.workouts = w; S.body = b; S.phases = ph; S.person = pe;
     if (!planTimer) S.plan = plan;
   }
   function localApply(id, data) {
     if (id === "plan") S.plan = data;
-    else if (id === "settings") S.phases = data ? data.phases : [];
+    else if (id === "settings") { S.phases = data ? data.phases : []; S.person = data && data.person || null; }
     else if (id.charAt(0) === "w") { if (data) S.workouts[id] = data; else delete S.workouts[id]; }
     else { if (data) S.body[id] = data; else delete S.body[id]; }
   }
-  function lsRead() { try { return JSON.parse(localStorage.getItem("trainingslog") || "{}") || {}; } catch (e) { return {}; } }
-  function lsWrite(o) { try { localStorage.setItem("trainingslog", JSON.stringify(o)); return true; } catch (e) { return false; } }
+  function lsRead() { try { return JSON.parse(localStorage.getItem(keyFor("data")) || "{}") || {}; } catch (e) { return {}; } }
+  function lsWrite(o) { try { localStorage.setItem(keyFor("data"), JSON.stringify(o)); return true; } catch (e) { return false; } }
+  function profRead() {
+    try {
+      var p = JSON.parse(localStorage.getItem("trainingslog-profiles") || "null");
+      if (p && Array.isArray(p.list)) {
+        var list = p.list.filter(function (x) { return x && IRE.test(x.id); }).map(function (x) { return { id: x.id, name: txt80(x.name).slice(0, 30) || "Profil" }; });
+        if (list.length) PROF = { active: p.active, list: list };
+      }
+    } catch (e) {}
+    if (!PROF.list.some(function (x) { return x.id === PROF.active; })) PROF.active = PROF.list[0].id;
+  }
+  function profWrite() { try { localStorage.setItem("trainingslog-profiles", JSON.stringify(PROF)); } catch (e) {} }
   function persist() {
     var ok = lsWrite(DOCS);
     setSync(ok ? "Auf diesem Gerät gespeichert" : "Speichern fehlgeschlagen – Speicher voll oder gesperrt", !ok);
@@ -197,8 +215,10 @@ button, select, input { touch-action: manipulation }
     applyDocs(Object.keys(DOCS).map(function (k) { return { id: k, data: DOCS[k] }; }));
   }
   function init() {
-    loadAll(); S.ready = true; setSync("Auf diesem Gerät gespeichert"); renderAll(true);
-    window.addEventListener("storage", function (ev) { if (ev.key === "trainingslog") { loadAll(); renderAll(false); } });
+    profRead(); loadAll(); S.ready = true; setSync("Auf diesem Gerät gespeichert"); renderAll(true);
+    window.addEventListener("storage", function (ev) {
+      if (ev.key && ev.key.indexOf("trainingslog") === 0 && ev.key !== "trainingslog-tab") { profRead(); loadAll(); renderAll(false); }
+    });
     if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(function () {});
   }
 
@@ -233,12 +253,20 @@ button, select, input { touch-action: manipulation }
     return out;
   }
   function lastBefore(exId, date) { var l = sessions(exId).filter(function (s) { return s.date < date; }); return l.length ? l[l.length - 1] : null; }
-  function advise(ex, date) {
-    var last = lastBefore(ex.id, date); if (!last) return null;
-    var all = function (n) { return last.sets.every(function (s) { return s.r >= n; }); };
-    if (last.sets.length >= ex.sets && all(ex.repMax)) return { w: last.top + ex.step, kind: "up", text: "Steigern auf " + fmt(last.top + ex.step) + " kg" };
-    if (all(ex.repMin)) return { w: last.top, kind: "hold", text: fmt(last.top) + " kg halten, mehr Wdh. anpeilen" };
-    return { w: last.top, kind: "low", text: fmt(last.top) + " kg halten, bis jeder Satz " + ex.repMin + " Wdh. hat" };
+  /* Doppelte Progression: erst Wiederholungen bis zur Obergrenze steigern, dann Gewicht um „Schritt“ erhöhen. */
+  function adviseSets(ex, sets) {
+    var top = 0; sets.forEach(function (s) { top = Math.max(top, s.w || 0); });
+    var all = function (n) { return sets.every(function (s) { return s.r >= n; }); };
+    if (sets.length >= ex.sets && all(ex.repMax)) return { w: top + ex.step, kind: "up", text: "Steigern auf " + fmt(top + ex.step) + " kg" };
+    if (all(ex.repMin)) return { w: top, kind: "hold", text: fmt(top) + " kg halten, mehr Wdh. anpeilen" };
+    return { w: top, kind: "low", text: fmt(top) + " kg halten, bis jeder Satz " + ex.repMin + " Wdh. hat" };
+  }
+  function advise(ex, date) { var last = lastBefore(ex.id, date); return last ? adviseSets(ex, last.sets) : null; }
+  /* Vorschlag fürs nächste Training aus den gerade eingetragenen Sätzen, sobald alle geplanten Sätze stehen. */
+  function nextText(ex) {
+    if (!draft) return "";
+    var sets = (draft.rows[ex.id] || []).map(function (r) { return { w: num(r.w) || 0, r: num(r.r) }; }).filter(function (s) { return s.r > 0; });
+    return sets.length >= ex.sets ? "Vorschlag fürs nächste Mal: " + adviseSets(ex, sets).text : "";
   }
   function setsText(sets) {
     var same = sets.every(function (s) { return (s.w || 0) === (sets[0].w || 0); });
@@ -281,24 +309,67 @@ button, select, input { touch-action: manipulation }
     if (v <= hi) return ["up", "Im Zielbereich"];
     return ["low", type === "cut" ? "Schneller als die Faustregel, das kostet eher Muskelmasse" : "Schneller als die Faustregel, der Überschuss wird eher Fett"];
   }
-  function phaseStatus(list) {
-    var t = today(), p = phaseAt(t);
-    if (!p) return '<h2>Keine Phase gewählt</h2><p class="small muted">Starte unten unter „Phasen“ einen Aufbau, einen Cut oder eine Haltephase. Dann bewertet der Tracker deinen Gewichtstrend und markiert die Phase in den Diagrammen.</p>';
-    var from = new Date(Date.parse(t) - 28 * 864e5).toISOString().slice(0, 10); if (p.start > from) from = p.start;
-    var ws = list.filter(function (x) { return x.weight != null && x.date >= from && x.date <= t; }), lastW = null;
-    list.forEach(function (x) { if (x.weight != null) lastW = x.weight; });
-    var h = "<h2>" + PH[p.type] + ' <span class="small muted" style="font-family:var(--body);font-weight:400">seit ' + dfmt(p.start, 1) + ", Woche " + weekOf(p, t) + "</span></h2>";
+  var ACT = [[1.2, "Kaum Bewegung (Bürojob, kein Sport)"], [1.375, "Leicht aktiv (1–2 Einheiten pro Woche)"], [1.55, "Mäßig aktiv (3–5 Einheiten pro Woche)"], [1.725, "Sehr aktiv (6–7 Einheiten pro Woche)"], [1.9, "Extrem aktiv (körperliche Arbeit plus Training)"]];
+  var kc = function (n) { return (Math.round(n / 50) * 50).toLocaleString("de-DE"); };
+  function saveSettings(phases, person) { put("settings", { kind: "settings", phases: phases || S.phases, person: person || S.person || null }); }
+  /* Gewichtstrend per Ausgleichsgerade über höchstens 28 Tage, frühestens ab `start`. */
+  function trendOf(list, start) {
+    var t = today(), from = new Date(Date.parse(t) - 28 * 864e5).toISOString().slice(0, 10); if (start && start > from) from = start;
+    var ws = list.filter(function (x) { return x.weight != null && x.date >= from && x.date <= t; });
     var span = ws.length > 1 ? (Date.parse(ws[ws.length - 1].date) - Date.parse(ws[0].date)) / 864e5 : 0;
-    if (span < 7) h += '<p class="small muted">Für einen Trend braucht es in dieser Phase zwei Gewichtsmessungen mit mindestens einer Woche Abstand.</p>';
+    if (span < 7) return null;
+    var n = ws.length, sx = 0, sy = 0, sxx = 0, sxy = 0;
+    ws.forEach(function (x) { var d = (Date.parse(x.date) - Date.parse(ws[0].date)) / 864e5; sx += d; sy += x.weight; sxx += d * d; sxy += d * x.weight; });
+    var perWeek = (n * sxy - sx * sy) / (n * sxx - sx * sx) * 7;
+    return { perWeek: perWeek, pct: perWeek / ws[n - 1].weight * 100, span: span, n: n };
+  }
+  /* Kalorienempfehlung. Erhaltungsbedarf: Grundumsatz nach Mifflin-St Jeor × Aktivität. Ist die aktuelle
+     Zufuhr bekannt und gibt es dazu mindestens 14 Tage Gewichtsverlauf, wird der Erhaltungsbedarf daraus
+     abgeleitet (1 kg pro Woche entspricht rund 1100 kcal pro Tag). Zielbereich wie bei der Trend-Faustregel. */
+  function kcalText(type, w, list) {
+    var P = S.person;
+    if (!P) return '<p class="small muted">Für eine Kalorienempfehlung trag unten unter „Angaben für die Kalorienempfehlung“ Geschlecht, Geburtsjahr, Größe und Aktivität ein.</p>';
+    if (w == null) return '<p class="small muted">Für eine Kalorienempfehlung fehlt noch eine Gewichtsmessung.</p>';
+    var age = new Date().getFullYear() - P.year, bmr = 10 * w + 6.25 * P.height - 5 * age + (P.sex === "m" ? 5 : -161), formula = bmr * P.act;
+    var tr = P.intake && P.since ? trendOf(list, P.since) : null;
+    var measured = tr && tr.span >= 14 && tr.n >= 3 ? P.intake - tr.perWeek * 1100 : null;
+    if (measured != null && (measured < bmr || measured > formula * 1.6)) measured = null;
+    var maint = measured || formula, k = 11 * w, lo = maint, hi = maint, rec = maint, clip = false;
+    if (type === "cut") { lo = maint - k; hi = maint - 0.5 * k; rec = hi; }
+    else if (type === "bulk") { lo = maint + 0.25 * k; hi = maint + 0.5 * k; rec = lo; }
+    if (lo < bmr) { lo = bmr; clip = true; }
+    if (hi < lo) hi = lo;
+    if (rec < lo) rec = lo;
+    var basis = measured ? "abgeleitet aus deinem Gewichtsverlauf bei " + P.intake.toLocaleString("de-DE") + " kcal pro Tag (nach Formel wären es " + kc(formula) + ")" : "geschätzt nach der Mifflin-St-Jeor-Formel aus " + fmt(w) + " kg, Größe, Alter und Aktivität";
+    if (!type) return "<p><b>Erhaltungsbedarf: rund " + kc(maint) + ' kcal pro Tag</b></p><p class="small muted">Wert ' + basis + ". Mit einer Phase wird daraus eine Empfehlung für Cut oder Aufbau.</p>";
+    return "<p><b>Kalorien: rund " + kc(rec) + " kcal pro Tag</b>" + (kc(lo) !== kc(hi) ? ' <span class="small muted">Bereich ' + kc(lo) + "–" + kc(hi) + "</span>" : "") + '</p><p class="small muted">Erhaltungsbedarf ' + kc(maint) + " kcal, " + basis + ". " +
+      (clip ? "Die Untergrenze ist auf deinen Grundumsatz von " + kc(bmr) + " kcal angehoben. " : "") +
+      "Das ist ein Schätzwert: Liegt dein Trend zwei Wochen außerhalb des Zielbereichs, passe um 100–200 kcal an.</p>";
+  }
+  function personForm() {
+    var P = S.person || {}, opt = function (v, l, cur) { return '<option value="' + v + '"' + (String(cur) === String(v) ? " selected" : "") + ">" + l + "</option>"; };
+    return '<div class="block"><h2>Angaben für die Kalorienempfehlung</h2><div class="row">' +
+      '<label style="flex:1 1 130px">Geschlecht<select id="pe-sex">' + opt("", "Bitte wählen", P.sex || "") + opt("m", "Männlich", P.sex) + opt("w", "Weiblich", P.sex) + "</select></label>" +
+      '<label style="flex:1 1 110px">Geburtsjahr<input id="pe-year" inputmode="numeric" autocomplete="off" value="' + esc(P.year || "") + '"></label>' +
+      '<label style="flex:1 1 110px">Größe (cm)<input id="pe-height" inputmode="decimal" autocomplete="off" value="' + esc(P.height ? fmt(P.height) : "") + '"></label>' +
+      '<label style="flex:1 1 100%">Aktivität<select id="pe-act">' + opt("", "Bitte wählen", P.act || "") + ACT.map(function (a) { return opt(a[0], a[1], P.act); }).join("") + "</select></label>" +
+      '<label style="flex:1 1 170px">Aktuelle Kalorien pro Tag (optional)<input id="pe-intake" inputmode="numeric" autocomplete="off" value="' + esc(P.intake || "") + '"></label>' +
+      '<label style="flex:1 1 150px">Diese Kalorien seit<input type="date" id="pe-since" value="' + esc(P.since || today()) + '" max="' + today() + '"></label>' +
+      '</div><div class="row" style="align-items:center"><button class="primary" data-act="pesave">Speichern</button><span class="small muted" id="pemsg">Kennt der Tracker deine aktuellen Kalorien, leitet er nach zwei Wochen deinen Erhaltungsbedarf aus dem Gewichtsverlauf ab.</span></div></div>';
+  }
+  function phaseStatus(list) {
+    var t = today(), p = phaseAt(t), tr = trendOf(list, p && p.start), lastW = null;
+    list.forEach(function (x) { if (x.weight != null) lastW = x.weight; });
+    if (!p) return '<h2>Keine Phase gewählt</h2><p class="small muted">Starte unten unter „Phasen“ einen Aufbau, einen Cut oder eine Haltephase. Dann bewertet der Tracker deinen Gewichtstrend und markiert die Phase in den Diagrammen.</p>' + kcalText(null, lastW, list);
+    var h = "<h2>" + PH[p.type] + ' <span class="small muted" style="font-family:var(--body);font-weight:400">seit ' + dfmt(p.start, 1) + ", Woche " + weekOf(p, t) + "</span></h2>";
+    if (!tr) h += '<p class="small muted">Für einen Trend braucht es in dieser Phase zwei Gewichtsmessungen mit mindestens einer Woche Abstand.</p>';
     else {
-      var n = ws.length, sx = 0, sy = 0, sxx = 0, sxy = 0;
-      ws.forEach(function (x) { var d = (Date.parse(x.date) - Date.parse(ws[0].date)) / 864e5; sx += d; sy += x.weight; sxx += d * d; sxy += d * x.weight; });
-      var perWeek = (n * sxy - sx * sy) / (n * sxx - sx * sx) * 7, pct = perWeek / ws[n - 1].weight * 100, v = verdict(p.type, pct);
-      h += "<p>Trend über " + Math.round(span) + " Tage (" + n + " Messungen): <b>" + sign(perWeek) + " kg pro Woche</b> (" + sign(pct) + ' %)</p><span class="hint ' + v[0] + '">' + v[1] + "</span>";
+      var v = verdict(p.type, tr.pct);
+      h += "<p>Trend über " + Math.round(tr.span) + " Tage (" + tr.n + " Messungen): <b>" + sign(tr.perWeek) + " kg pro Woche</b> (" + sign(tr.pct) + ' %)</p><span class="hint ' + v[0] + '">' + v[1] + "</span>";
     }
     var lo = RULE[p.type][0], hi = RULE[p.type][1];
     var kg = lastW == null ? "" : ", bei deinem Gewicht " + (p.type === "maintain" ? "±" + fmt(lastW * hi / 100) : fmt(lastW * lo / 100) + "–" + fmt(lastW * hi / 100)) + " kg";
-    return h + '<p class="small muted">' + (p.type === "cut" ? "Faustregel im Cut: 0,5–1 % des Körpergewichts pro Woche abnehmen" : p.type === "bulk" ? "Faustregel im Aufbau: 0,25–0,5 % des Körpergewichts pro Woche zunehmen" : "Faustregel beim Halten: höchstens ±0,25 % pro Woche") + kg + ".</p>";
+    return h + '<p class="small muted">' + (p.type === "cut" ? "Faustregel im Cut: 0,5–1 % des Körpergewichts pro Woche abnehmen" : p.type === "bulk" ? "Faustregel im Aufbau: 0,25–0,5 % des Körpergewichts pro Woche zunehmen" : "Faustregel beim Halten: höchstens ±0,25 % pro Woche") + kg + ".</p>" + kcalText(p.type, lastW, list);
   }
   function phaseList(list) {
     if (!S.phases.length) return "";
@@ -392,14 +463,14 @@ button, select, input { touch-action: manipulation }
     d.exercises.forEach(function (ex) {
       var last = lastBefore(ex.id, S.date), adv = advise(ex, S.date), rows = draft.rows[ex.id] || [];
       h += '<div class="block"><div class="exhead"><h3>' + esc(ex.name) + '</h3><span class="small muted">' + ex.sets + " × " + ex.repMin + "–" + ex.repMax + " Wdh.</span></div>" +
-        '<p class="small muted">' + (last ? "Zuletzt (" + dfmt(last.date) + "): " + setsText(last.sets) : "Noch kein früherer Eintrag") + "</p>" +
-        (adv ? '<span class="hint ' + adv.kind + '">' + adv.text + "</span>" : "") +
+        '<p class="small muted">' + (last ? "Zuletzt (" + dfmt(last.date) + "): " + setsText(last.sets) : "Noch kein früherer Eintrag. Ab dem zweiten Mal schlägt der Tracker hier ein Gewicht vor.") + "</p>" +
+        (adv ? '<span class="hint ' + adv.kind + '">Vorschlag heute: ' + adv.text + "</span>" : "") +
         '<div class="sets"><span class="hd">Satz</span><span class="hd">Gewicht (kg)</span><span class="hd">Wdh.</span>' +
         rows.map(function (r, i) {
           var ph = last && last.sets[i] ? String(last.sets[i].r) : "";
           return '<span class="n">' + (i + 1) + '</span><input id="w-' + ex.id + "-" + i + '" inputmode="decimal" autocomplete="off" aria-label="Gewicht Satz ' + (i + 1) + '" data-ex="' + ex.id + '" data-i="' + i + '" data-k="w" value="' + esc(r.w) + '">' +
             '<input id="r-' + ex.id + "-" + i + '" inputmode="numeric" autocomplete="off" aria-label="Wiederholungen Satz ' + (i + 1) + '" placeholder="' + ph + '" data-ex="' + ex.id + '" data-i="' + i + '" data-k="r" value="' + esc(r.r) + '">';
-        }).join("") + '</div><button class="ghost" style="align-self:flex-start" data-act="addset" data-id="' + ex.id + '">+ Satz</button></div>';
+        }).join("") + '</div><button class="ghost" style="align-self:flex-start" data-act="addset" data-id="' + ex.id + '">+ Satz</button><p class="small" id="nx-' + ex.id + '"' + (nextText(ex) ? "" : " hidden") + "><b>" + esc(nextText(ex)) + "</b></p></div>";
     });
     h += '<p class="small muted">Ein Satz zählt, sobald Wiederholungen eingetragen sind. Gespeichert wird automatisch.</p>';
     el.innerHTML = h;
@@ -454,7 +525,7 @@ button, select, input { touch-action: manipulation }
       el.innerHTML = '<div class="block" id="phstat"></div><div class="block" id="bform"><h2>Gewicht, Körperfett und Umfänge eintragen</h2><div class="row"><label style="flex:1 1 150px">Datum<input type="date" id="b-date" value="' + today() + '" max="' + today() + '"></label>' +
         BF.map(function (f) { return '<label style="flex:1 1 100px">' + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
         '</div><div class="row" style="align-items:center"><button class="primary" data-act="bsave">Speichern</button><span class="small muted" id="bmsg">Leere Felder werden übersprungen.</span></div></div><div id="bout" style="display:flex;flex-direction:column;gap:16px"></div>' +
-        '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div>';
+        '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div>' + personForm();
     }
     var h = "";
     if (!list.length) h = '<p class="empty">Noch keine Messung. Trag oben Gewicht, Körperfett oder Umfänge ein, dann erscheint hier der Verlauf.</p>';
@@ -511,10 +582,15 @@ button, select, input { touch-action: manipulation }
           return { id: e.id, name: txt80(e.name), sets: e.sets, repMin: e.repMin, repMax: e.repMax, step: e.step };
         }) };
       }) };
-      if (k === "settings") return { kind: "settings", phases: d.phases.map(function (p) {
-        if (!DRE.test(p.start) || !Object.prototype.hasOwnProperty.call(PH, p.type)) throw 0;
-        return { start: p.start, type: p.type };
-      }).sort(function (x, y) { return x.start < y.start ? -1 : 1; }) };
+      if (k === "settings") {
+        var q = d.person, okP = q && (q.sex === "m" || q.sex === "w") && isN(q.year) && isN(q.height) && isN(q.act);
+        return { kind: "settings",
+          person: okP ? { sex: q.sex, year: q.year, height: q.height, act: q.act, intake: isN(q.intake) ? q.intake : null, since: DRE.test(q.since) ? q.since : null } : null,
+          phases: (d.phases || []).map(function (p) {
+            if (!DRE.test(p.start) || !Object.prototype.hasOwnProperty.call(PH, p.type)) throw 0;
+            return { start: p.start, type: p.type };
+          }).sort(function (x, y) { return x.start < y.start ? -1 : 1; }) };
+      }
       if (k.indexOf("w_") === 0) {
         if (!DRE.test(d.date) || !IRE.test(d.dayId) || k !== "w_" + d.date + "_" + d.dayId) throw 0;
         return { kind: "workout", date: d.date, dayId: d.dayId, dayName: txt80(d.dayName), updated: String(d.updated || "").slice(0, 40), entries: d.entries.map(function (e) {
@@ -535,14 +611,18 @@ button, select, input { touch-action: manipulation }
     var o; try { o = JSON.parse(txt); } catch (e) { o = null; }
     if (!o || o.app !== "trainingslog" || !o.docs || typeof o.docs !== "object") return "Das ist keine Backup-Datei aus dem Trainingslog.";
     var n = 0, skip = 0;
-    Object.keys(o.docs).forEach(function (k) { var d = clean(k, o.docs[k]); if (d) { DOCS[k] = d; n++; } else skip++; });
+    Object.keys(o.docs).forEach(function (k) {
+      var d = clean(k, o.docs[k]); if (!d) { skip++; return; }
+      if (k === "settings" && !d.person && DOCS.settings && DOCS.settings.person) d.person = DOCS.settings.person;
+      DOCS[k] = d; n++;
+    });
     if (!n) return "Die Datei enthält keine lesbaren Einträge.";
     clearTimeout(planTimer); planTimer = null; clearTimeout(saveTimer); saveTimer = null; draft = null; dirty = false;
     var ok = persist(); loadAll();
     if (!ok) return "Einspielen fehlgeschlagen: Der Speicher dieses Geräts ist voll oder gesperrt.";
     return n + " Einträge übernommen" + (skip ? ", " + skip + " unlesbare übersprungen" : "") + ".";
   }
-  function lastBackup() { try { return localStorage.getItem("trainingslog-backup"); } catch (e) { return null; } }
+  function lastBackup() { try { return localStorage.getItem(keyFor("backup")); } catch (e) { return null; } }
   function download(name, text, type) {
     var url = URL.createObjectURL(new Blob([text], { type: type })), a = document.createElement("a");
     a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
@@ -592,12 +672,12 @@ button, select, input { touch-action: manipulation }
   function renderData() {
     var el = $("tab-data"); if (!S.ready) return;
     var lb = lastBackup(), ld = lb ? new Date(lb) : null, old = $("datamsg") ? $("datamsg").textContent : "";
-    el.innerHTML = '<div class="block"><h2>Backup</h2><p class="small muted">Deine Einträge liegen nur auf diesem Gerät. Ein Backup ist eine Datei, die du zum Beispiel in iCloud Drive ablegst. Damit stellst du deine Daten wieder her oder überträgst sie auf ein anderes Gerät.</p>' +
+    el.innerHTML = '<div class="block"><h2>Backup</h2><p class="small muted">Deine Einträge liegen nur auf diesem Gerät. Ein Backup ist eine Datei, die du zum Beispiel in iCloud Drive ablegst. Damit stellst du deine Daten wieder her oder überträgst sie auf ein anderes Gerät.' + (PROF.list.length > 1 ? " Backup, Einspielen und Export gelten für das aktive Profil „" + esc(profName()) + "“." : "") + "</p>" +
       "<p>Letztes Backup: <b>" + (ld ? pad(ld.getDate()) + "." + pad(ld.getMonth() + 1) + "." + ld.getFullYear() : "noch keins") + "</b></p>" +
       '<div class="row"><button class="primary" data-act="backup">Backup speichern</button><button data-act="pick">Backup einspielen</button><input type="file" id="impfile" accept=".json,.txt,application/json,text/plain" hidden></div>' +
       '<p class="small muted" id="datamsg">' + esc(old || "Beim Einspielen werden die Einträge aus der Datei ergänzt. Gibt es einen Tag schon, gilt die Version aus der Datei.") + "</p></div>" +
       '<div class="block"><h2>Export für Excel</h2><p class="small muted">CSV-Dateien mit einer Zeile pro Satz bzw. pro Messung, die Excel direkt öffnet.</p><div class="row"><button data-act="csvsets">Sätze exportieren</button><button data-act="csvbody">Körperwerte exportieren</button></div></div>' +
-      '<p class="small muted">' + Object.keys(S.workouts).length + " Einheiten und " + Object.keys(S.body).length + " Messungen gespeichert.</p>";
+      profileBlock() + '<p class="small muted">' + Object.keys(S.workouts).length + " Einheiten und " + Object.keys(S.body).length + " Messungen gespeichert.</p>";
   }
   function topNotice() {
     var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
@@ -608,6 +688,29 @@ button, select, input { touch-action: manipulation }
     else notice("");
   }
 
+  /* ---------- Profile ---------- */
+  function profileBlock() {
+    return '<div class="block"><h2>Profile</h2><p class="small muted">Für mehrere Personen auf diesem Gerät. Jedes Profil hat einen eigenen Plan, eigene Einheiten, Körperwerte, Phasen und Kalorienangaben.</p><div class="tablewrap"><table><tbody>' +
+      PROF.list.map(function (p) {
+        var on = p.id === PROF.active;
+        return "<tr><td>" + esc(p.name) + '</td><td class="r">' + (on ? '<span class="muted">aktiv</span>' : '<button data-act="pfswitch" data-id="' + p.id + '">Wechseln</button> <button class="danger" data-act="pfdel" data-id="' + p.id + '">Löschen</button>') + "</td></tr>";
+      }).join("") + "</tbody></table></div>" +
+      '<div class="row"><label style="flex:1 1 170px">Name des aktiven Profils<input id="pf-name" autocomplete="off" maxlength="30" value="' + esc(profName()) + '"></label><button data-act="pfrename">Umbenennen</button></div>' +
+      '<div class="row"><label style="flex:1 1 170px">Neues Profil<input id="pf-new" autocomplete="off" maxlength="30" placeholder="Name"></label><button data-act="pfadd">Anlegen</button></div></div>';
+  }
+  function renderProfSel() {
+    $("profrow").hidden = PROF.list.length < 2;
+    $("profsel").innerHTML = PROF.list.map(function (p) { return '<option value="' + p.id + '"' + (p.id === PROF.active ? " selected" : "") + ">" + esc(p.name) + "</option>"; }).join("");
+  }
+  function switchProfile(id) {
+    if (!PROF.list.some(function (p) { return p.id === id; })) return;
+    saveDraft(); if (planTimer) planChanged(true);
+    PROF.active = id; profWrite(); loadAll();
+    S.date = today(); S.dayId = null; S.exSel = null; draft = null; dirty = false;
+    if ($("datamsg")) $("datamsg").textContent = "";
+    renderAll(true); setSync("Profil „" + profName() + "“ geladen");
+  }
+
   /* ---------- Rendern & Events ---------- */
   function focusIn(id) { var a = document.activeElement; return a && $(id).contains(a) && /INPUT|SELECT/.test(a.tagName); }
   function renderAll(force) {
@@ -615,7 +718,7 @@ button, select, input { touch-action: manipulation }
     renderProgress();
     renderBody(!force);
     if (force || (!planTimer && !focusIn("tab-plan"))) renderPlan();
-    renderData(); topNotice();
+    renderData(); renderProfSel(); topNotice();
   }
   function showTab(t) {
     saveDraft(); S.tab = t;
@@ -658,11 +761,35 @@ button, select, input { touch-action: manipulation }
       $("bmsg").textContent = "Messung vom " + dfmt(date, 1) + " gespeichert."; renderBody(true);
     }
     else if (a === "bdel") { if (arm(b, "Sicher?")) { put(id, null); renderBody(true); } }
+    else if (a === "pesave") {
+      var sx = $("pe-sex").value, yr = num($("pe-year").value), hg = num($("pe-height").value), ac = num($("pe-act").value), it = num($("pe-intake").value), age = new Date().getFullYear() - yr;
+      if (!sx || !yr || age > 100 || age < 0 || !hg || hg < 120 || hg > 230 || !ac) { $("pemsg").textContent = "Bitte Geschlecht, Geburtsjahr, Größe in cm und Aktivität angeben."; return; }
+      if (age < 18) { $("pemsg").textContent = "Die Kalorienempfehlung ist nur für Erwachsene ausgelegt."; return; }
+      if (it != null && (it < 800 || it > 8000)) { $("pemsg").textContent = "Die Kalorienangabe sieht nicht plausibel aus."; return; }
+      saveSettings(null, { sex: sx, year: Math.round(yr), height: hg, act: ac, intake: it == null ? null : Math.round(it), since: it == null ? null : ($("pe-since").value || today()) });
+      $("pemsg").textContent = "Gespeichert. Die Empfehlung steht oben bei der Phase."; renderBody(true);
+    }
+    else if (a === "pfswitch") switchProfile(id);
+    else if (a === "pfadd") {
+      var pn = { id: rid("p"), name: $("pf-new").value.trim().slice(0, 30) || "Profil " + (PROF.list.length + 1) };
+      PROF.list.push(pn); switchProfile(pn.id);
+    }
+    else if (a === "pfrename") {
+      var rn = $("pf-name").value.trim().slice(0, 30);
+      if (rn) { PROF.list.forEach(function (p) { if (p.id === PROF.active) p.name = rn; }); profWrite(); renderData(); renderProfSel(); }
+    }
+    else if (a === "pfdel") {
+      if (id !== PROF.active && PROF.list.some(function (p) { return p.id === id; }) && arm(b, "Mit allen Daten löschen?")) {
+        try { localStorage.removeItem(keyFor("data", id)); localStorage.removeItem(keyFor("backup", id)); } catch (e) {}
+        PROF.list = PROF.list.filter(function (p) { return p.id !== id; }); profWrite(); renderData(); renderProfSel();
+      }
+    }
     else if (a === "backup") {
       if (planTimer) planChanged(true);
-      deliver("trainingslog-backup-" + today() + ".json", JSON.stringify({ app: "trainingslog", version: 1, exported: new Date().toISOString(), docs: DOCS }), "application/json").then(function (ok) {
+      var slug = PROF.list.length > 1 ? (profName().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "profil") + "-" : "";
+      deliver("trainingslog-backup-" + slug + today() + ".json", JSON.stringify({ app: "trainingslog", version: 1, profile: profName(), exported: new Date().toISOString(), docs: DOCS }), "application/json").then(function (ok) {
         if (!ok) return;
-        try { localStorage.setItem("trainingslog-backup", new Date().toISOString()); } catch (e) {}
+        try { localStorage.setItem(keyFor("backup"), new Date().toISOString()); } catch (e) {}
         renderData(); $("datamsg").textContent = "Backup erstellt. Leg die Datei außerhalb dieses Geräts ab, zum Beispiel in iCloud Drive."; topNotice();
       });
     }
@@ -674,9 +801,9 @@ button, select, input { touch-action: manipulation }
       if (act && act.type === pt && act.start !== pd) { $("phmsg").textContent = "Am " + dfmt(pd, 1) + " läuft bereits die Phase „" + PH[pt] + "“."; return; }
       var np = S.phases.filter(function (p) { return p.start !== pd; }); np.push({ start: pd, type: pt });
       np.sort(function (x, y) { return x.start < y.start ? -1 : 1; });
-      put("settings", { kind: "settings", phases: np }); $("phmsg").textContent = PH[pt] + " ab " + dfmt(pd, 1) + " gespeichert."; renderAll(false);
+      saveSettings(np); $("phmsg").textContent = PH[pt] + " ab " + dfmt(pd, 1) + " gespeichert."; renderAll(false);
     }
-    else if (a === "phdel") { if (arm(b, "Sicher?")) { put("settings", { kind: "settings", phases: S.phases.filter(function (p) { return p.start !== id; }) }); renderAll(false); } }
+    else if (a === "phdel") { if (arm(b, "Sicher?")) { saveSettings(S.phases.filter(function (p) { return p.start !== id; })); renderAll(false); } }
     else if (a === "addd") { S.plan.days.push({ id: rid("d"), name: "Neuer Tag", exercises: [] }); planChanged(true); renderPlan(); }
     else if (a === "deld") { if (arm(b, "Sicher löschen?")) { S.plan.days.splice(+id, 1); planChanged(true); renderPlan(); } }
     else if (a === "adde") { var e = { id: rid("e"), name: "Neue Übung", sets: 3, repMin: 8, repMax: 12, step: 2.5 }; S.plan.days[+id].exercises.push(e); planChanged(true); renderPlan(); var n = $("p-" + e.id + "-name"); if (n) { n.focus(); n.select(); } }
@@ -685,7 +812,11 @@ button, select, input { touch-action: manipulation }
 
   document.addEventListener("input", function (ev) {
     var t = ev.target, ds = t.dataset;
-    if (ds.k && draft) { draft.rows[ds.ex][+ds.i][ds.k] = t.value; dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 900); }
+    if (ds.k && draft) {
+      draft.rows[ds.ex][+ds.i][ds.k] = t.value; dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 900);
+      var exo = day() && day().exercises.filter(function (x) { return x.id === ds.ex; })[0], nxe = $("nx-" + ds.ex);
+      if (exo && nxe) { var nt = nextText(exo); nxe.hidden = !nt; nxe.firstChild.textContent = nt; }
+    }
     else if (ds.pf && S.plan) {
       var d = S.plan.days[+ds.day];
       if (ds.pf === "dayname") d.name = t.value.trim() || d.name;
@@ -702,6 +833,7 @@ button, select, input { touch-action: manipulation }
     var t = ev.target;
     if (t.id === "tdate") { saveDraft(); S.date = t.value || today(); draft = null; renderTrain(); }
     else if (t.id === "exsel") { S.exSel = t.value; renderProgress(); }
+    else if (t.id === "profsel") switchProfile(t.value);
     else if (t.dataset.k) saveDraft();
     else if (t.id === "impfile" && t.files && t.files[0]) {
       var fr = new FileReader();
