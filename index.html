@@ -198,8 +198,13 @@ button.danger { color: var(--bad) }
 .mring text.mk1 { fill: var(--ink); font: 700 28px var(--display) }
 .mring text.mk2 { fill: var(--muted); font: 500 12px var(--body) }
 .mring text.mk3 { fill: var(--muted); font: 500 11px var(--body) }
-.mlegend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; flex: 1 1 160px; min-width: 0; max-width: 260px }
-.mlegend li { display: grid; grid-template-columns: 12px 1fr auto 3.2em; align-items: center; gap: 8px; font-size: 14px }
+.mlegend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; flex: 1 1 100%; min-width: 0; max-width: 340px }
+.mlegend li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto 3.4em; align-items: center; column-gap: 10px; font-size: 14px }
+.mlegend .mname { overflow-wrap: anywhere }
+.mlegend b { text-align: right; white-space: nowrap }
+.chart text.wlab { fill: var(--ink); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round }
+.mform { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--line) }
+.mform p { margin: 0 }
 .mdot { width: 12px; height: 12px; border-radius: 3px }
 .mname { min-width: 0 }
 .mpct { color: var(--muted); text-align: right; font-size: 13px }
@@ -313,7 +318,7 @@ button, select, input { touch-action: manipulation }
   var rid = function (p) { return p + Math.random().toString(36).slice(2, 8); };
   var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
 
-  var S = { ready: false, plan: null, workouts: {}, body: {}, phases: [], person: null, sched: {}, tab: "home", date: today(), dayId: null, exSel: null, metric: "e1rm", bodyMetric: "weight" };
+  var S = { ready: false, plan: null, workouts: {}, body: {}, phases: [], person: null, sched: {}, macro: null, tab: "home", date: today(), dayId: null, exSel: null, metric: "e1rm", bodyMetric: "weight" };
   var draft = null, dirty = false, saveTimer = null, planTimer = null;
   var DOCS = {}, persistAsked = false;
   /* Profile: mehrere Personen auf einem Gerät. Das erste Profil ("main") nutzt die ursprünglichen Speicherschlüssel. */
@@ -321,7 +326,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 25;
+  var APP_VERSION = 26;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -351,7 +356,9 @@ button, select, input { touch-action: manipulation }
     { v: 22, tab: "plan", text: "Das Suchfeld unter „Alle Übungen“ hat rechts ein ✕, das die Suche mit einem Tipp löscht." },
     { v: 23, tab: "body", text: "Das Formular für Gewicht, Körperfett und Umfänge ist neu angeordnet: Das Datum steht in einer eigenen Zeile, darunter je zwei Felder nebeneinander." },
     { v: 24, tab: "body", text: "Zielgewicht: Für einen Cut oder Aufbau legst du im Tab „Körper“ bei der laufenden Phase ein Zielgewicht fest. Der Reiter „Start“ zeigt es als Linie in der Gewichtskurve, dazu Fortschritt und voraussichtliches Datum." },
-    { v: 25, tab: "home", text: "Ringdiagramm im Reiter „Start“: In der Mitte stehen die Kalorien für heute, der Ring zeigt die Anteile von Eiweiß, Fett und Kohlenhydraten." }
+    { v: 25, tab: "home", text: "Ringdiagramm im Reiter „Start“: In der Mitte stehen die Kalorien für heute, der Ring zeigt die Anteile von Eiweiß, Fett und Kohlenhydraten." },
+    { v: 26, tab: "body", text: "Makros anpassen: Im Tab „Körper“ unter „Kalorien und Makros“ stellst du Eiweiß pro kg je Phase und den Fettanteil ein. Standard ist jetzt 25 % Fett statt bis zu 30 %, dadurch mehr Kohlenhydrate." },
+    { v: 26, tab: "home", text: "Die Gewichtskurve zeigt über jedem Messpunkt das Gewicht. Die Legende am Ringdiagramm steht jetzt unter dem Ring und überlappt nicht mehr." }
   ];
   var TABNAME = { home: "Start", train: "Training", prog: "Fortschritt", body: "Körper", plan: "Plan", data: "Daten" };
   var fresh = [], hiddenAt = 0, hiddenDay = "";
@@ -362,19 +369,19 @@ button, select, input { touch-action: manipulation }
   function setSync(t, err) { var el = $("sync"); el.textContent = t; el.classList.toggle("err", !!err); }
   function notice(t) { var el = $("notice"); el.hidden = !t; el.textContent = t || ""; }
   function applyDocs(list) {
-    var w = {}, b = {}, plan = null, ph = [], pe = null, sc = {};
+    var w = {}, b = {}, plan = null, ph = [], pe = null, sc = {}, mo = null;
     list.forEach(function (d) {
       if (d.id === "plan") plan = d.data;
-      else if (d.id === "settings") { ph = d.data.phases || []; pe = d.data.person || null; sc = d.data.sched || {}; }
+      else if (d.id === "settings") { ph = d.data.phases || []; pe = d.data.person || null; sc = d.data.sched || {}; mo = d.data.macro || null; }
       else if (d.data.kind === "workout") w[d.id] = d.data;
       else if (d.data.kind === "body") b[d.id] = d.data;
     });
-    S.workouts = w; S.body = b; S.phases = ph; S.person = pe; S.sched = sc;
+    S.workouts = w; S.body = b; S.phases = ph; S.person = pe; S.sched = sc; S.macro = mo;
     if (!planTimer) { S.plan = plan; if (S.plan) syncLib(); }
   }
   function localApply(id, data) {
     if (id === "plan") S.plan = data;
-    else if (id === "settings") { S.phases = data ? data.phases : []; S.person = data && data.person || null; S.sched = data && data.sched || {}; }
+    else if (id === "settings") { S.phases = data ? data.phases : []; S.person = data && data.person || null; S.sched = data && data.sched || {}; S.macro = data && data.macro || null; }
     else if (id.charAt(0) === "w") { if (data) S.workouts[id] = data; else delete S.workouts[id]; }
     else { if (data) S.body[id] = data; else delete S.body[id]; }
   }
@@ -536,7 +543,7 @@ button, select, input { touch-action: manipulation }
   }
   var ACT = [[1.2, "Kaum aktiv: Büro, kein Sport"], [1.375, "Leicht aktiv: Büro, 1–2× Training pro Woche"], [1.55, "Mäßig aktiv: Büro, 3–5× Training pro Woche"], [1.725, "Sehr aktiv: 6–7× Training oder körperliche Arbeit"], [1.9, "Extrem aktiv: körperliche Arbeit plus Training"]];
   var kc = function (n) { return (Math.round(n / 50) * 50).toLocaleString("de-DE"); };
-  function saveSettings(phases, person) { put("settings", { kind: "settings", phases: phases || S.phases, person: person || S.person || null, sched: S.sched || {} }); }
+  function saveSettings(phases, person) { put("settings", { kind: "settings", phases: phases || S.phases, person: person || S.person || null, sched: S.sched || {}, macro: S.macro || null }); }
   /* Gewichtstrend per Ausgleichsgerade über höchstens 28 Tage, frühestens ab `start`. */
   function trendOf(list, start) {
     var t = today(), from = new Date(Date.parse(t) - 28 * 864e5).toISOString().slice(0, 10); if (start && start > from) from = start;
@@ -570,8 +577,12 @@ button, select, input { touch-action: manipulation }
     return { w: w, bmr: bmr, formula: formula, measured: measured, maint: maint, range: range, cols: cols, clip: maint - k < bmr, target: target, n: n, d: d, split: split };
   }
   /* Makros: Eiweiß nach Körpergewicht, Fett 1 g pro kg, höchstens 30 % der Kalorien (DGE), Kohlenhydrate als Rest. */
+  /* Makro-Einstellungen: Eiweiß in g pro kg je Phase, Fett als Anteil der Kalorien. Änderbar im Tab „Körper“. */
+  var MACRO_DEF = { pc: 2.2, pm: 1.8, pb: 1.8, fat: 25 };
+  function macroSet() { var m = S.macro || {}, o = {}; Object.keys(MACRO_DEF).forEach(function (k) { o[k] = isN(m[k]) ? m[k] : MACRO_DEF[k]; }); return o; }
   function macros(kcal, t, w) {
-    var p = Math.round(PROT[t] * w), f = Math.round(Math.min(w, 0.3 * kcal / 9));
+    var M = macroSet(), pk = t === "cut" ? M.pc : t === "bulk" ? M.pb : M.pm;
+    var p = Math.round(pk * w), f = Math.round(M.fat / 100 * kcal / 9);
     return { kcal: kcal, p: p, f: f, c: Math.max(0, Math.round((kcal - 4 * p - 9 * f) / 4)) };
   }
   /* Kalorienbedarf eines Kalendertags: Phase an diesem Tag; Trainingstag, wenn ein Training eingetragen ist
@@ -583,6 +594,14 @@ button, select, input { touch-action: manipulation }
     return { kcal: Math.round((E.n ? (train ? sp.train : sp.rest) : E.target[type]) / 50) * 50, type: type, phase: !!ph, train: train, plan: train && !hasWorkout };
   }
   function bodyList() { return Object.keys(S.body).map(function (k) { return S.body[k]; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; }); }
+  function macroForm(E) {
+    var M = macroSet(), f = function (id, lab, v, mode) { return '<label>' + lab + '<input id="' + id + '" inputmode="' + mode + '" autocomplete="off" value="' + fmt(v) + '"></label>'; };
+    var fatG = E.cols[phaseAt(today()) ? phaseAt(today()).type : "maintain"].f, fatKg = fatG / E.w;
+    return '<div class="mform"><h3>Makros anpassen</h3><p class="small muted">Eiweiß in Gramm pro kg Körpergewicht, je nach Phase. Fett als Anteil der Kalorien. Was übrig bleibt, sind Kohlenhydrate.</p>' +
+      '<div class="bgrid mgrid">' + f("mc-pc", "Eiweiß im Cut (g/kg)", M.pc, "decimal") + f("mc-pm", "Eiweiß beim Halten (g/kg)", M.pm, "decimal") + f("mc-pb", "Eiweiß im Aufbau (g/kg)", M.pb, "decimal") + f("mc-fat", "Fett (% der Kalorien)", M.fat, "numeric") + "</div>" +
+      '<p class="small' + (fatKg < 0.6 ? '" style="color:var(--warn)' : " muted") + '">Fett aktuell: ' + fatG + " g, das sind " + fmt(Math.round(fatKg * 100) / 100) + " g pro kg." + (fatKg < 0.6 ? " Das ist wenig: Unter etwa 0,6 g pro kg wird es auf Dauer knapp." : "") + "</p>" +
+      '<div class="row" style="align-items:center"><button class="primary" data-act="mcsave">Speichern</button><button class="ghost" data-act="mcreset">Standard (2,2 / 1,8 / 1,8 g/kg, 25 % Fett)</button></div><p class="small muted" id="mcmsg"></p></div>';
+  }
   function kcalBlock(list) {
     var P = S.person, E = energy(list), ph = phaseAt(today()), cur = ph ? ph.type : null, title = "<h2>Kalorien und Makros</h2>";
     if (!P) return title + '<p class="small muted">Trag unten unter „Angaben für die Kalorienempfehlung“ Geschlecht, Geburtsjahr, Größe und Aktivität ein. Dann berechnet der Tracker deinen Grundumsatz, deine Erhaltungskalorien und die Makros für Cut und Aufbau.</p>';
@@ -601,7 +620,8 @@ button, select, input { touch-action: manipulation }
       '<p class="small muted">Erhaltung ' + (E.measured ? "abgeleitet aus deinem Gewichtsverlauf bei " + P.intake.toLocaleString("de-DE") + " kcal pro Tag (nach Formel wären es " + kc(E.formula) + ")" : "geschätzt nach der Mifflin-St-Jeor-Formel aus " + fmt(E.w) + " kg, Größe, Alter und Aktivität") +
       ". Cut: " + kc(E.range.cut[0]) + "–" + kc(E.range.cut[1]) + " kcal für 0,5–1 % Abnahme pro Woche. Aufbau: " + kc(E.range.bulk[0]) + "–" + kc(E.range.bulk[1]) + " kcal für 0,25–0,5 % Zunahme. Die Tabelle nutzt jeweils das mildere Ende." +
       (E.clip ? " Die Untergrenze im Cut ist auf deinen Grundumsatz angehoben." : "") + "</p>" +
-      '<p class="small muted">Makros: Eiweiß 1,8 g pro kg Körpergewicht, im Cut 2,2 g. Fett 1 g pro kg, höchstens 30 % der Kalorien. Kohlenhydrate füllen den Rest auf. ' +
+      macroForm(E) +
+      '<p class="small muted">Kohlenhydrate füllen den Rest der Kalorien auf. ' +
       (E.n ? "Trainingstage bekommen rund " + Math.round(E.d / 10) * 10 + " kcal mehr als Ruhetage, im Wochenschnitt bleibt es beim Zielwert. Die Makros oben gelten für den Schnitt, die für einzelne Tage zeigt der Kalender im Tab „Fortschritt“. " : "Wähle unten deine Trainingstage, dann unterscheidet der Tracker zwischen Trainings- und Ruhetagen. ") +
       "Alles sind Schätzwerte: Liegt dein Trend zwei Wochen außerhalb des Zielbereichs, passe um 100–200 kcal an.</p>";
   }
@@ -1255,7 +1275,8 @@ button, select, input { touch-action: manipulation }
         var q = d.person, okP = q && (q.sex === "m" || q.sex === "w") && isN(q.year) && isN(q.height) && isN(q.act);
         var sched = {}, rawS = d.sched && typeof d.sched === "object" ? d.sched : {};
         Object.keys(rawS).slice(0, 400).forEach(function (ks) { if (DRE.test(ks) && typeof rawS[ks] === "string" && IRE.test(rawS[ks])) sched[ks] = rawS[ks]; });
-        return { kind: "settings", sched: sched,
+        var mq = d.macro, macro = mq && [mq.pc, mq.pm, mq.pb, mq.fat].every(isN) ? { pc: mq.pc, pm: mq.pm, pb: mq.pb, fat: mq.fat } : null;
+        return { kind: "settings", sched: sched, macro: macro,
           person: okP ? { sex: q.sex, year: q.year, height: q.height, act: q.act, intake: isN(q.intake) ? q.intake : null, since: DRE.test(q.since) ? q.since : null,
             tdays: (Array.isArray(q.tdays) ? q.tdays : []).filter(function (x, i, arr) { return isN(x) && x >= 0 && x <= 6 && x % 1 === 0 && arr.indexOf(x) === i; }) } : null,
           phases: (d.phases || []).map(function (p) {
@@ -1288,6 +1309,7 @@ button, select, input { touch-action: manipulation }
       var d = clean(k, o.docs[k]); if (!d) { skip++; return; }
       if (k === "settings" && !d.person && DOCS.settings && DOCS.settings.person) d.person = DOCS.settings.person;
       if (k === "settings" && !Object.keys(d.sched).length && DOCS.settings && DOCS.settings.sched) d.sched = DOCS.settings.sched;
+      if (k === "settings" && !d.macro && DOCS.settings && DOCS.settings.macro) d.macro = DOCS.settings.macro;
       DOCS[k] = d; n++;
     });
     if (!n) return "Die Datei enthält keine lesbaren Einträge.";
@@ -1485,6 +1507,7 @@ button, select, input { touch-action: manipulation }
     var svg = '<div class="chart wchart"><svg class="yax" width="42" height="' + H + '" aria-hidden="true">' + yl + '</svg><div class="wscroll" id="wscroll" data-today="' + tx.toFixed(0) + '"><svg width="' + W + '" height="' + H + '" role="img" aria-label="Gewichtsverlauf' + (rates ? " mit Zielkorridor" : "") + '">' +
       '<rect class="todaycol" x="' + (tx - DAY / 2).toFixed(1) + '" y="' + T + '" width="' + DAY + '" height="' + (H - T - 4) + '" rx="6"/>' + g + vg + band + gl +
       (pts.length > 1 ? '<path class="ln" d="' + d + '"/>' : "") +
+      pts.map(function (p) { return '<text class="wlab" x="' + X(Date.parse(p.date)).toFixed(1) + '" y="' + (Y(p.weight) - 10).toFixed(1) + '" text-anchor="middle">' + fmt(p.weight) + "</text>"; }).join("") +
       pts.map(function (p, i) { var e = i === pts.length - 1; return '<circle class="' + (e ? "end" : "pt") + '" cx="' + X(Date.parse(p.date)).toFixed(1) + '" cy="' + Y(p.weight).toFixed(1) + '" r="' + (e ? 5 : 3.5) + '"><title>' + dfmt(p.date, 1) + ": " + fmt(p.weight) + " kg</title></circle>"; }).join("") +
       dl + "</svg></div></div>" + (nD > 7 ? '<p class="small muted">Zum Blättern seitlich wischen.</p>' : "");
     var info = "";
@@ -1624,6 +1647,15 @@ button, select, input { touch-action: manipulation }
         var pcopy = clone(S.person); pcopy.tdays = tds; saveSettings(null, pcopy);
         $("pemsg").textContent = "Trainingstage gespeichert."; renderBody(true);
       }
+    }
+    else if (a === "mcsave" || a === "mcreset") {
+      var nm = a === "mcreset" ? null : { pc: num($("mc-pc").value), pm: num($("mc-pm").value), pb: num($("mc-pb").value), fat: num($("mc-fat").value) };
+      if (nm) {
+        if (![nm.pc, nm.pm, nm.pb].every(function (x) { return x != null && x >= 1 && x <= 3.5; })) { $("mcmsg").textContent = "Eiweiß bitte zwischen 1 und 3,5 g pro kg angeben."; return; }
+        if (nm.fat == null || nm.fat < 15 || nm.fat > 45) { $("mcmsg").textContent = "Fett bitte zwischen 15 und 45 % der Kalorien angeben."; return; }
+      }
+      S.macro = nm; saveSettings(); renderBody(true); renderHome();
+      $("mcmsg").textContent = nm ? "Gespeichert. Ringdiagramm, Tabelle und Kalender rechnen jetzt damit." : "Auf Standard zurückgesetzt.";
     }
     else if (a === "pesave") {
       var sx = $("pe-sex").value, yr = num($("pe-year").value), hg = num($("pe-height").value), ac = num($("pe-act").value), it = num($("pe-intake").value), age = new Date().getFullYear() - yr;
