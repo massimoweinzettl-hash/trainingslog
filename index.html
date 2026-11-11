@@ -225,6 +225,49 @@ button.danger { color: var(--bad) }
 .chart .vday.mon { opacity: 1; stroke-width: 1.5 }
 .chart .goalline { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 2 4; stroke-linecap: round }
 .chart text.glab { fill: var(--ink); font-weight: 700; font-size: 11px }
+.fbadge { display: inline-block; margin-left: 4px; padding: 2px 7px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: 600 11px var(--body); letter-spacing: .02em; vertical-align: middle; white-space: nowrap }
+.fbadge.sm { padding: 1px 6px; font-size: 10px }
+.focusblk { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent) }
+.focusnote { margin: 0; color: var(--warn) }
+.focusnote .ghost { padding: 2px 4px }
+.warm { font-size: 14px }
+.warm summary { cursor: pointer; color: var(--accent); font-weight: 600 }
+.warm ol { margin: 8px 0 4px; padding-left: 22px; display: flex; flex-direction: column; gap: 3px }
+.warm p { margin: 0 }
+.testbox { padding: 10px 12px; border-radius: 8px; background: var(--accent-soft) }
+.testbox p { margin: 0 }
+button.ghost.on { color: var(--accent); font-weight: 700 }
+.prnote { margin: 0; align-self: flex-start; padding: 4px 9px; border-radius: 6px; background: var(--good-soft); color: var(--good); font-size: 13px; font-weight: 600 }
+.prnote span::before { content: "🏆 " }
+.chg { display: inline-block; padding: 1px 7px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap }
+.chg.up { background: var(--good-soft); color: var(--good) }
+.chg.down { background: var(--warn-soft); color: var(--warn) }
+.chg.same { background: var(--sunken); color: var(--muted) }
+table.strength td, table.recs td { white-space: normal; vertical-align: middle }
+table.strength td:first-child, table.recs td:first-child { min-width: 120px }
+table.strength .exico, table.recs .exico, .testlist .exico, .focusrow .exico { vertical-align: -4px }
+.newrec { display: inline-block; padding: 0 6px; border-radius: 6px; background: var(--good-soft); color: var(--good); font-size: 11px; font-weight: 700 }
+.testlist { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line) }
+.testlist h3, .testlist p { margin: 0 }
+.vol { display: flex; flex-direction: column; gap: 8px }
+.vrow { display: grid; grid-template-columns: 80px minmax(0, 1fr) 2.6em; align-items: center; gap: 10px; font-size: 14px }
+.vbar { position: relative; height: 14px; border-radius: 7px; background: var(--sunken); overflow: hidden }
+.vzone { position: absolute; top: 0; bottom: 0; background: var(--good-soft); opacity: .9 }
+.vfill { position: absolute; left: 0; top: 3px; bottom: 3px; border-radius: 4px; background: var(--accent) }
+.vfill.low { background: var(--muted) } .vfill.high { background: var(--warn) }
+.vnum { text-align: right; font-weight: 600 }
+.rank { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font: 700 11px var(--body) }
+.stars { color: var(--dot); font-size: 12px; letter-spacing: 1px; white-space: nowrap }
+.starpick { display: flex; gap: 2px }
+.starpick button { border: 0; background: none; padding: 2px 4px; font-size: 26px; line-height: 1; color: var(--line) }
+.starpick button[aria-pressed="true"] { color: var(--dot) }
+.fswitch { align-self: flex-start }
+.fswitch[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) }
+.focusrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 4px }
+.focusrow p { margin: 0 0 3px }
+.spark { width: 120px; height: 32px; flex: none }
+.spark path { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round }
+@media (max-width: 400px) { .spark { width: 84px } }
 .advice { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 10px; background: var(--warn-soft) }
 .advice p { margin: 0 }
 .goal { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line) }
@@ -328,7 +371,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 28;
+  var APP_VERSION = 29;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -362,7 +405,11 @@ button, select, input { touch-action: manipulation }
     { v: 26, tab: "body", text: "Makros anpassen: Im Tab „Körper“ unter „Kalorien und Makros“ stellst du Eiweiß pro kg je Phase und den Fettanteil ein. Standard ist jetzt 25 % Fett statt bis zu 30 %, dadurch mehr Kohlenhydrate." },
     { v: 26, tab: "home", text: "Die Gewichtskurve zeigt über jedem Messpunkt das Gewicht. Die Legende am Ringdiagramm steht jetzt unter dem Ring und überlappt nicht mehr." },
     { v: 27, tab: "home", text: "Außerhalb des Korridors gibt der Reiter „Start“ jetzt einen Hinweis: Ein kleiner Rückstand lässt sich mit begrenztem Zusatz-Defizit aufholen, bei einem großen empfiehlt die App, den Korridor neu zu starten. Der Neustart lässt sich im Tab „Körper“ aufheben." },
-    { v: 28, tab: "train", text: "Der Kalender ist umgezogen: Im Reiter „Training“ schaltest du oben zwischen „Eintragen“ und „Kalender“ um. „Fortschritt“ zeigt jetzt nur noch die Entwicklung deiner Übungen." }
+    { v: 28, tab: "train", text: "Der Kalender ist umgezogen: Im Reiter „Training“ schaltest du oben zwischen „Eintragen“ und „Kalender“ um. „Fortschritt“ zeigt jetzt nur noch die Entwicklung deiner Übungen." },
+    { v: 29, tab: "prog", text: "Fortschritt hat drei neue Bereiche: Kraft seit Phasenstart (hältst du deine Kraft im Cut?), Sätze pro Muskelgruppe und Woche mit Zielbereich 10–20, und Rekorde mit monatlichem Krafttest." },
+    { v: 29, tab: "plan", text: "Unter „Alle Übungen“ bewertest du Übungen mit 1–5 Sternen und sortierst nach Bewertung. Übungen wie Kreuzheben markierst du dort als Schwerpunkt." },
+    { v: 29, tab: "train", text: "Schwerpunktübungen bekommen im Training Aufwärmsätze, einen Hinweis, wenn sie nicht am Anfang stehen, und einen Krafttest-Modus. Neue Rekorde werden beim Eintragen sofort angezeigt." },
+    { v: 29, tab: "home", text: "Im Reiter „Start“ siehst du deine Schwerpunktübungen mit 1RM, Veränderung in der Phase, Rekord und wann der nächste Krafttest fällig ist." }
   ];
   var TABNAME = { home: "Start", train: "Training", prog: "Fortschritt", body: "Körper", plan: "Plan", data: "Daten" };
   var fresh = [], hiddenAt = 0, hiddenDay = "";
@@ -464,8 +511,42 @@ button, select, input { touch-action: manipulation }
         if (!sets.length) return;
         var top = 0, e1 = 0, vol = 0;
         sets.forEach(function (s) { var w = s.w || 0; top = Math.max(top, w); e1 = Math.max(e1, s.r === 1 ? w : w * (1 + s.r / 30)); vol += w * s.r; });
-        out.push({ date: o.w.date, sets: sets, top: top, e1rm: e1, vol: vol });
+        out.push({ date: o.w.date, sets: sets, top: top, e1rm: e1, vol: vol, test: !!e.test });
       });
+    });
+    return out;
+  }
+  var e1of = function (s) { var w = s.w || 0; return s.r === 1 ? w : w * (1 + s.r / 30); };
+  /* Rekorde einer Übung: bestes geschätztes 1RM und schwerstes bewegtes Gewicht, jeweils mit Datum. */
+  function records(exId, before) {
+    var best = null, heavy = null;
+    sessions(exId).forEach(function (ss) {
+      if (before && ss.date >= before) return;
+      ss.sets.forEach(function (st) {
+        var v = e1of(st);
+        if (!best || v > best.v + 1e-9) best = { v: v, w: st.w || 0, r: st.r, date: ss.date };
+        if (!heavy || (st.w || 0) > heavy.w + 1e-9 || ((st.w || 0) === heavy.w && st.r > heavy.r)) heavy = { w: st.w || 0, r: st.r, date: ss.date };
+      });
+    });
+    return { best: best, heavy: heavy };
+  }
+  function lastTest(exId) { var t = null; sessions(exId).forEach(function (ss) { if (ss.test) t = ss; }); return t; }
+  /* Neuer Rekord beim Eintragen: bestes 1RM der heutigen Sätze gegen alle früheren Einheiten. */
+  function prText(ex) {
+    if (!draft) return "";
+    var sets = (draft.rows[ex.id] || []).map(function (r) { return { w: num(r.w) || 0, r: num(r.r) }; }).filter(function (x) { return x.r > 0 && x.w > 0; });
+    if (!sets.length) return "";
+    var prev = records(ex.id, S.date).best; if (!prev) return "";
+    var now = Math.max.apply(0, sets.map(e1of));
+    return now > prev.v + 0.05 ? "Neuer Rekord: geschätztes 1RM " + fmt(Math.round(now * 10) / 10) + " kg (bisher " + fmt(Math.round(prev.v * 10) / 10) + " kg)" : "";
+  }
+  /* Aufwärmsätze für eine Schwerpunktübung: Rampe auf das Arbeitsgewicht, gerundet auf den Schritt. */
+  function warmups(ex, work) {
+    if (!(work > 0)) return [];
+    var st = ex.step > 0 ? ex.step : 2.5, out = [], seen = {};
+    [[0.4, 8], [0.6, 5], [0.75, 3], [0.85, 1]].forEach(function (x) {
+      var w = Math.round(work * x[0] / st) * st;
+      if (w <= 0 || w >= work || seen[w]) return; seen[w] = 1; out.push({ w: w, r: x[1], pct: Math.round(x[0] * 100) });
     });
     return out;
   }
@@ -742,9 +823,10 @@ button, select, input { touch-action: manipulation }
     var d = day(); if (!d) { draft = null; return; }
     var stored = S.workouts[wid()], byEx = {};
     (stored && stored.entries || []).forEach(function (e) { byEx[e.exId] = e; });
-    draft = { rows: {}, extra: [] };
+    draft = { rows: {}, extra: [], test: {} };
     d.exercises.forEach(function (ex) {
       var adv = advise(ex, S.date), w = adv ? fmt(adv.w) : "", rows = [];
+      if (byEx[ex.id] && byEx[ex.id].test) draft.test[ex.id] = true;
       if (byEx[ex.id]) { rows = byEx[ex.id].sets.map(function (s) { return { w: s.w == null ? "" : fmt(s.w), r: String(s.r) }; }); w = rows.length ? rows[rows.length - 1].w : w; delete byEx[ex.id]; }
       while (rows.length < ex.sets) rows.push({ w: w, r: "" });
       draft.rows[ex.id] = rows;
@@ -760,7 +842,7 @@ button, select, input { touch-action: manipulation }
     d.exercises.forEach(function (ex) {
       var sets = (draft.rows[ex.id] || []).map(function (r) { return { w: num(r.w), r: num(r.r) }; }).filter(function (s) { return s.r > 0; })
         .map(function (s) { return { w: s.w == null ? 0 : s.w, r: Math.round(s.r) }; });
-      if (sets.length) entries.push({ exId: ex.id, name: ex.name, sets: sets });
+      if (sets.length) { var en = { exId: ex.id, name: ex.name, sets: sets }; if (draft.test && draft.test[ex.id]) en.test = true; entries.push(en); }
     });
     entries = entries.concat(draft.extra);
     var id = wid();
@@ -789,9 +871,23 @@ button, select, input { touch-action: manipulation }
       S.plan.days.map(function (x) { return '<button data-act="day" data-id="' + x.id + '" aria-pressed="' + (x.id === d.id) + '">' + esc(x.name) + "</button>"; }).join("") + "</div>" +
       (S.workouts[wid()] ? '<p class="small muted">Für diesen Tag ist schon ein Eintrag gespeichert. Änderungen überschreiben ihn.</p><div class="row"><label style="flex:0 1 170px">Eintrag verschieben auf<input type="date" id="mvdate" value="' + S.date + '" max="' + today() + '"></label><button data-act="move">Verschieben</button><span class="small muted" id="mvmsg"></span></div>' : "") + "</div>";
     if (!d.exercises.length) h += '<p class="empty">Dieser Tag hat noch keine Übungen. Füge sie im Tab „Plan“ hinzu.</p>';
-    d.exercises.forEach(function (ex) {
-      var last = lastBefore(ex.id, S.date), adv = advise(ex, S.date), rows = draft.rows[ex.id] || [];
-      h += '<div class="block"><div class="exhead"><span class="extitle">' + exIcon(ex, 30) + "<h3>" + esc(ex.name) + '</h3></span><span class="small muted">' + ex.sets + " × " + ex.repMin + "–" + ex.repMax + " Wdh.</span></div>" +
+    d.exercises.forEach(function (ex, xi) {
+      var last = lastBefore(ex.id, S.date), adv = advise(ex, S.date), rows = draft.rows[ex.id] || [], isTest = !!(draft.test && draft.test[ex.id]);
+      var fh = "";
+      if (ex.focus) {
+        /* Schwerpunkt: Hinweis auf die Position, Aufwärmsätze zum heutigen Arbeitsgewicht, Krafttest. */
+        var before = d.exercises.slice(0, xi).filter(function (x) { return !x.focus; }).length;
+        if (before) fh += '<p class="small focusnote">Steht an Position ' + (xi + 1) + '. Am Anfang des Trainings bist du am frischesten. <button class="ghost" data-act="focusfront" data-id="' + ex.id + '">Nach vorn</button></p>';
+        var work = num((rows[0] || {}).w) || (adv ? adv.w : 0), wu = warmups(ex, work);
+        if (isTest) {
+          var rec = records(ex.id, S.date).best, tw = rec ? Math.round(rec.v * 0.85 / (ex.step || 2.5)) * (ex.step || 2.5) : 0;
+          fh += '<div class="testbox"><p class="small"><b>Krafttest heute.</b> ' + (tw ? "Nach dem Aufwärmen ein Satz mit etwa <b>" + fmt(tw) + " kg</b> (85 % deines besten 1RM)" : "Nach dem Aufwärmen ein schwerer Satz") + ", so viele saubere Wiederholungen wie möglich, Schluss eine Wiederholung vor dem Versagen. Trag ihn als Satz 1 ein, das geschätzte 1RM daraus ist dein Testergebnis.</p></div>";
+          wu = warmups(ex, tw || work);
+        }
+        if (wu.length) fh += '<details class="warm"><summary>Aufwärmsätze (' + wu.length + ")</summary><ol>" + wu.map(function (x) { return "<li><b>" + fmt(x.w) + " kg</b> × " + x.r + ' <span class="muted">(' + x.pct + " %)</span></li>"; }).join("") + '</ol><p class="small muted">Nicht eintragen, nur zur Orientierung. Kurze Pausen, keine Ermüdung.</p></details>';
+        fh += '<button class="ghost' + (isTest ? " on" : "") + '" style="align-self:flex-start" data-act="testtoggle" data-id="' + ex.id + '" aria-pressed="' + isTest + '">' + (isTest ? "Krafttest: aktiv" : "Heute als Krafttest markieren") + "</button>";
+      }
+      h += '<div class="block' + (ex.focus ? " focusblk" : "") + '"><div class="exhead"><span class="extitle">' + exIcon(ex, 30) + "<h3>" + esc(ex.name) + "</h3>" + (ex.focus ? '<span class="fbadge">Schwerpunkt</span>' : "") + '</span><span class="small muted">' + ex.sets + " × " + ex.repMin + "–" + ex.repMax + " Wdh.</span></div>" + fh +
         '<p class="small muted">' + (last ? "Zuletzt (" + dfmt(last.date) + "): " + setsText(last.sets) : "Noch kein früherer Eintrag. Ab dem zweiten Mal schlägt der Tracker hier ein Gewicht vor.") + "</p>" +
         (adv ? '<span class="hint ' + adv.kind + '">Vorschlag heute: ' + adv.text + "</span>" : "") +
         '<div class="sets"><span class="hd">Satz</span><span class="hd">Gewicht (kg)</span><span class="hd">Wdh.</span>' +
@@ -799,7 +895,7 @@ button, select, input { touch-action: manipulation }
           var ph = last && last.sets[i] ? String(last.sets[i].r) : "";
           return '<span class="n">' + (i + 1) + '</span><input id="w-' + ex.id + "-" + i + '" inputmode="decimal" autocomplete="off" aria-label="Gewicht Satz ' + (i + 1) + '" data-ex="' + ex.id + '" data-i="' + i + '" data-k="w" value="' + esc(r.w) + '">' +
             '<input id="r-' + ex.id + "-" + i + '" inputmode="numeric" autocomplete="off" aria-label="Wiederholungen Satz ' + (i + 1) + '" placeholder="' + ph + '" data-ex="' + ex.id + '" data-i="' + i + '" data-k="r" value="' + esc(r.r) + '">';
-        }).join("") + '</div><button class="ghost" style="align-self:flex-start" data-act="addset" data-id="' + ex.id + '">+ Satz</button><p class="small" id="nx-' + ex.id + '"' + (nextText(ex) ? "" : " hidden") + "><b>" + esc(nextText(ex)) + "</b></p></div>";
+        }).join("") + '</div><button class="ghost" style="align-self:flex-start" data-act="addset" data-id="' + ex.id + '">+ Satz</button><p class="small" id="nx-' + ex.id + '"' + (nextText(ex) ? "" : " hidden") + "><b>" + esc(nextText(ex)) + '</b></p><p class="prnote" id="pr-' + ex.id + '"' + (prText(ex) ? "" : " hidden") + "><span>" + esc(prText(ex)) + "</span></p></div>";
     });
     h += '<p class="small muted">Ein Satz zählt, sobald Wiederholungen eingetragen sind. Gespeichert wird automatisch.</p>';
     el.innerHTML = h;
@@ -931,7 +1027,78 @@ button, select, input { touch-action: manipulation }
         '<p class="small muted">Geschätztes 1RM nach Epley: Gewicht × (1 + Wdh. / 30), bester Satz der Einheit. Volumen: Gewicht × Wdh. über alle Sätze.</p>';
     }
     h += "</div>";
+    h += strengthBlock() + volumeBlock() + recordBlock();
     el.innerHTML = h;
+  }
+  function exById() {
+    var m = {}; if (!S.plan) return m;
+    allExercises().forEach(function (x) { m[x.ex.id] = x.ex; });
+    return m;
+  }
+  function exOrder(ids, m) {
+    return ids.sort(function (a, b) { var fa = m[a] && m[a].focus ? 1 : 0, fb = m[b] && m[b].focus ? 1 : 0; return fb - fa || (m[a] ? m[a].name : a).localeCompare(m[b] ? m[b].name : b, "de"); });
+  }
+  /* Kraft seit Phasenstart: geschätztes 1RM der ersten gegen die letzte Einheit im Zeitraum. */
+  function strengthBlock() {
+    var t = today(), ph = phaseAt(t), from = ph ? ph.start : addDays(t, -56), m = exById(), rows = [];
+    exOrder(Object.keys(m), m).forEach(function (id) {
+      var ss = sessions(id).filter(function (x) { return x.date >= from; });
+      if (ss.length < 2) return;
+      var a = ss[0].e1rm, b = ss[ss.length - 1].e1rm, pct = a > 0 ? (b - a) / a * 100 : 0;
+      rows.push({ ex: m[id], a: a, b: b, pct: pct, n: ss.length });
+    });
+    var h = '<div class="block"><h2>Kraft ' + (ph ? "seit Beginn " + (ph.type === "cut" ? "des Cuts" : ph.type === "bulk" ? "des Aufbaus" : "der Phase") : "in den letzten 8 Wochen") + "</h2>";
+    if (!rows.length) return h + '<p class="small muted">Sobald eine Übung in diesem Zeitraum mindestens zwei Einheiten hat, siehst du hier, ob deine Kraft steigt, hält oder sinkt.</p></div>';
+    var up = 0, down = 0;
+    h += '<div class="tablewrap"><table class="strength"><thead><tr><th>Übung</th><th class="r">1RM gesch.</th><th class="r">Veränderung</th></tr></thead><tbody>' + rows.map(function (r) {
+      var cls = r.pct >= 2 ? "up" : r.pct <= -5 ? "down" : "same"; if (cls === "up") up++; if (cls === "down") down++;
+      return "<tr><td>" + exIcon(r.ex, 18) + " " + esc(r.ex.name) + (r.ex.focus ? ' <span class="fbadge sm">Schwerpunkt</span>' : "") + '</td><td class="r">' + fmt(Math.round(r.a)) + " → " + fmt(Math.round(r.b)) + ' kg</td><td class="r"><span class="chg ' + cls + '">' + (cls === "up" ? "↑" : cls === "down" ? "↓" : "→") + " " + sign(Math.round(r.pct * 10) / 10) + " %</span></td></tr>";
+    }).join("") + "</tbody></table></div>";
+    var downN = rows.filter(function (r) { return r.pct <= -5; }).map(function (r) { return r.ex.name; });
+    var msg = ph && ph.type === "cut" ? (down >= Math.max(2, Math.ceil(rows.length / 3)) ? "Bei mehreren Übungen sinkt die Kraft deutlich. Das kann ein Zeichen sein, dass das Defizit zu groß ist oder die Erholung fehlt." : down ? "Insgesamt hältst du deine Kraft, bei " + downN.join(", ") + " sinkt sie aber deutlich. Einzelne Ausreißer sind normal, beobachte es über die nächsten Einheiten." : "Im Cut ist es ein Erfolg, die Kraft zu halten. Das spricht dafür, dass du Muskeln bewahrst.") : (up >= rows.length / 2 ? "Die Mehrheit deiner Übungen wird stärker." : "Viele Übungen stehen. Prüfe dort Wiederholungsbereich, Schlaf und Kalorien.");
+    return h + '<p class="small">' + msg + '</p><p class="small muted">Vergleich des geschätzten 1RM aus der ersten und der letzten Einheit im Zeitraum. Ab +2 % stärker, ab −5 % schwächer, dazwischen stabil. Einzelne Tagesformen schwanken.</p></div>';
+  }
+  /* Sätze pro Muskelgruppe und Woche, Zielbereich 10–20 Arbeitssätze. */
+  function volumeBlock() {
+    var t = today(), mon = addDays(t, -((dateOf(t).getDay() + 6) % 7)), mode = S.volMode || "last", m = exById(), cnt = {}, weeks = 1, from, to;
+    if (mode === "this") { from = mon; to = addDays(mon, 6); }
+    else if (mode === "avg") { from = addDays(mon, -28); to = addDays(mon, -1); weeks = 4; }
+    else { from = addDays(mon, -7); to = addDays(mon, -1); }
+    sortedWorkouts().forEach(function (o) {
+      if (o.w.date < from || o.w.date > to) return;
+      (o.w.entries || []).forEach(function (e) {
+        var g = groupOf(m[e.exId] || { name: e.name }) || "Sonstige";
+        cnt[g] = (cnt[g] || 0) + (e.sets || []).filter(function (x) { return x.r > 0; }).length;
+      });
+    });
+    var groups = CGROUPS.concat(cnt.Sonstige ? ["Sonstige"] : []), MAX = 24;
+    var h = '<div class="block"><h2>Sätze pro Muskelgruppe</h2><div class="chips" role="group" aria-label="Zeitraum">' +
+      [["this", "Diese Woche"], ["last", "Letzte Woche"], ["avg", "Ø 4 Wochen"]].map(function (x) { return '<button data-act="volmode" data-id="' + x[0] + '" aria-pressed="' + (mode === x[0]) + '">' + x[1] + "</button>"; }).join("") + "</div>" +
+      '<div class="vol">' + groups.map(function (g) {
+        var v = (cnt[g] || 0) / weeks, w = Math.min(100, v / MAX * 100), st = v < 10 ? "low" : v > 20 ? "high" : "ok";
+        return '<div class="vrow"><span class="vname">' + g + '</span><span class="vbar"><span class="vzone" style="left:' + (10 / MAX * 100) + "%;width:" + (10 / MAX * 100) + '%"></span><span class="vfill ' + st + '" style="width:' + w.toFixed(1) + '%"></span></span><span class="vnum">' + fmt(Math.round(v * 10) / 10) + "</span></div>";
+      }).join("") + "</div>" +
+      '<p class="small muted">Gezählt werden alle eingetragenen Sätze, jede Übung zählt für ihre Muskelgruppe. Das helle Feld markiert 10–20 Sätze pro Woche, ein üblicher Bereich für Muskelaufbau. ' + (mode === "this" ? "Die laufende Woche ist noch nicht vollständig." : "") + "</p></div>";
+    return h;
+  }
+  /* Rekorde und Krafttest (für Schwerpunktübungen einmal im Monat). */
+  function recordBlock() {
+    var m = exById(), ids = exOrder(Object.keys(m).filter(function (id) { return sessions(id).length; }), m), t = today();
+    var h = '<div class="block"><h2>Rekorde</h2>';
+    if (!ids.length) return h + '<p class="small muted">Rekorde erscheinen, sobald du Sätze eingetragen hast.</p></div>';
+    h += '<div class="tablewrap"><table class="recs"><thead><tr><th>Übung</th><th class="r">Bestes 1RM gesch.</th></tr></thead><tbody>' + ids.map(function (id) {
+      var r = records(id), ex = m[id], fresh = r.best && r.best.date >= addDays(t, -7);
+      return "<tr><td>" + exIcon(ex, 18) + " " + esc(ex.name) + (fresh ? ' <span class="newrec">neu</span>' : "") + '</td><td class="r"><b>' + fmt(Math.round(r.best.v * 10) / 10) + ' kg</b><br><span class="small muted">' + dfmt(r.best.date) + " · " + fmt(r.best.w) + " × " + r.best.r + '</span>' + (r.heavy.w > r.best.w ? '<br><span class="small muted">schwerster Satz ' + fmt(r.heavy.w) + " × " + r.heavy.r + " (" + dfmt(r.heavy.date) + ")</span>" : "") + "</td></tr>";
+    }).join("") + "</tbody></table></div>";
+    var focus = ids.filter(function (id) { return m[id].focus; });
+    if (focus.length) h += '<div class="testlist"><h3>Krafttest</h3>' + focus.map(function (id) { return testLine(m[id]); }).join("") + '<p class="small muted">Einmal im Monat für deine Schwerpunktübungen: Im Training „Heute als Krafttest markieren“ tippen, nach dem Aufwärmen ein Satz mit etwa 85 % des besten 1RM bis eine Wiederholung vor dem Versagen.</p></div>';
+    else h += '<p class="small muted">Für einen monatlichen Krafttest markiere deine wichtigsten Übungen im Reiter „Plan“ unter „Alle Übungen“ als Schwerpunkt.</p>';
+    return h + "</div>";
+  }
+  function testLine(ex) {
+    var lt = lastTest(ex.id), t = today(), due = lt ? addDays(lt.date, 28) : null;
+    var st = !lt ? '<span class="chg same">noch kein Test</span>' : due <= t ? '<span class="chg down">fällig seit ' + dfmt(due) + "</span>" : '<span class="chg up">nächster ab ' + dfmt(due) + "</span>";
+    return '<p class="small">' + exIcon(ex, 18) + " <b>" + esc(ex.name) + "</b> " + st + (lt ? '<br><span class="muted">Letzter Test ' + dfmt(lt.date, 1) + ": 1RM gesch. " + fmt(Math.round(lt.e1rm * 10) / 10) + " kg</span>" : "") + "</p>";
   }
 
   /* ---------- Körper ---------- */
@@ -1056,7 +1223,7 @@ button, select, input { touch-action: manipulation }
     lib.forEach(function (e, i) { idx[e.id] = i; });
     S.plan.days.forEach(function (d) { d.exercises.forEach(function (e) {
       var c = { id: e.id, name: e.name, sets: e.sets, repMin: e.repMin, repMax: e.repMax, step: e.step };
-      if (e.grp) c.grp = e.grp;
+      XF.forEach(function (k) { if (e[k] != null) c[k] = e[k]; });
       if (idx[e.id] == null) { idx[e.id] = lib.length; lib.push(c); } else lib[idx[e.id]] = c;
     }); });
   }
@@ -1067,11 +1234,11 @@ button, select, input { touch-action: manipulation }
   }
   function setExercise(n) {
     var c = { id: n.id, name: n.name, sets: n.sets, repMin: n.repMin, repMax: n.repMax, step: n.step }, lib = S.plan.lib || (S.plan.lib = []), i = -1;
-    if (n.grp) c.grp = n.grp;
+    XF.forEach(function (k) { if (n[k] != null) c[k] = n[k]; });
     S.plan.days.forEach(function (d) { d.exercises.forEach(function (x) {
       if (x.id !== c.id) return;
       x.name = c.name; x.sets = c.sets; x.repMin = c.repMin; x.repMax = c.repMax; x.step = c.step;
-      if (c.grp) x.grp = c.grp; else delete x.grp;
+      XF.forEach(function (k) { if (c[k] != null) x[k] = c[k]; else delete x[k]; });
     }); });
     lib.forEach(function (x, k) { if (x.id === c.id) i = k; });
     if (i < 0) lib.push(c); else lib[i] = c;
@@ -1085,9 +1252,13 @@ button, select, input { touch-action: manipulation }
     sortedWorkouts().forEach(function (o) { (o.w.entries || []).forEach(function (e) { if (!m[e.exId]) add(defaultsFor(e.exId, e.name)); }); });
     return list.sort(function (a, b) { return a.ex.name.localeCompare(b.ex.name, "de"); });
   }
+  /* Zusatzfelder einer Übung: Muskelgruppe (grp), Bewertung 1–5 Sterne (fav), Schwerpunktübung (focus). */
+  var XF = ["grp", "fav", "focus"];
   function exClean(e) {
     var o = { id: e.id, name: txt80(e.name), sets: e.sets, repMin: e.repMin, repMax: e.repMax, step: e.step };
     if (CGROUPS.indexOf(e.grp) >= 0) o.grp = e.grp;
+    if (isN(e.fav) && e.fav >= 1 && e.fav <= 5) o.fav = Math.round(e.fav);
+    if (e.focus === true) o.focus = true;
     return o;
   }
   /* ---------- Symbole ----------
@@ -1125,6 +1296,9 @@ button, select, input { touch-action: manipulation }
     var q = norm(S.exFilter), own = allExercises(), taken = {};
     own.forEach(function (x) { taken[norm(x.ex.name)] = 1; });
     var items = own.filter(function (x) { return !q || norm(x.ex.name).indexOf(q) >= 0; });
+    var byFav = S.exSort === "fav";
+    if (byFav) items.sort(function (a, b) { return (b.ex.fav || 0) - (a.ex.fav || 0) || a.ex.name.localeCompare(b.ex.name, "de"); });
+    var rank = 0;
     /* Katalog-Übungen, die noch nicht zu den eigenen gehören: bei einer Suche direkt, sonst auf Knopfdruck. */
     var cat = CATALOG.map(function (c, i) { return { c: c, i: i }; }).filter(function (x) { return !taken[norm(x.c[0])] && (!q || norm(x.c[0]).indexOf(q) >= 0 || norm(x.c[1]) === q); });
     var dayChips = function (xid, own2) {
@@ -1135,11 +1309,15 @@ button, select, input { touch-action: manipulation }
     };
     var h = items.map(function (x) {
       var e = x.ex, open = S.exOpen === e.id;
-      var head = '<button class="dayhead exhead2" data-act="exopen" data-id="' + e.id + '" aria-expanded="' + open + '"><span class="chev" aria-hidden="true">›</span>' + exIcon(e, 22) + '<span class="dayname">' + esc(e.name) + '</span><span class="cnt">' + exSummary(e) + "</span></button>";
+      var rk = byFav && e.fav ? ++rank : 0;
+      var head = '<button class="dayhead exhead2" data-act="exopen" data-id="' + e.id + '" aria-expanded="' + open + '"><span class="chev" aria-hidden="true">›</span>' + (rk ? '<span class="rank">' + rk + "</span>" : "") + exIcon(e, 22) + '<span class="dayname">' + esc(e.name) + (e.focus ? ' <span class="fbadge sm">Schwerpunkt</span>' : "") + "</span>" +
+        (e.fav ? '<span class="stars" aria-label="' + e.fav + ' von 5 Sternen">' + "★★★★★".slice(0, e.fav) + "</span>" : "") + '<span class="cnt">' + exSummary(e) + "</span></button>";
       if (!open) return '<div class="exrow">' + head + "</div>";
       var f = function (k, l, mode) { return "<label>" + l + '<input id="lx-' + e.id + "-" + k + '" inputmode="' + mode + '" data-lid="' + e.id + '" data-lf="' + k + '" value="' + fmt(e[k]) + '"></label>'; };
       return '<div class="exrow">' + head + '<div class="planex"><label class="name">Name<input id="lx-' + e.id + '-name" data-lid="' + e.id + '" data-lf="name" value="' + esc(e.name) + '"></label>' +
         f("sets", "Sätze", "numeric") + f("repMin", "Wdh. von", "numeric") + f("repMax", "Wdh. bis", "numeric") + f("step", "Schritt kg", "decimal") + "<span></span></div>" +
+        '<div class="lab">Bewertung<div class="starpick" role="group" aria-label="Bewertung">' + [1, 2, 3, 4, 5].map(function (n) { return '<button data-act="exfav" data-id="' + e.id + '" data-n="' + n + '" aria-label="' + n + ' Sterne" aria-pressed="' + ((e.fav || 0) >= n) + '">★</button>'; }).join("") + "</div></div>" +
+        '<div class="lab">Schwerpunkt<button class="fswitch" data-act="exfocus" data-id="' + e.id + '" aria-pressed="' + !!e.focus + '">' + (e.focus ? "Schwerpunktübung: an" : "Als Schwerpunktübung markieren") + '</button><span>Für Übungen, in denen du vor allem stärker werden willst: Aufwärmsätze im Training, Krafttest einmal im Monat, eigene Auswertung.</span></div>' +
         '<label>Muskelgruppe (bestimmt das Symbol)<select id="lx-' + e.id + '-grp" data-lid="' + e.id + '" data-lf="grp"><option value="">Automatisch (' + (groupOf({ name: e.name }) || "nicht erkannt") + ")</option>" +
         CGROUPS.map(function (g) { return "<option" + (e.grp === g ? " selected" : "") + ">" + g + "</option>"; }).join("") + "</select></label>" +
         dayChips(e.id, true) +
@@ -1173,7 +1351,8 @@ button, select, input { touch-action: manipulation }
     var opt = function (v, l, dis) { return '<option value="' + esc(v) + '"' + (dis ? " disabled" : "") + ">" + esc(l) + "</option>"; };
     var own = planExercises(), old = oldExercises();
     var h = '<option value="">Übung auswählen …</option>';
-    if (own.length) h += '<optgroup label="Aus deinem Plan">' + own.map(function (e) { return opt("id:" + e.id, e.name + (here[e.id] ? " (schon an diesem Tag)" : ""), here[e.id]); }).join("") + "</optgroup>";
+    own = own.slice().sort(function (a, b) { return (b.fav || 0) - (a.fav || 0) || a.name.localeCompare(b.name, "de"); });
+    if (own.length) h += '<optgroup label="Aus deinem Plan">' + own.map(function (e) { return opt("id:" + e.id, e.name + (e.fav ? " " + "★★★★★".slice(0, e.fav) : "") + (here[e.id] ? " (schon an diesem Tag)" : ""), here[e.id]); }).join("") + "</optgroup>";
     if (old.length) h += '<optgroup label="Weitere eigene Übungen">' + old.map(function (e) { return opt("old:" + e.id, e.name); }).join("") + "</optgroup>";
     CGROUPS.forEach(function (g) {
       var items = CATALOG.map(function (c, i) { return [c, i]; }).filter(function (x) { return x[0][1] === g && !taken[norm(x[0][0])]; });
@@ -1220,6 +1399,7 @@ button, select, input { touch-action: manipulation }
     var h = '<div class="chips" role="group" aria-label="Ansicht"><button data-act="planview" data-id="days" aria-pressed="' + (view === "days") + '">Trainingstage</button><button data-act="planview" data-id="ex" aria-pressed="' + (view === "ex") + '">Alle Übungen</button></div>';
     if (view === "ex") {
       el.innerHTML = h + '<p class="small muted">Hier änderst du Sätze, Wiederholungsbereich und Schritt jeder Übung an einer Stelle, egal in welchem Trainingstag sie steht.</p>' +
+        '<div class="chips" role="group" aria-label="Sortierung"><button data-act="exsort" data-id="az" aria-pressed="' + (S.exSort !== "fav") + '">A–Z</button><button data-act="exsort" data-id="fav" aria-pressed="' + (S.exSort === "fav") + '">Nach Bewertung</button></div>' +
         '<label for="exfilter">Übung suchen</label><div class="searchbox"><input id="exfilter" type="search" autocomplete="off" placeholder="z. B. Seitheben" value="' + esc(S.exFilter || "") + '">' +
         '<button class="clearbtn" data-act="exclear" aria-label="Suche löschen"' + (S.exFilter ? "" : " hidden") + '>✕</button></div><div class="block" id="exlist">' + exListHtml() + "</div>";
       return;
@@ -1300,7 +1480,9 @@ button, select, input { touch-action: manipulation }
         if (!DRE.test(d.date) || !IRE.test(d.dayId) || k !== "w_" + d.date + "_" + d.dayId) throw 0;
         return { kind: "workout", date: d.date, dayId: d.dayId, dayName: txt80(d.dayName), updated: String(d.updated || "").slice(0, 40), entries: d.entries.map(function (e) {
           if (!IRE.test(e.exId)) throw 0;
-          return { exId: e.exId, name: txt80(e.name), sets: e.sets.map(function (s) { if (!isN(s.w) || !isN(s.r)) throw 0; return { w: s.w, r: s.r }; }) };
+          var ce = { exId: e.exId, name: txt80(e.name), sets: e.sets.map(function (s) { if (!isN(s.w) || !isN(s.r)) throw 0; return { w: s.w, r: s.r }; }) };
+          if (e.test === true) ce.test = true;
+          return ce;
         }) };
       }
       if (k.indexOf("b_") === 0) {
@@ -1607,6 +1789,19 @@ button, select, input { touch-action: manipulation }
     }
     h += "</div>";
     /* Gewicht */
+    var fm = exById(), fids = Object.keys(fm).filter(function (id) { return fm[id].focus; });
+    if (fids.length) {
+      h += '<div class="block"><p class="eyebrow">Schwerpunkt</p>' + fids.map(function (id) {
+        var ex = fm[id], ss = sessions(id), rec = records(id).best, lt = lastTest(id), due = lt ? addDays(lt.date, 28) : null;
+        if (!ss.length) return "<p>" + exIcon(ex, 20) + " <b>" + esc(ex.name) + '</b> <span class="small muted">noch keine Einträge</span></p>';
+        var from = ph ? ph.start : addDays(t, -56), win = ss.filter(function (x) { return x.date >= from; }), chg = win.length >= 2 ? (win[win.length - 1].e1rm - win[0].e1rm) / win[0].e1rm * 100 : null;
+        var pts = ss.slice(-12), mx = Math.max.apply(0, pts.map(function (x) { return x.e1rm; })), mn = Math.min.apply(0, pts.map(function (x) { return x.e1rm; })), sp = "";
+        if (pts.length > 1) sp = '<svg class="spark" viewBox="0 0 120 32" aria-hidden="true"><path d="' + pts.map(function (x, i) { return (i ? "L" : "M") + (i / (pts.length - 1) * 116 + 2).toFixed(1) + " " + (mx > mn ? 28 - (x.e1rm - mn) / (mx - mn) * 24 : 16).toFixed(1); }).join(" ") + '"/></svg>';
+        return '<div class="focusrow"><div><p>' + exIcon(ex, 20) + " <b>" + esc(ex.name) + "</b></p>" +
+          '<p class="small">1RM gesch. <b>' + fmt(Math.round(ss[ss.length - 1].e1rm * 10) / 10) + " kg</b>" + (chg != null ? ' <span class="chg ' + (chg >= 2 ? "up" : chg <= -5 ? "down" : "same") + '">' + sign(Math.round(chg * 10) / 10) + " % " + (ph ? "in der Phase" : "in 8 Wochen") + "</span>" : "") + "</p>" +
+          '<p class="small muted">Rekord ' + fmt(Math.round(rec.v * 10) / 10) + " kg (" + dfmt(rec.date) + ") · " + (!lt ? "noch kein Krafttest" : due <= t ? "<b>Krafttest fällig</b>" : "nächster Test ab " + dfmt(due)) + "</p></div>" + sp + "</div>";
+      }).join("") + "</div>";
+    }
     h += '<div class="block"><p class="eyebrow">Gewicht' + (ph ? " im " + PH[ph.type] : "") + "</p>" + weightCorridor(list).html + "</div>";
     el.innerHTML = h;
     /* Gewichtskurve so scrollen, dass heute rechts der Mitte steht und die Vorschau sichtbar bleibt. */
@@ -1778,6 +1973,29 @@ button, select, input { touch-action: manipulation }
       S.exOpen = S.exOpen === id ? null : id; $("exlist").innerHTML = exListHtml();
       var eb = document.querySelector('[data-act="exopen"][data-id="' + id + '"]'); if (eb) eb.focus();
     }
+    else if (a === "exfav" || a === "exfocus") {
+      var fx = allExercises().filter(function (x) { return x.ex.id === id; })[0]; if (!fx) return;
+      var fe = clone(fx.ex);
+      if (a === "exfav") { var n = +b.dataset.n; if (fe.fav === n) delete fe.fav; else fe.fav = n; }
+      else { if (fe.focus) delete fe.focus; else fe.focus = true; }
+      setExercise(fe); planChanged(true); $("exlist").innerHTML = exListHtml();
+      var fb = document.querySelector('[data-act="' + a + '"][data-id="' + id + '"]' + (a === "exfav" ? '[data-n="' + b.dataset.n + '"]' : "")); if (fb) fb.focus();
+    }
+    else if (a === "exsort") { S.exSort = id; renderPlan(); }
+    else if (a === "volmode") { S.volMode = id; renderProgress(); }
+    else if (a === "testtoggle") {
+      draft.test = draft.test || {};
+      if (draft.test[id]) delete draft.test[id]; else draft.test[id] = true;
+      dirty = true; saveDraft(); renderTrain();
+    }
+    else if (a === "focusfront") {
+      var fd = day(); if (!fd) return;
+      var fi = -1; fd.exercises.forEach(function (x, k) { if (x.id === id) fi = k; });
+      if (fi < 0) return;
+      var fx2 = fd.exercises.splice(fi, 1)[0], at = 0;
+      while (at < fd.exercises.length && fd.exercises[at].focus) at++;
+      fd.exercises.splice(at, 0, fx2); saveDraft(); planChanged(true); renderTrain();
+    }
     else if (a === "excat") { S.exCat = true; $("exlist").innerHTML = exListHtml(); }
     else if (a === "exday") {
       /* Übung in der Übungsliste einem Trainingstag zuordnen oder daraus entfernen; Katalog-Übungen werden dabei angelegt. */
@@ -1789,7 +2007,7 @@ button, select, input { touch-action: manipulation }
       } else {
         var curx = allExercises().filter(function (x) { return x.ex.id === xid; })[0]; if (!curx) return;
         exo = { id: curx.ex.id, name: curx.ex.name, sets: curx.ex.sets, repMin: curx.ex.repMin, repMax: curx.ex.repMax, step: curx.ex.step };
-        if (curx.ex.grp) exo.grp = curx.ex.grp;
+        XF.forEach(function (k) { if (curx.ex[k] != null) exo[k] = curx.ex[k]; });
       }
       var at = -1; dayO.exercises.forEach(function (e, i2) { if (e.id === exo.id) at = i2; });
       if (at >= 0) dayO.exercises.splice(at, 1); else dayO.exercises.push(exo);
@@ -1828,6 +2046,7 @@ button, select, input { touch-action: manipulation }
       draft.rows[ds.ex][+ds.i][ds.k] = t.value; dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 900);
       var exo = day() && day().exercises.filter(function (x) { return x.id === ds.ex; })[0], nxe = $("nx-" + ds.ex);
       if (exo && nxe) { var nt = nextText(exo); nxe.hidden = !nt; nxe.firstChild.textContent = nt; }
+      var pre = $("pr-" + ds.ex); if (exo && pre) { var pt = prText(exo); pre.hidden = !pt; pre.firstChild.textContent = pt; }
     }
     else if (ds.lf && S.plan) {
       /* Übungsliste: Änderung gilt für die Übung in allen Trainingstagen. */
