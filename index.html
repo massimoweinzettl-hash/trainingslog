@@ -108,6 +108,7 @@ button:disabled { opacity: .4; cursor: default }
 .catchip { display: inline-flex; align-items: center; gap: 6px }
 .catchip[aria-pressed="false"] { opacity: .55; text-decoration: line-through }
 .catedit > .primary { align-self: flex-start; margin-top: 12px }
+.plategrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px }
 .dupwarn { grid-column: 1 / -1; font-size: 13px; color: var(--warn) }
 .exmanage { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--line) }
 .exmanage h4 { margin: 0; font-size: 14px }
@@ -394,7 +395,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 36;
+  var APP_VERSION = 37;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -440,7 +441,8 @@ button, select, input { touch-action: manipulation }
     { v: 34, tab: "plan", text: "Die Bewertung hat jetzt drei Stufen: Okay, Mittel und Sehr gut. Bisherige Bewertungen wurden umgerechnet (4–5 Sterne → Sehr gut, 3 → Mittel, 1–2 → Okay)." },
     { v: 35, tab: "plan", text: "Trainingstage aufgeräumt: Nummer, Bild und Name der Übung stehen jetzt in einer Zeile, wie unter „Alle Übungen“. Den Namen änderst du unter „Alle Übungen“." },
     { v: 35, tab: "plan", text: "Neue Bilder für Übungen im Sitzen und Stehen, zum Beispiel Beinbeuger sitzend und stehend, Wadenheben sitzend, Scottcurls, Schulterpresse, Seal Row und Nordic Curls." },
-    { v: 36, tab: "train", text: "Aufwärmsätze gibt es jetzt bei jeder Übung: 4 bei der ersten Übung des Tages, danach 2–3. Bei Langhantelübungen sind sie so gewählt, dass du nur Scheiben nachlegst, mit Angabe, was pro Seite dazukommt." }
+    { v: 36, tab: "train", text: "Aufwärmsätze gibt es jetzt bei jeder Übung: 4 bei der ersten Übung des Tages, danach 2–3. Bei Langhantelübungen sind sie so gewählt, dass du nur Scheiben nachlegst, mit Angabe, was pro Seite dazukommt." },
+    { v: 37, tab: "plan", text: "Neu im Plan unter den Trainingstagen: „Scheiben im Studio“. Trag ein, wie viele Scheibenpaare es je Größe gibt, dann plant die App die Aufwärmsätze nur mit diesen Scheiben und mit möglichst wenigen verschiedenen Größen." }
   ];
   var TABNAME = { home: "Start", train: "Training", prog: "Fortschritt", body: "Körper", plan: "Plan", data: "Daten" };
   var fresh = [], hiddenAt = 0, hiddenDay = "";
@@ -451,19 +453,19 @@ button, select, input { touch-action: manipulation }
   function setSync(t, err) { var el = $("sync"); el.textContent = t; el.classList.toggle("err", !!err); }
   function notice(t) { var el = $("notice"); el.hidden = !t; el.textContent = t || ""; }
   function applyDocs(list) {
-    var w = {}, b = {}, plan = null, ph = [], pe = null, sc = {}, mo = null, hc = [];
+    var w = {}, b = {}, plan = null, ph = [], pe = null, sc = {}, mo = null, hc = [], pl = null;
     list.forEach(function (d) {
       if (d.id === "plan") plan = d.data;
-      else if (d.id === "settings") { ph = d.data.phases || []; pe = d.data.person || null; sc = d.data.sched || {}; mo = d.data.macro || null; hc = d.data.hide || []; }
+      else if (d.id === "settings") { ph = d.data.phases || []; pe = d.data.person || null; sc = d.data.sched || {}; mo = d.data.macro || null; hc = d.data.hide || []; pl = d.data.plates || null; }
       else if (d.data.kind === "workout") w[d.id] = d.data;
       else if (d.data.kind === "body") b[d.id] = d.data;
     });
-    S.workouts = w; S.body = b; S.phases = ph; S.person = pe; S.sched = sc; S.macro = mo; S.hide = hc;
+    S.workouts = w; S.body = b; S.phases = ph; S.person = pe; S.sched = sc; S.macro = mo; S.hide = hc; S.plates = pl;
     if (!planTimer) { S.plan = plan; if (S.plan) { favMigrate(); syncLib(); } }
   }
   function localApply(id, data) {
     if (id === "plan") S.plan = data;
-    else if (id === "settings") { S.phases = data ? data.phases : []; S.person = data && data.person || null; S.sched = data && data.sched || {}; S.macro = data && data.macro || null; S.hide = data && data.hide || []; }
+    else if (id === "settings") { S.phases = data ? data.phases : []; S.person = data && data.person || null; S.sched = data && data.sched || {}; S.macro = data && data.macro || null; S.hide = data && data.hide || []; S.plates = data && data.plates || null; }
     else if (id.charAt(0) === "w") { if (data) S.workouts[id] = data; else delete S.workouts[id]; }
     else { if (data) S.body[id] = data; else delete S.body[id]; }
   }
@@ -589,35 +591,68 @@ button, select, input { touch-action: manipulation }
     if (/kurzhantel|maschine|multipresse|kabel|sz|presse|goblet|belt|hackenschmidt|pendulum|sissy|t-bar/.test(n)) return false;
     return /langhantel|bankdr|kniebeug|kreuzheb|good morning|rackpull|hip thrust|squat$|deadlift|bench press/.test(n);
   }
-  function plateSplit(v) { var out = []; PLATES.forEach(function (p) { while (v >= p - 1e-9) { out.push(p); v = Math.round((v - p) * 100) / 100; } }); return out; }
-  var PLATE_STEPS = (function () {
-    var m = {};
-    PLATES.forEach(function (a, i) { m[a] = m[a] || [a]; PLATES.slice(i).forEach(function (b) { var v = Math.round((a + b) * 100) / 100; if (!m[v]) m[v] = [a, b]; }); });
+  /* Scheiben im Studio: Anzahl Paare je Größe (settings.plates). Fehlt eine Angabe, gilt die Größe als unbegrenzt vorhanden. */
+  function plateClean(o) {
+    if (!o || typeof o !== "object") return null; var r = {}, any = false;
+    PLATES.forEach(function (p) { var v = o[p]; if (isN(v) && v >= 0 && v <= 20) { r[p] = Math.round(v); any = true; } });
+    return any ? r : null;
+  }
+  function plateAvail(p) { var o = S.plates; return o && isN(o[p]) ? o[p] : 99; }
+  /* Kleinste Scheibenzahl für v kg pro Seite mit den noch freien Paaren; null, wenn es nicht aufgeht. */
+  function plateSplit(v, used) {
+    var u = Math.round(v / 1.25); if (Math.abs(u * 1.25 - v) > 0.01 || u < 0) return null;
+    var best = [[]];
+    for (var k = 1; k <= u; k++) best[k] = null;
+    PLATES.forEach(function (p) {
+      var pu = Math.round(p / 1.25), n = plateAvail(p) - (used && used[p] || 0);
+      for (var t = 0; t < n; t++) for (var k = u; k >= pu; k--) if (best[k - pu] && (!best[k] || best[k - pu].length + 1 < best[k].length)) best[k] = best[k - pu].concat([p]);
+    });
+    return best[u] ? best[u].slice().sort(function (x, y) { return y - x; }) : null;
+  }
+  function plateSteps() {
+    var m = {}, L = PLATES.filter(function (p) { return plateAvail(p) > 0; });
+    L.forEach(function (a, i) { m[a] = m[a] || [a]; L.slice(i).forEach(function (b) { if (a === b && plateAvail(a) < 2) return; var v = Math.round((a + b) * 100) / 100; if (!m[v]) m[v] = [a, b]; }); });
     return Object.keys(m).map(function (k) { return { v: +k, p: m[k] }; });
-  })();
+  }
   function warmups(ex, work, first) {
     if (!(work > 0)) return [];
     var n = first ? 4 : work >= 60 ? 3 : 2, plan = WU[n], out = [];
     if (isBarbell(ex) && work > BAR + 2.5) {
-      /* Suche über mögliche Nachlege-Schritte (1–2 Scheiben pro Seite): nah an den Richtwerten, möglichst wenige Scheiben. */
-      var L = Math.round((work - BAR) / 2 / 1.25) * 1.25, W = BAR + 2 * L;
-      var beam = [{ c: 0, cost: 0, sets: [], n: 0 }];
+      /* Suche über Nachlege-Schritte (1–2 Scheiben pro Seite) mit den vorhandenen Scheiben:
+         nah an den Richtwerten, möglichst wenige Scheiben und möglichst wenige verschiedene Größen. */
+      var L = Math.round((work - BAR) / 2 / 1.25) * 1.25, W = BAR + 2 * L, steps = plateSteps();
+      var cnt = function (u, ps) { var r = {}; Object.keys(u).forEach(function (k) { r[k] = u[k]; }); ps.forEach(function (q) { r[q] = (r[q] || 0) + 1; }); return r; };
+      var fits = function (u) { return PLATES.every(function (q) { return (u[q] || 0) <= plateAvail(q); }); };
+      var beam = [{ c: 0, cost: 0, sets: [], used: {} }];
       plan.forEach(function (x, i) {
-        var next = [];
+        var next = beam.slice();
         beam.forEach(function (st0) {
-          if (i === 0 && x[0] * W < BAR + 12) next.push({ c: 0, cost: st0.cost + Math.abs(BAR / W - x[0]) * 100, sets: [{ w: BAR, r: x[1], add: [], bar: true }], n: 0 });
-          PLATE_STEPS.forEach(function (o) {
+          if (!st0.sets.length && (x[0] * W < BAR + 20 || first)) next.push({ c: 0, cost: st0.cost + Math.abs(BAR / W - x[0]) * (first ? 30 : 100) - 30, sets: [{ w: BAR, r: x[1], add: [], bar: true }], used: {} });
+          steps.forEach(function (o) {
             var c = Math.round((st0.c + o.v) * 100) / 100; if (c > L - 1.25 + 1e-9) return;
-            var w = BAR + 2 * c, dev = Math.abs(w / W - x[0]) * 100; if (dev > 12) return;
-            next.push({ c: c, cost: st0.cost + dev + 5 * o.p.length, sets: st0.sets.concat([{ w: w, r: x[1], add: o.p }]), n: st0.n + o.p.length });
+            var u = cnt(st0.used, o.p); if (!fits(u)) return;
+            var w = BAR + 2 * c, dev = Math.abs(w / W - x[0]) * 100; if (dev > 20) return;
+            next.push({ c: c, cost: st0.cost + dev + 8 * o.p.length - 30, sets: st0.sets.concat([{ w: w, r: x[1], add: o.p }]), used: u });
           });
         });
-        if (next.length) beam = next.sort(function (p1, p2) { return p1.cost - p2.cost; }).slice(0, 40);
+        beam = next.sort(function (p1, p2) { return p1.cost - p2.cost; }).slice(0, 60);
       });
       var bestS = null;
-      beam.forEach(function (st0) { var rest = plateSplit(Math.round((L - st0.c) * 100) / 100), cost = st0.cost + 5 * rest.length - 10 * st0.sets.length; if (!bestS || cost < bestS.cost) bestS = { st: st0, rest: rest, cost: cost }; });
-      out = bestS.st.sets.map(function (x) { return { w: x.w, r: x.r, add: x.add, bar: x.bar, pct: Math.round(x.w / W * 100) }; });
-      out.plates = { rest: bestS.rest, all: [].concat.apply([], out.map(function (x) { return x.add; })).concat(bestS.rest), work: W };
+      beam.forEach(function (st0) {
+        var rest = plateSplit(Math.round((L - st0.c) * 100) / 100, st0.used); if (!rest) return;
+        var all = [].concat.apply([], st0.sets.map(function (x) { return x.add; })).concat(rest);
+        var sizes = all.filter(function (q, k) { return all.indexOf(q) === k; }).length;
+        var cost = st0.cost + 8 * rest.length + 6 * sizes;
+        if (!bestS || cost < bestS.cost) bestS = { st: st0, rest: rest, all: all, cost: cost };
+      });
+      if (bestS) {
+        out = bestS.st.sets.map(function (x) { return { w: x.w, r: x.r, add: x.add, bar: x.bar, pct: Math.round(x.w / W * 100) }; });
+        out.plates = { rest: bestS.rest, all: bestS.all, work: W };
+        return out;
+      }
+      out.noload = true;
+      var stn = ex.step > 0 ? ex.step : 2.5, seenn = {};
+      plan.forEach(function (x) { var w = Math.round(work * x[0] / stn) * stn; if (w > 0 && w < work && !seenn[w]) { seenn[w] = 1; out.push({ w: w, r: x[1], pct: Math.round(w / work * 100) }); } });
       return out;
     }
     var st = ex.step > 0 ? ex.step : 2.5, seen = {};
@@ -634,6 +669,7 @@ button, select, input { touch-action: manipulation }
       return "<li><b>" + fmt(x.w) + " kg</b> × " + x.r + ' <span class="muted">(' + x.pct + " %)</span>" + (pl ? '<br><span class="small muted">' + (x.bar ? "Leere Stange" : (x === wu[0] || wu[0].bar && x === wu[1] ? "Pro Seite auflegen: " : "Pro Seite dazu: ") + j(x.add)) + "</span>" : "") + "</li>";
     }).join("") + "</ol>" +
       (pl ? '<p class="small">Zum Arbeitssatz (' + fmt(pl.work) + " kg)" + (pl.rest.length ? " pro Seite dazu: <b>" + j(pl.rest) + "</b>" : "") + ". Am Ende pro Seite: " + j(pl.all) + "</p>" : "") +
+      (wu.noload ? '<p class="small" style="color:var(--warn)">Mit den eingetragenen Scheiben lässt sich das Arbeitsgewicht nicht genau laden. Die Aufwärmsätze sind daher nur gerundet.</p>' : "") +
       '<p class="small muted">Nicht eintragen, nur zur Orientierung. Kurze Pausen, keine Ermüdung.' + (pl ? " Stange mit 20 kg gerechnet, Scheiben werden nur nachgelegt." : "") + "</p></details>";
   }
   function lastBefore(exId, date) { var l = sessions(exId).filter(function (s) { return s.date < date; }); return l.length ? l[l.length - 1] : null; }
@@ -714,7 +750,7 @@ button, select, input { touch-action: manipulation }
   }
   var ACT = [[1.2, "Kaum aktiv: Büro, kein Sport"], [1.375, "Leicht aktiv: Büro, 1–2× Training pro Woche"], [1.55, "Mäßig aktiv: Büro, 3–5× Training pro Woche"], [1.725, "Sehr aktiv: 6–7× Training oder körperliche Arbeit"], [1.9, "Extrem aktiv: körperliche Arbeit plus Training"]];
   var kc = function (n) { return (Math.round(n / 50) * 50).toLocaleString("de-DE"); };
-  function saveSettings(phases, person) { put("settings", { kind: "settings", phases: phases || S.phases, person: person || S.person || null, sched: S.sched || {}, macro: S.macro || null, hide: S.hide || [] }); }
+  function saveSettings(phases, person) { put("settings", { kind: "settings", phases: phases || S.phases, person: person || S.person || null, sched: S.sched || {}, macro: S.macro || null, hide: S.hide || [], plates: S.plates || null }); }
   /* Gewichtstrend per Ausgleichsgerade über höchstens 28 Tage, frühestens ab `start`. */
   function trendOf(list, start) {
     var t = today(), from = new Date(Date.parse(t) - 28 * 864e5).toISOString().slice(0, 10); if (start && start > from) from = start;
@@ -1643,6 +1679,8 @@ button, select, input { touch-action: manipulation }
       h += pickerHtml(d, di) + "</div>";
     });
     h += '<button data-act="addd" style="align-self:flex-start">+ Trainingstag</button>';
+    h += '<div class="block"><h2>Scheiben im Studio</h2><p class="small muted">Für die Aufwärmsätze an der Langhantel (Stange 20 kg). Trag ein, wie viele <b>Paare</b> es je Größe gibt. Leer heißt beliebig viele, 0 heißt nicht vorhanden.</p><div class="plategrid">' +
+      PLATES.slice().reverse().map(function (q) { var v = S.plates && isN(S.plates[q]) ? S.plates[q] : ""; return "<label>" + fmt(q) + ' kg<input data-plate="' + q + '" inputmode="numeric" autocomplete="off" placeholder="beliebig" value="' + v + '"></label>'; }).join("") + '</div><span class="small muted" id="platemsg"></span></div>';
     h += '<div class="block"><h2>Plan-Code einfügen</h2><p class="small muted">Wenn Claude deinen Plan für dich anpasst, bekommst du einen Code. Füge ihn hier ein, prüfe die Vorschau und übernimm die Änderung.</p>' +
       '<textarea id="plancode" rows="4" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Plan-Code" placeholder="Code hier einfügen">' + esc(S.planCode || "") + "</textarea>";
     if (planPatch && planPatch.list) h += "<p><b>Tag „" + esc(planPatch.tag) + "“</b>" + (planPatch.dayId ? "" : " (neuer Trainingstag)") + '</p><ol class="pvlist">' +
@@ -1681,7 +1719,7 @@ button, select, input { touch-action: manipulation }
         var sched = {}, rawS = d.sched && typeof d.sched === "object" ? d.sched : {};
         Object.keys(rawS).slice(0, 400).forEach(function (ks) { if (DRE.test(ks) && typeof rawS[ks] === "string" && IRE.test(rawS[ks])) sched[ks] = rawS[ks]; });
         var mq = d.macro, macro = mq && [mq.pc, mq.pm, mq.pb, mq.fat].every(isN) ? { pc: mq.pc, pm: mq.pm, pb: mq.pb, fat: mq.fat } : null;
-        return { kind: "settings", sched: sched, macro: macro, hide: (Array.isArray(d.hide) ? d.hide : []).filter(function (x) { return typeof x === "string"; }).map(txt80).slice(0, 300),
+        return { kind: "settings", sched: sched, macro: macro, plates: plateClean(d.plates), hide: (Array.isArray(d.hide) ? d.hide : []).filter(function (x) { return typeof x === "string"; }).map(txt80).slice(0, 300),
           person: okP ? { sex: q.sex, year: q.year, height: q.height, act: q.act, intake: isN(q.intake) ? q.intake : null, since: DRE.test(q.since) ? q.since : null,
             tdays: (Array.isArray(q.tdays) ? q.tdays : []).filter(function (x, i, arr) { return isN(x) && x >= 0 && x <= 6 && x % 1 === 0 && arr.indexOf(x) === i; }) } : null,
           phases: (d.phases || []).map(function (p) {
@@ -1719,6 +1757,7 @@ button, select, input { touch-action: manipulation }
       if (k === "settings" && !Object.keys(d.sched).length && DOCS.settings && DOCS.settings.sched) d.sched = DOCS.settings.sched;
       if (k === "settings" && !d.macro && DOCS.settings && DOCS.settings.macro) d.macro = DOCS.settings.macro;
       if (k === "settings" && !d.hide.length && DOCS.settings && DOCS.settings.hide) d.hide = DOCS.settings.hide;
+      if (k === "settings" && !d.plates && DOCS.settings && DOCS.settings.plates) d.plates = DOCS.settings.plates;
       DOCS[k] = d; n++;
     });
     if (!n) return "Die Datei enthält keine lesbaren Einträge.";
@@ -2326,6 +2365,11 @@ button, select, input { touch-action: manipulation }
     if (t.id === "tdate") { saveDraft(); S.date = t.value || today(); draft = null; renderTrain(); }
     else if (t.id === "exsel") { S.exSel = t.value; renderProgress(); }
     else if (t.id === "profsel") switchProfile(t.value);
+    else if (t.dataset.plate != null) {
+      var po = {}; document.querySelectorAll("[data-plate]").forEach(function (inp) { var v = inp.value.trim(); if (v !== "" && isN(+v)) po[inp.dataset.plate] = +v; });
+      S.plates = plateClean(po); saveSettings(); draft = null;
+      var pm = $("platemsg"); if (pm) pm.textContent = "Gespeichert.";
+    }
     else if (t.dataset.pick != null) {
       S.pick = S.pick || {}; S.pick[t.dataset.pick] = t.value; pickMsg[t.dataset.pick] = "";
       if (t.value === "own") { renderPlan(); var pn = $("pickname-" + t.dataset.pick); if (pn) pn.focus(); }
