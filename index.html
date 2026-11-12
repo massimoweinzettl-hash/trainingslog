@@ -230,6 +230,10 @@ input[type="date"] { -webkit-appearance: none; appearance: none; display: block;
 input[type="date"]::-webkit-date-and-time-value { text-align: left }
 .bgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px }
 .bgrid .full { grid-column: 1 / -1 }
+.hbox .hrow { margin-top: 12px }
+.hbox .hmsg { margin: 8px 0 0 }
+.hbox textarea { margin-top: 8px }
+.hbox .row + .tip, .hbox .hmsg + .tip, .hbox .row + .row { margin-top: 8px }
 @media (min-width: 620px) { .bgrid { grid-template-columns: repeat(4, minmax(0, 1fr)) } .bgrid .full { grid-column: span 2 } }
 input, select { font: 16px var(--body); color: var(--ink); background: var(--sunken); border: 1px solid transparent; border-radius: 8px; padding: 9px 10px; width: 100%; min-width: 0 }
 input::placeholder { color: var(--muted); opacity: .7 }
@@ -468,7 +472,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 42;
+  var APP_VERSION = 43;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -525,10 +529,13 @@ button, select, input { touch-action: manipulation }
     { v: 41, tab: "train", text: "Der Reiter „Training“ ist nur noch fürs Eintragen da, ohne Umschalter. Den Kalender findest du auf der Startseite." },
     { v: 41, tab: "plan", text: "Im Plan stehen nur noch die Trainingstage. Bei jeder Übung führt „Einstellungen“ direkt zur Übung im Reiter „Daten“." },
     { v: 42, tab: "home", text: "Die Kalorien für heute stehen jetzt kompakt in einer Zeile mit kleinem Ring, darunter die Makros. Der Gewichtsverlauf mit Korridor ist wieder voll auf der Startseite." },
-    { v: 42, tab: "data", text: "Rund 35 Lebensmittel sind dazugekommen, nach Gruppen sortiert, darunter Reis, Nudeln, Kartoffeln, Pute, Lachs, Banane und dein ESN Designer Whey. Die Liste zeigt jedes Lebensmittel in einer Zeile, antippen zum Bearbeiten, mit Suche." }
+    { v: 42, tab: "data", text: "Rund 35 Lebensmittel sind dazugekommen, nach Gruppen sortiert, darunter Reis, Nudeln, Kartoffeln, Pute, Lachs, Banane und dein ESN Designer Whey. Die Liste zeigt jedes Lebensmittel in einer Zeile, antippen zum Bearbeiten, mit Suche." },
+    { v: 43, tab: "body", text: "Gewicht und Körperfett aus Apple Health übernehmen: „Aus Apple Health holen“ startet deinen Kurzbefehl „Trainingslog Health“. Danach zurück in die App wechseln und „Einfügen“ tippen. Je Tag zählt die früheste Messung, schon Eingetragenes bleibt unverändert." },
+    { v: 43, tab: "home", text: "Unter dem Gewichtsverlauf holst du Gewicht und Körperfett aus Apple Health, mit „Aus Health holen“ und danach „Einfügen“." }
   ];
   var TABNAME = { home: "Start", train: "Training", prog: "Fortschritt", body: "Körper", plan: "Plan", data: "Daten" };
   var fresh = [], hiddenAt = 0, hiddenDay = "";
+  var hWait = 0, hMsg = "", hMan = false;
   var keyFor = function (kind, id) { id = id || PROF.active; return id === "main" ? (kind === "data" ? "trainingslog" : "trainingslog-backup") : "trainingslog-" + kind + "-" + id; };
   var profName = function () { var n = ""; PROF.list.forEach(function (p) { if (p.id === PROF.active) n = p.name; }); return n; };
 
@@ -1266,7 +1273,7 @@ button, select, input { touch-action: manipulation }
     if (!keepForm || !$("bform")) {
       el.innerHTML = '<div class="block" id="phstat"></div><div class="block" id="wcorr"></div><div class="block" id="bform"><h2>Gewicht, Körperfett und Umfänge eintragen</h2><div class="bgrid"><label class="full">Datum<input type="date" id="b-date" value="' + today() + '" max="' + today() + '"></label>' +
         BF.map(function (f) { return "<label>" + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
-        '</div><div class="row" style="align-items:center"><button class="primary" data-act="bsave">Speichern</button><span class="small muted" id="bmsg">Leere Felder werden übersprungen.</span></div></div><div id="bout" style="display:flex;flex-direction:column;gap:16px"></div>' +
+        '</div><div class="row" style="align-items:center"><button class="primary" data-act="bsave">Speichern</button><span class="small muted" id="bmsg">Leere Felder werden übersprungen.</span></div><div class="hbox" id="hbody"></div></div><div id="bout" style="display:flex;flex-direction:column;gap:16px"></div>' +
         '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="">Bitte wählen</option><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div><div class="block" id="kcalbox"></div>';
     }
     var h = "";
@@ -1281,6 +1288,7 @@ button, select, input { touch-action: manipulation }
         list.slice(-12).reverse().map(function (b) { return "<tr><td>" + dfmt(b.date, 1) + "</td>" + BF.map(function (f) { return '<td class="r">' + fmt(b[f[0]]) + "</td>"; }).join("") + '<td class="r"><button class="danger" data-act="bdel" data-id="b_' + b.date + '">Löschen</button></td></tr>'; }).join("") + "</tbody></table></div></div>";
     }
     $("bout").innerHTML = h;
+    $("hbody").innerHTML = healthRow(true);
     $("phstat").innerHTML = phaseStatus(list);
     $("kcalbox").innerHTML = kcalBlock(list);
     $("phlist").innerHTML = phaseList(list);
@@ -1288,6 +1296,51 @@ button, select, input { touch-action: manipulation }
     $("wcorr").innerHTML = '<p class="eyebrow">Gewicht' + (phw ? " im " + PH[phw.type] : "") + "</p>" + weightCorridor(list).html;
     $("wcorr").querySelectorAll(".wscroll").forEach(function (w) { w.scrollLeft = Math.max(0, +w.dataset.today - w.clientWidth * 0.5); });
   }
+
+  /* ---------- Apple Health (über einen Kurzbefehl) ----------
+     Web-Apps dürfen Apple Health nicht lesen. Der Kurzbefehl „Trainingslog Health“ kopiert Gewicht (W) und
+     Körperfett (K) der letzten 30 Tage in die Zwischenablage, eine Zeile je Messung, z. B.
+     „W;2026-11-12T07:12:05+01:00;94.40000152587891“. Die Kopfzeile „trainingslog-health 1“ ist optional.
+     Übernommen wird je Tag die früheste Messung, auf 0,1 gerundet; schon eingetragene Werte bleiben unverändert. */
+  var HSC = "Trainingslog Health";
+  function healthRow(big) {
+    return '<div class="row hrow"><button data-act="hfetch">' + (big ? "Aus Apple Health holen" : "Aus Health holen") + '</button><button data-act="hpaste"' + (hWait ? ' class="primary"' : "") + ">Einfügen</button></div>" +
+      (hMsg ? '<p class="small hmsg">' + esc(hMsg) + "</p>" : "") +
+      (hMan ? '<textarea rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Text vom Kurzbefehl" placeholder="Text vom Kurzbefehl hier einsetzen"></textarea><div class="row"><button data-act="hman">Übernehmen</button></div>' : "") +
+      (big ? tip("health", "Wie funktioniert das?", "Die App kann Apple Health nicht direkt lesen. „Aus Apple Health holen“ startet den Kurzbefehl „" + HSC + "“. Er kopiert Gewicht und Körperfett der letzten 30 Tage. Zurück in der App tippst du auf „Einfügen“. Je Tag zählt die früheste Messung; was schon eingetragen ist, bleibt unverändert.") : "");
+  }
+  function healthParse(txt) {
+    var out = { weight: {}, fat: {}, n: 0 }, t = today();
+    String(txt || "").split(/\r?\n/).forEach(function (ln) {
+      var m = /^\s*([WK])\s*;\s*(\d{4}-\d{2}-\d{2})([^;]*);\s*([-+]?\d+(?:[.,]\d+)?)/.exec(ln); if (!m) return;
+      var f = m[1] === "W" ? "weight" : "fat", d = m[2], v = parseFloat(m[4].replace(",", "."));
+      if (!isFinite(v) || d > t) return;
+      if (f === "fat" && v > 0 && v < 1) v *= 100;
+      v = Math.round(v * 10) / 10;
+      if (f === "weight" ? v < 20 || v > 400 : v < 2 || v > 75) return;
+      var ts = d + m[3].trim(), o = out[f][d];
+      if (!o || ts < o.ts) out[f][d] = { ts: ts, v: v };
+      out.n++;
+    });
+    return out;
+  }
+  function healthImport(txt) {
+    var p = healthParse(txt), add = { weight: 0, fat: 0 }, upd = {};
+    if (!p.n) return "Keine Health-Daten gefunden. Lief vorher der Kurzbefehl „" + HSC + "“?";
+    ["weight", "fat"].forEach(function (f) {
+      Object.keys(p[f]).forEach(function (d) {
+        var id = "b_" + d, cur = upd[id] || clone(S.body[id] || { kind: "body", date: d });
+        if (cur[f] != null) return;
+        cur[f] = p[f][d].v; upd[id] = cur; add[f]++;
+      });
+    });
+    Object.keys(upd).forEach(function (id) { localApply(id, upd[id]); DOCS[id] = upd[id]; });
+    if (Object.keys(upd).length) persist();
+    var tot = add.weight + add.fat;
+    if (!tot) return "Nichts Neues: Alle Werte aus Health sind schon eingetragen.";
+    return tot + (tot === 1 ? " neuer Wert" : " neue Werte") + " übernommen (Gewicht " + add.weight + ", Körperfett " + add.fat + ").";
+  }
+  function hRefresh() { renderBody(true); renderHome(); }
 
   /* ---------- Plan ---------- */
   /* ---------- Plan-Code: eine Plan-Änderung als Text einfügen ----------
@@ -2251,7 +2304,7 @@ button, select, input { touch-action: manipulation }
       }).join("") + "</div>";
     }
     var wc = weightCorridor(list);
-    h += '<div class="block"><p class="eyebrow">Gewicht' + (ph ? " im " + PH[ph.type] : "") + "</p>" + wc.html + "</div>";
+    h += '<div class="block"><p class="eyebrow">Gewicht' + (ph ? " im " + PH[ph.type] : "") + "</p>" + wc.html + '<div class="hbox">' + healthRow(false) + "</div></div>";
     el.innerHTML = h;
     /* Gewichtskurve so scrollen, dass heute rechts der Mitte steht und die Vorschau sichtbar bleibt. */
     el.querySelectorAll(".wscroll").forEach(function (w) { w.scrollLeft = Math.max(0, +w.dataset.today - w.clientWidth * 0.5); });
@@ -2328,6 +2381,16 @@ button, select, input { touch-action: manipulation }
       put("b_" + date, cur); BF.forEach(function (f) { $("b-" + f[0]).value = ""; });
       $("bmsg").textContent = "Messung vom " + dfmt(date, 1) + " gespeichert."; renderBody(true);
     }
+    else if (a === "hfetch") {
+      hWait = Date.now(); hMan = false; hMsg = "Der Kurzbefehl startet. Danach zurück in die App wechseln und „Einfügen“ tippen."; hRefresh();
+      location.href = "shortcuts://run-shortcut?name=" + encodeURIComponent(HSC);
+    }
+    else if (a === "hpaste") {
+      var hfail = function () { hMan = true; hMsg = "Die Zwischenablage ließ sich nicht lesen. Setz den Text unten von Hand ein (lange tippen, dann „Einsetzen“) und tippe auf „Übernehmen“."; hRefresh(); };
+      if (!navigator.clipboard || !navigator.clipboard.readText) hfail();
+      else navigator.clipboard.readText().then(function (txt) { hWait = 0; hMan = false; hMsg = healthImport(txt); hRefresh(); }, hfail);
+    }
+    else if (a === "hman") { var hta = b.closest(".hbox").querySelector("textarea"); hWait = 0; hMan = false; hMsg = healthImport(hta ? hta.value : ""); hRefresh(); }
     else if (a === "bdel") { if (arm(b, "Sicher?")) { put(id, null); renderBody(true); } }
     else if (a === "who") { $("who").hidden = true; if (id !== PROF.active) switchProfile(id); showNews(false); }
     else if (a === "news") showNews(true);
@@ -2640,6 +2703,9 @@ button, select, input { touch-action: manipulation }
     /* Zurück in der App: nach einem Tageswechsel aufs heutige Datum springen, nach über 3 Stunden Pause neu fragen. */
     if (hiddenDay && hiddenDay !== today()) { S.date = today(); S.dayId = null; draft = null; dirty = false; renderAll(true); }
     if (hiddenAt && Date.now() - hiddenAt > 3 * 36e5 && PROF.list.length > 1 && $("who").hidden) askWho();
+    /* Zurück aus dem Kurzbefehl: auf „Einfügen“ hinweisen (Zwischenablage lesen geht nur nach einem Tippen). */
+    if (hWait && Date.now() - hWait < 10 * 6e4 && !hMan) { hMsg = "Jetzt „Einfügen“ tippen, um die Werte zu übernehmen."; hRefresh(); }
+    else if (hWait) hWait = 0;
   });
 
   /* Die App öffnet immer mit „Start“. */
