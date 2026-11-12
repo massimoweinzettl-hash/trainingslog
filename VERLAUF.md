@@ -52,3 +52,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v42: kompakte Kalorienzeile, Gewichtsverlauf auf Start, Lebensmittel-Datenbank mit Gruppen und Suche
 - Arbeitsweise: Projektnotizen enthalten nur noch den aktuellen Stand; Geschichte steht hier und in alten Chats
 - v43: Gewicht und KFA aus Apple Health per Kurzbefehl „Trainingslog Health“ (Zwischenablage, Knopf „Einfügen“; je Tag früheste Messung, vorhandene Werte bleiben). Keine tägliche Automation, weil sie die Zwischenablage überschreiben würde. `VERLAUF.md` angelegt.
+- v44: Start: Ring und „Essen heute“ zu einem Block „Heute“ zusammengelegt (Ladebalken „Noch … kcal“, Eiweißbalken, Fett/KH nur als Ziel, weil Lebensmittel nur Eiweiß und kcal kennen). Aufwärmsätze bleiben offen. Krafttest: Zeile „Test“ markiert und mit Testgewicht vorbelegt; Testsatz zählt nicht für den Gewichtsvorschlag (übrige Sätze gelten ab `sets − 1` als vollständig).
