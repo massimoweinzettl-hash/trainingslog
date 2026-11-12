@@ -359,6 +359,8 @@ button.danger { color: var(--bad) }
 .srow { gap: 8px; align-items: center; flex-wrap: wrap }
 .updbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px; background: var(--accent-soft); color: var(--ink); font-size: 15px }
 .block.late { border: 2px solid var(--accent) }
+.migcard { border: 2px solid var(--accent); background: var(--accent-soft) }
+.migcard p { margin: 0 }
 .tbadge { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap }
 .tadd { align-self: flex-start; margin: 4px 0 8px }
 .tpick { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px; background: var(--sunken); margin: 8px 0 }
@@ -505,7 +507,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 50;
+  var APP_VERSION = 51;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -580,7 +582,8 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "train", text: "Krafttest-Korrekturen: Eine Test-Einheit nur mit dem Testsatz zählt nicht mehr für den Gewichtsvorschlag, und „Letzter Test“ zeigt das 1RM aus dem Testsatz. Ein Training über Mitternacht läuft beim Zurückkehren weiter." },
     { v: 49, tab: "train", text: "Übungen ohne Zusatzgewicht bekommen keinen kg-Vorschlag mehr, sondern „mehr Wdh.“. Fehler bei „Rückgängig“ und „Ersetzen“ behoben." },
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
-    { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." }
+    { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
+    { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Für dich ändert sich sonst nichts." }
   ];
   var TABNAME = { home: "Start", train: "Training", prog: "Fortschritt", body: "Körper", plan: "Plan", data: "Daten" };
   var fresh = [], hiddenAt = 0, hiddenDay = "";
@@ -613,8 +616,158 @@ button, select, input { touch-action: manipulation }
     else if (id.indexOf("n_") === 0) { if (data) S.nutri[id] = data; else delete S.nutri[id]; }
     else { if (data) S.body[id] = data; else delete S.body[id]; }
   }
-  function lsRead() { try { return JSON.parse(localStorage.getItem(keyFor("data")) || "{}") || {}; } catch (e) { return {}; } }
-  function lsWrite(o) { try { localStorage.setItem(keyFor("data"), JSON.stringify(o)); return true; } catch (e) { return false; } }
+  /* Alter Speicher (localStorage): ein JSON-Block je Profil. Im Reservebetrieb steht zusätzlich „_seq“ darin
+     (Zähler der Speichervorgänge), damit beim Laden erkennbar ist, ob die Reserve neuer ist als IndexedDB. */
+  var LS_SEQ = 0;
+  function lsRead(pid) {
+    var o = {};
+    try { o = JSON.parse(localStorage.getItem(keyFor("data", pid)) || "{}") || {}; } catch (e) { o = {}; }
+    LS_SEQ = isN(o._seq) ? o._seq : 0; delete o._seq;
+    return o;
+  }
+  function lsWrite(o, seq) {
+    try {
+      var c = o; if (seq) { c = {}; Object.keys(o).forEach(function (k) { c[k] = o[k]; }); c._seq = seq; }
+      localStorage.setItem(keyFor("data"), JSON.stringify(c)); return true;
+    } catch (e) { return false; }
+  }
+
+  /* ---------- Neuer Speicher: IndexedDB (ab Version 51) ----------
+     Datenbank „trainingslog“: Speicher „docs“ (Schlüssel „<Profil>|<Dokument>“, Wert = Dokument) und „meta“ (Schlüssel = Profil,
+     Wert {migrated, count, seq, fresh?, reserveDone?}). Ablauf je Profil:
+     - Ohne IndexedDB (gesperrt, sehr alter Browser) arbeitet die App wie bisher nur mit localStorage (MODE "ls").
+     - Daten im alten Speicher und noch nicht umgezogen: MODE "ls", auf Start und unter Sicherung erscheint der Umzug.
+       Nach einem Backup (oder „Ohne Backup umziehen“) kopiert migrate() alle Dokumente, liest sie zurück, vergleicht jedes
+       einzelne und schaltet erst dann auf MODE "idb" um. Schlägt etwas fehl, bleibt alles im alten Speicher.
+     - Danach schreibt persist() nur geänderte Dokumente in IndexedDB und RESERVE_DAYS lang zusätzlich den ganzen Stand in
+       localStorage (Reserve). Danach wird die Reserve gelöscht. Neue Profile starten direkt in IndexedDB. */
+  var IDBP = null, MODE = "ls", META = null, SEQ = 0, written = {}, needFull = false, RESERVE_DAYS = 28, migBusy = false, migMsg = "", idbFailed = false;
+  var BC = null; try { BC = window.BroadcastChannel ? new BroadcastChannel("trainingslog") : null; } catch (e) { BC = null; }
+  function idbOpen() {
+    if (IDBP) return IDBP;
+    IDBP = new Promise(function (res) {
+      var done = false, fin = function (db) { if (!done) { done = true; res(db); } };
+      try {
+        if (!window.indexedDB) return fin(null);
+        var rq = indexedDB.open("trainingslog", 1);
+        rq.onupgradeneeded = function () { var db = rq.result; if (!db.objectStoreNames.contains("docs")) db.createObjectStore("docs"); if (!db.objectStoreNames.contains("meta")) db.createObjectStore("meta"); };
+        rq.onsuccess = function () { var db = rq.result; db.onversionchange = function () { db.close(); IDBP = null; }; fin(db); };
+        rq.onerror = rq.onblocked = function () { fin(null); };
+      } catch (e) { fin(null); }
+      setTimeout(function () { fin(null); }, 4000); /* IndexedDB hängt (selten auf iOS): dann alter Speicher */
+    });
+    return IDBP;
+  }
+  function idbRange(pid) { return IDBKeyRange.bound(pid + "|", pid + "|\uffff"); }
+  function idbAll(pid) {
+    return idbOpen().then(function (db) {
+      if (!db) return null;
+      return new Promise(function (res) {
+        var out = { docs: {}, meta: null }, tx;
+        try { tx = db.transaction(["docs", "meta"], "readonly"); } catch (e) { return res(null); }
+        var cr = tx.objectStore("docs").openCursor(idbRange(pid));
+        cr.onsuccess = function () { var c = cr.result; if (c) { out.docs[String(c.key).slice(pid.length + 1)] = c.value; c.continue(); } };
+        var mr = tx.objectStore("meta").get(pid); mr.onsuccess = function () { out.meta = mr.result || null; };
+        tx.oncomplete = function () { res(out); }; tx.onerror = tx.onabort = function () { res(null); };
+      });
+    });
+  }
+  function idbWrite(pid, puts, dels, meta, clear) {
+    return idbOpen().then(function (db) {
+      if (!db) return false;
+      return new Promise(function (res) {
+        var tx;
+        try {
+          tx = db.transaction(["docs", "meta"], "readwrite");
+          var st = tx.objectStore("docs");
+          if (clear) st.delete(idbRange(pid));
+          Object.keys(puts || {}).forEach(function (k) { st.put(puts[k], pid + "|" + k); });
+          (dels || []).forEach(function (k) { st.delete(pid + "|" + k); });
+          if (meta === "delete") tx.objectStore("meta").delete(pid); else if (meta) tx.objectStore("meta").put(meta, pid);
+        } catch (e) { try { tx.abort(); } catch (e2) {} return res(false); }
+        tx.oncomplete = function () { res(true); }; tx.onerror = tx.onabort = function () { res(false); };
+      });
+    });
+  }
+  function reserveActive() { return MODE === "idb" && META && !META.fresh && !META.reserveDone && Date.now() - Date.parse(META.migrated) < RESERVE_DAYS * 864e5; }
+  function migPending() { return MODE === "ls" && !idbFailed && Object.keys(DOCS).length > 0; }
+  /* Lädt die Daten des aktiven Profils (Promise). Entscheidet, aus welchem Speicher. */
+  function loadDocs() {
+    var pid = PROF.active, ls = lsRead(pid), lsSeq = LS_SEQ, hasLs = Object.keys(ls).length > 0;
+    return idbAll(pid).then(function (r) {
+      if (!r) return { mode: "ls", docs: ls, meta: null, noidb: true };
+      if (r.meta && r.meta.migrated) {
+        var n = Object.keys(r.docs).length;
+        /* IndexedDB leer, Reserve aber vorhanden (z. B. gelöschter Website-Speicher): aus der Reserve, Umzug neu anbieten. */
+        if (!n && hasLs) return { mode: "ls", docs: ls, meta: null };
+        /* Reserve neuer als IndexedDB (App beendet, bevor IndexedDB fertig war): Reserve gilt und wird nachgeschrieben. */
+        if (hasLs && lsSeq > (r.meta.seq || 0) && !r.meta.reserveDone) return { mode: "idb", docs: ls, meta: r.meta, full: true, seq: lsSeq, idbDocs: r.docs };
+        return { mode: "idb", docs: r.docs, meta: r.meta, seq: r.meta.seq || 0 };
+      }
+      if (hasLs) return { mode: "ls", docs: ls, meta: null };
+      return { mode: "idb", docs: {}, meta: { migrated: new Date().toISOString(), fresh: true, seq: 0 }, newMeta: true, seq: 0 };
+    }).then(function (r) {
+      if (PROF.active !== pid) return false;
+      MODE = r.mode; META = r.meta; DOCS = r.docs; SEQ = r.seq || 0; idbFailed = !!r.noidb; written = {}; needFull = !!r.full;
+      /* written = Stand in IndexedDB; bei neuerer Reserve der IndexedDB-Stand, damit auch Löschungen nachgeschrieben werden. */
+      var base = r.full ? r.idbDocs : DOCS;
+      if (MODE === "idb") Object.keys(base || {}).forEach(function (k) { written[k] = JSON.stringify(base[k]); });
+      if (r.newMeta) idbWrite(pid, null, null, META);
+      applyDocs(Object.keys(DOCS).map(function (k) { return { id: k, data: DOCS[k] }; }));
+      if (needFull) persist();
+      reserveCheck();
+      return true;
+    });
+  }
+  /* Nach RESERVE_DAYS: Reserve im alten Speicher löschen (einmalig). */
+  function reserveCheck() {
+    if (MODE !== "idb" || !META || META.fresh || META.reserveDone || reserveActive()) return;
+    var pid = PROF.active, m = clone(META); m.reserveDone = new Date().toISOString();
+    idbWrite(pid, null, null, m).then(function (ok) { if (ok && PROF.active === pid) { META = m; try { localStorage.removeItem(keyFor("data", pid)); } catch (e) {} } });
+  }
+  /* Umzug: kopieren, zurücklesen, jedes Dokument vergleichen, erst dann umschalten. */
+  function migrate() {
+    if (!migPending() || migBusy) return;
+    saveDraft(); if (planTimer) planChanged(true);
+    var pid = PROF.active, snap = clone(DOCS), ids = Object.keys(snap), puts = {};
+    ids.forEach(function (k) { puts[k] = snap[k]; });
+    migBusy = true; migMsg = ""; setSync("Umzug läuft …"); renderHome(); renderData();
+    var fail = function (why) {
+      migBusy = false; migMsg = "Der Umzug hat nicht geklappt (" + why + "). Deine Daten sind unverändert im alten Speicher, die App versucht es beim nächsten Backup erneut.";
+      setSync("Auf diesem Gerät gespeichert"); renderHome(); renderData();
+    };
+    idbWrite(pid, puts, null, null, true).then(function (ok) {
+      if (!ok) throw "Schreiben";
+      return idbAll(pid);
+    }).then(function (r) {
+      if (!r) throw "Lesen";
+      var back = Object.keys(r.docs);
+      if (back.length !== ids.length) throw "Anzahl " + back.length + " statt " + ids.length;
+      ids.forEach(function (k) { if (JSON.stringify(r.docs[k]) !== JSON.stringify(snap[k])) throw "Eintrag " + k; });
+      if (PROF.active !== pid) throw "Profil gewechselt";
+      var meta = { migrated: new Date().toISOString(), count: ids.length, seq: 1 };
+      return idbWrite(pid, null, null, meta).then(function (ok2) {
+        if (!ok2) throw "Abschluss";
+        MODE = "idb"; META = meta; SEQ = 1; written = {};
+        ids.forEach(function (k) { written[k] = JSON.stringify(snap[k]); });
+        lsWrite(DOCS, SEQ);
+        migBusy = false; persist(); /* Änderungen, die während des Umzugs entstanden sind */
+        migMsg = "Umzug abgeschlossen: " + ids.length + " Einträge geprüft und im neuen Speicher. Der alte Speicher bleibt " + RESERVE_DAYS / 7 + " Wochen als Reserve.";
+        setSync("Auf diesem Gerät gespeichert"); renderHome(); renderData();
+      });
+    }).catch(function (e) { fail(typeof e === "string" ? e : "unbekannter Fehler"); });
+  }
+  function migCard(where) {
+    if (migMsg) return '<div class="block migcard"><p class="small">' + esc(migMsg) + '</p>' + (where === "home" ? '<div class="row"><button class="ghost" data-act="migok">OK</button></div>' : "") + "</div>";
+    if (migBusy) return '<div class="block migcard"><p class="small"><b>Umzug läuft …</b> Bitte die App kurz offen lassen.</p></div>';
+    if (!migPending()) return "";
+    return '<div class="block migcard"><p class="small"><b>Größerer Speicher bereit.</b> Mach zuerst ein Backup, danach ziehen deine Daten automatisch um. Jeder Eintrag wird geprüft, der alte Speicher bleibt ' + RESERVE_DAYS / 7 + ' Wochen als Reserve.</p>' +
+      '<div class="row"><button class="primary" data-act="backup">Backup speichern</button><button class="ghost" data-act="migrate">Ohne Backup umziehen</button></div></div>';
+  }
+  function storeLine() {
+    if (MODE === "idb" && META) return "Speicher: neuer Speicher" + (META.fresh ? "" : " seit " + dfmt(META.migrated.slice(0, 10), 1) + (reserveActive() ? ", Reserve im alten Speicher bis " + dfmt(addDays(META.migrated.slice(0, 10), RESERVE_DAYS), 1) : ""));
+    return idbFailed ? "Speicher: alter Speicher (der neue ist in diesem Browser nicht verfügbar)" : "Speicher: alter Speicher, Umzug noch nicht erfolgt";
+  }
   function profRead() {
     try {
       var p = JSON.parse(localStorage.getItem("trainingslog-profiles") || "null");
@@ -631,7 +784,39 @@ button, select, input { touch-action: manipulation }
   }
   function profWrite() { try { localStorage.setItem("trainingslog-profiles", JSON.stringify(PROF)); } catch (e) {} }
   var storeWarned = false;
-  function persist() {
+  /* Speichern. Im neuen Speicher nur geänderte Dokumente (mit id: nur dieses; ohne: Vergleich aller), dazu während der
+     Reservezeit der ganze Stand im alten Speicher. Gibt sofort true zurück; Fehler melden sich über setSync/notice,
+     beim nächsten Speichern wird alles noch einmal verglichen und nachgeschrieben. */
+  function persist(id) {
+    if (MODE !== "idb") return persistLs();
+    var pid = PROF.active, puts = {}, dels = [], js = {}, any = false;
+    var ids = id && !needFull ? [id] : Object.keys(DOCS).concat(Object.keys(written).filter(function (k) { return !DOCS[k]; }));
+    needFull = false;
+    ids.forEach(function (k) {
+      if (DOCS[k]) { var j = JSON.stringify(DOCS[k]); if (written[k] !== j) { puts[k] = DOCS[k]; js[k] = j; any = true; } }
+      else if (written[k] != null && dels.indexOf(k) < 0) { dels.push(k); any = true; }
+    });
+    if (!any) return true;
+    SEQ++; var meta = clone(META); meta.seq = SEQ; META = meta;
+    if (reserveActive()) lsWrite(DOCS, SEQ);
+    var w0 = written;
+    idbWrite(pid, puts, dels, meta).then(function (ok) {
+      if (PROF.active !== pid || written !== w0) return;
+      if (ok) {
+        Object.keys(js).forEach(function (k) { written[k] = js[k]; }); dels.forEach(function (k) { delete written[k]; });
+        setSync("Auf diesem Gerät gespeichert");
+        if (storeWarned) { storeWarned = false; notice(""); }
+        if (BC) try { BC.postMessage({ pid: pid }); } catch (e) {}
+      } else {
+        needFull = true; storeWarned = true;
+        setSync("Speichern fehlgeschlagen – Speicher voll oder gesperrt", true);
+        notice("Speichern fehlgeschlagen: Der Speicher dieses Geräts ist voll oder gesperrt. Mach jetzt unter Daten → Sicherung ein Backup, sonst gehen die letzten Eingaben verloren.");
+      }
+    });
+    if (!persistAsked && navigator.storage && navigator.storage.persist) { persistAsked = true; navigator.storage.persist().catch(function () {}); }
+    return true;
+  }
+  function persistLs() {
     var ok = lsWrite(DOCS);
     setSync(ok ? "Auf diesem Gerät gespeichert" : "Speichern fehlgeschlagen – Speicher voll oder gesperrt", !ok);
     /* Voller Speicher: deutlich und bleibend warnen; ungespeicherte Sätze werden beim nächsten Speichern erneut versucht. */
@@ -643,7 +828,7 @@ button, select, input { touch-action: manipulation }
   function put(id, data) {
     localApply(id, data);
     if (data) DOCS[id] = data; else delete DOCS[id];
-    return persist();
+    return persist(id);
   }
   /* Bewertung: bis Version 33 1–5 Sterne, jetzt 1–3 (Okay, Mittel, Sehr gut). Alte Werte: 1–2 → 1, 3 → 2, 4–5 → 3. */
   var FAVL = ["", "Okay", "Mittel", "Sehr gut"];
@@ -653,10 +838,7 @@ button, select, input { touch-action: manipulation }
     (S.plan.lib || []).forEach(m); S.plan.days.forEach(function (d) { d.exercises.forEach(m); });
     S.plan.fav3 = 1; DOCS.plan = clone(S.plan); persist();
   }
-  function loadAll() {
-    DOCS = lsRead();
-    applyDocs(Object.keys(DOCS).map(function (k) { return { id: k, data: DOCS[k] }; }));
-  }
+  function loadAll() { return loadDocs(); }
   /* Neue Version: höchstens alle 30 Minuten die veröffentlichte index.html prüfen (am Service Worker vorbei,
      Parameter „fresh“) und bei höherer APP_VERSION einen Knopf „Neu laden“ zeigen. */
   var updChecked = 0;
@@ -675,17 +857,24 @@ button, select, input { touch-action: manipulation }
     var had = false, seen = 0;
     try { had = localStorage.getItem("trainingslog") != null || localStorage.getItem("trainingslog-profiles") != null; seen = Number(localStorage.getItem("trainingslog-seen")) || 0; } catch (e) {}
     try { planClosed = JSON.parse(localStorage.getItem("trainingslog-planclosed") || "{}") || {}; } catch (e) { planClosed = {}; }
-    profRead(); loadAll(); S.ready = true; setSync("Auf diesem Gerät gespeichert"); renderAll(true);
-    if (!seen) seen = had ? 1 : APP_VERSION;
-    fresh = CHANGES.filter(function (c) { return c.v > seen; });
-    document.querySelectorAll(".tabs button").forEach(function (b) {
-      if (fresh.some(function (c) { return c.tab === b.dataset.tab; })) { b.classList.add("new"); b.setAttribute("aria-label", b.textContent + " (neu)"); }
-    });
-    if (!had) markSeen();
-    if (PROF.list.length > 1) askWho(); else showNews(false);
+    profRead();
+    loadAll().then(function () {
+      S.ready = true; setSync("Auf diesem Gerät gespeichert"); renderAll(true);
+      if (!seen) seen = had ? 1 : APP_VERSION;
+      fresh = CHANGES.filter(function (c) { return c.v > seen; });
+      document.querySelectorAll(".tabs button").forEach(function (b) {
+        if (fresh.some(function (c) { return c.tab === b.dataset.tab; })) { b.classList.add("new"); b.setAttribute("aria-label", b.textContent + " (neu)"); }
+      });
+      if (!had) markSeen();
+      if (PROF.list.length > 1) askWho(); else showNews(false);
+    }).catch(function (e) { setSync("Laden fehlgeschlagen – bitte App neu öffnen", true); });
+    /* Andere Tabs/Fenster: alter Speicher meldet sich über „storage“, der neue über BroadcastChannel. */
+    var reloadOther = function () { if (S.ready && !dirty && !saveTimer && !planTimer) { profRead(); loadAll().then(function () { renderAll(false); }); } };
     window.addEventListener("storage", function (ev) {
-      if (ev.key && ev.key.indexOf("trainingslog") === 0 && ev.key !== "trainingslog-tab" && ev.key !== "trainingslog-seen" && ev.key !== "trainingslog-planclosed") { profRead(); loadAll(); renderAll(false); }
+      if (ev.key && ev.key.indexOf("trainingslog") === 0 && ev.key !== "trainingslog-tab" && ev.key !== "trainingslog-seen" && ev.key !== "trainingslog-planclosed" && MODE === "ls") reloadOther();
+      else if (ev.key === "trainingslog-profiles") reloadOther();
     });
+    if (BC) BC.onmessage = function (ev) { if (ev.data && ev.data.pid === PROF.active && MODE === "idb") reloadOther(); };
     if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(function () {});
     checkUpdate();
   }
@@ -2035,7 +2224,7 @@ button, select, input { touch-action: manipulation }
     });
     if (!n) return "Die Datei enthält keine lesbaren Einträge.";
     clearTimeout(planTimer); planTimer = null; clearTimeout(saveTimer); saveTimer = null; draft = null; dirty = false;
-    var ok = persist(); loadAll();
+    var ok = persist(); applyDocs(Object.keys(DOCS).map(function (k2) { return { id: k2, data: DOCS[k2] }; }));
     if (!ok) return "Einspielen fehlgeschlagen: Der Speicher dieses Geräts ist voll oder gesperrt.";
     return n + " Einträge übernommen" + (skip ? ", " + skip + " unlesbare übersprungen" : "") + ".";
   }
@@ -2105,12 +2294,12 @@ button, select, input { touch-action: manipulation }
     else if (sec === "me") { var E = energy(bodyList()); h += personForm() + '<div class="block">' + macroForm(E) + "</div>"; }
     else {
       var lb = lastBackup(), ld = lb ? new Date(lb) : null, old = $("datamsg") ? $("datamsg").textContent : "";
-      h += '<div class="block"><h2>Backup' + ib("bk") + "</h2>" + itx("bk", "Deine Einträge liegen nur auf diesem Gerät. Ein Backup ist eine Datei, die du zum Beispiel in iCloud Drive ablegst. Damit stellst du deine Daten wieder her oder überträgst sie auf ein anderes Gerät." + (PROF.list.length > 1 ? " Backup, Einspielen und Export gelten für das aktive Profil „" + esc(profName()) + "“." : "")) +
+      h += migCard("data") + '<div class="block"><h2>Backup' + ib("bk") + "</h2>" + itx("bk", "Deine Einträge liegen nur auf diesem Gerät. Ein Backup ist eine Datei, die du zum Beispiel in iCloud Drive ablegst. Damit stellst du deine Daten wieder her oder überträgst sie auf ein anderes Gerät." + (PROF.list.length > 1 ? " Backup, Einspielen und Export gelten für das aktive Profil „" + esc(profName()) + "“." : "")) +
       "<p>Letztes Backup: <b>" + (ld ? pad(ld.getDate()) + "." + pad(ld.getMonth() + 1) + "." + ld.getFullYear() : "noch keins") + "</b></p>" +
       '<div class="row"><button class="primary" data-act="backup">Backup speichern</button><button data-act="pick">Backup einspielen</button><input type="file" id="impfile" accept=".json,.txt,application/json,text/plain" hidden></div>' +
       '<p class="small muted" id="datamsg">' + esc(old || "Beim Einspielen werden die Einträge aus der Datei ergänzt. Gibt es einen Tag schon, gilt die Version aus der Datei.") + "</p></div>" +
       '<div class="block"><h2>Export für Excel' + ib("csv") + "</h2>" + itx("csv", "CSV-Dateien mit einer Zeile pro Satz bzw. pro Messung, die Excel direkt öffnet.") + '<div class="row"><button data-act="csvsets">Sätze exportieren</button><button data-act="csvbody">Körperwerte exportieren</button></div></div>' +
-      profileBlock() + '<div class="row" style="align-items:center;justify-content:space-between"><span class="small muted" id="datacount">' + Object.keys(S.workouts).length + " Einheiten und " + Object.keys(S.body).length + " Messungen gespeichert · Version " + APP_VERSION + '</span><button class="ghost" data-act="news">Was ist neu?</button></div>';
+      profileBlock() + '<div class="row" style="align-items:center;justify-content:space-between"><span class="small muted" id="datacount">' + Object.keys(S.workouts).length + " Einheiten und " + Object.keys(S.body).length + " Messungen gespeichert · Version " + APP_VERSION + "<br>" + esc(storeLine()) + '</span><button class="ghost" data-act="news">Was ist neu?</button></div>';
     }
     el.innerHTML = h;
   }
@@ -2141,10 +2330,14 @@ button, select, input { touch-action: manipulation }
   function switchProfile(id) {
     if (!PROF.list.some(function (p) { return p.id === id; })) return;
     saveDraft(); if (planTimer) planChanged(true);
-    PROF.active = id; profWrite(); loadAll();
+    PROF.active = id; profWrite(); S.ready = false; migMsg = "";
     S.date = today(); S.dayId = null; S.exSel = null; S.calSel = null; S.planCode = ""; planPatch = null; S.pick = {}; pickMsg = {}; S.exOpen = null; S.exFilter = ""; draft = null; dirty = false;
-    if ($("datamsg")) $("datamsg").textContent = "";
-    renderAll(true); setSync("Profil „" + profName() + "“ geladen");
+    loadAll().then(function (ok) {
+      if (!ok) return;
+      S.ready = true; draft = null;
+      if ($("datamsg")) $("datamsg").textContent = "";
+      renderAll(true); setSync("Profil „" + profName() + "“ geladen");
+    });
   }
 
   /* „Wer trainiert?“: erscheint bei mehreren Profilen beim Start und nach längerer Pause, Hauptnutzer zuerst. */
@@ -2482,6 +2675,7 @@ button, select, input { touch-action: manipulation }
     }
     var head = '<div class="dhead"><span class="ddate">' + ic("cal") + "<span>" + WDAYS[dateOf(t).getDay()].slice(0, 2) + ". " + dfmt(t) + (E && E.n ? '<span class="muted"> · ' + (di.train ? "Trainingstag" : "Ruhetag") + "</span>" : "") + "</span></span>" +
       (ph ? '<span class="phpill pp-' + ph.type + '">' + ic(ph.type) + PH[ph.type] + " · Woche " + weekOf(ph, t) + "</span>" : "") + "</div>";
+    h += migCard("home");
     h += '<div class="block foodblk">' + foodBlock(t, E, E ? di : null, E ? mc : null, head, stats) + "</div>";
     /* Training und Kalender: nächstes Training vorausgewählt */
     if (S.calSel === undefined) { var nt0 = nextTraining(); S.calSel = nt0 ? nt0.date : t; S.calMonth = S.calSel.slice(0, 7); }
@@ -2556,6 +2750,8 @@ button, select, input { touch-action: manipulation }
       var moved = clone(cur0); moved.date = nd; moved.updated = new Date().toISOString();
       put(newId, moved); put(oldId, null); S.date = nd; draft = null; renderTrain(); renderProgress();
     }
+    else if (a === "migrate") { if (arm(b, "Ohne Backup umziehen?")) migrate(); }
+    else if (a === "migok") { migMsg = ""; renderHome(); renderData(); }
     else if (a === "totoday") { saveDraft(); S.lateDay = false; S.date = today(); S.dayId = null; draft = null; renderTrain(); }
     else if (a === "reload") { var go = function () { location.reload(); }; if (window.caches) caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }).then(go, go); else go(); }
     else if (a === "tadd" || a === "trep") { S.tpick = a === "tadd" ? { mode: "add" } : { mode: "rep", id: id }; renderTrain(); var tq = $("tpq"); if (tq) { tq.scrollIntoView({ block: "center" }); tq.focus(); } }
@@ -2658,6 +2854,7 @@ button, select, input { touch-action: manipulation }
     else if (a === "pfdel") {
       if (id !== PROF.active && PROF.list.some(function (p) { return p.id === id; }) && arm(b, "Mit allen Daten löschen?")) {
         try { localStorage.removeItem(keyFor("data", id)); localStorage.removeItem(keyFor("backup", id)); } catch (e) {}
+        idbWrite(id, null, null, "delete", true);
         PROF.list = PROF.list.filter(function (p) { return p.id !== id; }); profFix(); profWrite(); renderData(); renderProfSel();
       }
     }
@@ -2667,7 +2864,8 @@ button, select, input { touch-action: manipulation }
       deliver("trainingslog-backup-" + slug + today() + ".json", JSON.stringify({ app: "trainingslog", version: 1, profile: profName(), exported: new Date().toISOString(), docs: DOCS }), "application/json").then(function (ok) {
         if (!ok) return;
         try { localStorage.setItem(keyFor("backup"), new Date().toISOString()); } catch (e) {}
-        renderData(); $("datamsg").textContent = "Backup erstellt. Leg die Datei außerhalb dieses Geräts ab, zum Beispiel in iCloud Drive."; topNotice();
+        renderData(); if ($("datamsg")) $("datamsg").textContent = "Backup erstellt. Leg die Datei außerhalb dieses Geräts ab, zum Beispiel in iCloud Drive."; topNotice();
+        if (migPending()) migrate();
       });
     }
     else if (a === "pick") $("impfile").click();
