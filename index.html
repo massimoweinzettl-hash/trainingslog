@@ -356,7 +356,16 @@ button.danger { color: var(--bad) }
 .warm p { margin: 0 }
 .testbox { padding: 10px 12px; border-radius: 8px; background: var(--accent-soft) }
 .testbox p { margin: 0 }
-.srow { gap: 8px; align-items: center }
+.srow { gap: 8px; align-items: center; flex-wrap: wrap }
+.tbadge { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap }
+.tadd { align-self: flex-start; margin: 4px 0 8px }
+.tpick { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px; background: var(--sunken); margin: 8px 0 }
+.tpick p { margin: 0 }
+.tpres { display: flex; flex-direction: column; gap: 2px; max-height: 300px; overflow-y: auto }
+.tpitem { display: flex; align-items: center; gap: 10px; text-align: left; background: var(--surface); color: var(--ink); border: 0; border-radius: 10px; padding: 6px 10px; min-height: 44px; font: 500 15px var(--body) }
+.tpitem > span:nth-of-type(1) { flex: 1; min-width: 0 }
+label.chk { display: flex; flex-direction: row; align-items: center; gap: 10px; font-size: 15px }
+label.chk input { width: 22px; height: 22px; min-height: 0; flex: none; accent-color: var(--accent) }
 button.ghost.on { color: var(--accent); font-weight: 700 }
 .prnote { margin: 0; align-self: flex-start; padding: 4px 9px; border-radius: 6px; background: var(--good-soft); color: var(--good); font-size: 13px; font-weight: 600 }
 .prnote span::before { content: "🏆 " }
@@ -494,7 +503,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 47;
+  var APP_VERSION = 48;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -561,7 +570,9 @@ button, select, input { touch-action: manipulation }
     { v: 46, tab: "home", text: "Der Kalorienbalken füllt sich jetzt in den Farben von Protein, Fett und Kohlenhydraten. Darunter stehen alle drei mit „gegessen / Ziel“, Defizit und Verbrauch in einer kleinen Zeile." },
     { v: 46, tab: "data", text: "Lebensmittel haben jetzt auch Fett und Kohlenhydrate. Die vorbelegten sind ergänzt, bei eigenen Lebensmitteln trägst du die Werte einmal nach (markiert mit „Fett/KH fehlt“)." },
     { v: 47, tab: "train", text: "Krafttest jetzt bei jeder Übung: Knopf „Krafttest“ neben „+ Satz“. Sinnvoll vor allem bei Grundübungen, höchstens ein, zwei Tests pro Training." },
-    { v: 47, tab: "prog", text: "In der Krafttest-Liste stehen jetzt auch getestete Übungen, die keine Schwerpunktübungen sind." }
+    { v: 47, tab: "prog", text: "In der Krafttest-Liste stehen jetzt auch getestete Übungen, die keine Schwerpunktübungen sind." },
+    { v: 48, tab: "train", text: "Übungen außerhalb des Plans: „+ Übung für heute“ unter der letzten Übung, mit Auswahl, nach welcher Übung sie kommt. „Ersetzen“ tauscht eine Übung nur für heute aus. Mit dem Häkchen „auch in den Plan übernehmen“ landet sie an derselben Stelle im Trainingstag." },
+    { v: 48, tab: "data", text: "Neu im Katalog: „Latzug Maschine“. „Rudern Maschine“ hat ein eigenes Bild mit Brustpolster." }
   ];
   var TABNAME = { home: "Start", train: "Training", prog: "Fortschritt", body: "Körper", plan: "Plan", data: "Daten" };
   var fresh = [], hiddenAt = 0, hiddenDay = "";
@@ -665,7 +676,7 @@ button, select, input { touch-action: manipulation }
 
   /* ---------- Auswertung ---------- */
   function sortedWorkouts() {
-    return Object.keys(S.workouts).map(function (k) { var w = S.workouts[k]; return { id: k, w: w }; })
+    return Object.keys(S.workouts).filter(function (k) { return (S.workouts[k].entries || []).length; }).map(function (k) { var w = S.workouts[k]; return { id: k, w: w }; })
       .sort(function (a, b) { return a.w.date < b.w.date ? -1 : a.w.date > b.w.date ? 1 : String(a.w.updated || "") < String(b.w.updated || "") ? -1 : 1; });
   }
   function sessions(exId) {
@@ -1013,17 +1024,29 @@ button, select, input { touch-action: manipulation }
   }
 
   /* ---------- Training ---------- */
+  /* Übungen der heutigen Einheit: normalerweise die des Trainingstags. Mit „+ Übung für heute“ oder „Ersetzen“ gilt eine
+     eigene Liste nur für diese Einheit (draft.exs = [{id, name, was?}], im Trainingseintrag als exs gespeichert). */
+  function sessList() {
+    var d = day(); if (!d) return [];
+    if (!draft || !draft.exs) return d.exercises;
+    var m = exById();
+    return draft.exs.map(function (x) { return m[x.id] || defaultsFor(x.id, x.name); });
+  }
+  function initRows(ex, e) {
+    var adv = advise(ex, S.date), w = adv ? fmt(adv.w) : "", rows = [];
+    if (e) { rows = e.sets.map(function (s) { return { w: s.w == null ? "" : fmt(s.w), r: String(s.r) }; }); w = rows.length ? rows[rows.length - 1].w : w; }
+    while (rows.length < ex.sets) rows.push({ w: w, r: "" });
+    return rows;
+  }
   function buildDraft() {
     var d = day(); if (!d) { draft = null; return; }
     var stored = S.workouts[wid()], byEx = {};
     (stored && stored.entries || []).forEach(function (e) { byEx[e.exId] = e; });
-    draft = { rows: {}, extra: [], test: {} };
-    d.exercises.forEach(function (ex) {
-      var adv = advise(ex, S.date), w = adv ? fmt(adv.w) : "", rows = [];
+    draft = { rows: {}, extra: [], test: {}, exs: stored && stored.exs ? clone(stored.exs) : null };
+    S.tpick = null;
+    sessList().forEach(function (ex) {
       if (byEx[ex.id] && byEx[ex.id].test) draft.test[ex.id] = true;
-      if (byEx[ex.id]) { rows = byEx[ex.id].sets.map(function (s) { return { w: s.w == null ? "" : fmt(s.w), r: String(s.r) }; }); w = rows.length ? rows[rows.length - 1].w : w; delete byEx[ex.id]; }
-      while (rows.length < ex.sets) rows.push({ w: w, r: "" });
-      draft.rows[ex.id] = rows;
+      draft.rows[ex.id] = initRows(ex, byEx[ex.id]); delete byEx[ex.id];
     });
     draft.extra = Object.keys(byEx).map(function (k) { return byEx[k]; });
     dirty = false;
@@ -1032,17 +1055,72 @@ button, select, input { touch-action: manipulation }
     clearTimeout(saveTimer); saveTimer = null;
     if (!dirty || !draft || !day()) return;
     dirty = false;
-    var d = day(), entries = [];
-    d.exercises.forEach(function (ex) {
+    var d = day(), entries = [], L = sessList(), inL = {}, m = exById();
+    var toEntry = function (ex) {
       var sets = (draft.rows[ex.id] || []).map(function (r) { return { w: num(r.w), r: num(r.r) }; }).filter(function (s) { return s.r > 0; })
         .map(function (s) { return { w: s.w == null ? 0 : s.w, r: Math.round(s.r) }; });
       if (sets.length) { var en = { exId: ex.id, name: ex.name, sets: sets }; if (draft.test && draft.test[ex.id]) en.test = true; entries.push(en); }
-    });
+    };
+    L.forEach(function (ex) { inL[ex.id] = 1; toEntry(ex); });
+    /* Schon eingetragene Sätze einer heute ersetzten Übung gehen nicht verloren. */
+    Object.keys(draft.rows).forEach(function (k) { if (!inL[k] && m[k]) toEntry(m[k]); });
     entries = entries.concat(draft.extra);
     var id = wid();
-    if (!entries.length) { if (S.workouts[id]) put(id, null); }
-    else put(id, { kind: "workout", date: S.date, dayId: d.id, dayName: d.name, entries: entries, updated: new Date().toISOString() });
+    if (!entries.length && !draft.exs) { if (S.workouts[id]) put(id, null); }
+    else { var wd = { kind: "workout", date: S.date, dayId: d.id, dayName: d.name, entries: entries, updated: new Date().toISOString() }; if (draft.exs) wd.exs = clone(draft.exs); put(id, wd); }
     renderProgress();
+  }
+  /* Auswahl für „+ Übung für heute“ und „Ersetzen“: eigene Übungen und Katalog, Suche über #tpq. */
+  function tpResults(q) {
+    var n = norm(q || ""), cur = {}, known = {}, all = allExercises().map(function (x) { return x.ex; });
+    sessList().forEach(function (e) { cur[e.id] = 1; });
+    all.forEach(function (e) { known[norm(e.name)] = 1; });
+    var mine = all.filter(function (e) { return !cur[e.id] && (!n || norm(e.name).indexOf(n) >= 0); })
+      .sort(function (a, b) { return (b.fav || 0) - (a.fav || 0) || a.name.localeCompare(b.name, "de"); }).slice(0, n ? 8 : 6);
+    var cat = n ? CATALOG.map(function (c, i) { return [c, i]; }).filter(function (x) { return !catHidden(x[0][0]) && !known[norm(x[0][0])] && norm(x[0][0]).indexOf(n) >= 0; }).slice(0, 8) : [];
+    var item = function (key, ex) { return '<button class="tpitem" data-act="tpick" data-id="' + key + '">' + exIcon(ex, 22) + "<span>" + esc(ex.name) + '</span><span class="small muted">' + esc(groupOf(ex)) + "</span></button>"; };
+    var h = mine.map(function (e) { return item("e:" + e.id, e); }).join("") + cat.map(function (x) { return item("c:" + x[1], { name: x[0][0] }); }).join("");
+    if (n && !known[n] && !CATALOG.some(function (c) { return norm(c[0]) === n; })) h += '<button class="tpitem" data-act="tpick" data-id="n:"><span>„' + esc(q.trim()) + "“ als neue Übung anlegen</span></button>";
+    return h || '<p class="small muted">' + (n ? "Keine Übung gefunden." : "Tipp oben einen Namen ein.") + "</p>";
+  }
+  function tpickHtml() {
+    var P = S.tpick, L = sessList(), last = L.length ? L[L.length - 1].id : "", m = exById();
+    L.forEach(function (e) { if ((draft.rows[e.id] || []).some(function (r) { return num(r.r) > 0; })) last = e.id; });
+    var h = '<div class="tpick"><p class="small"><b>' + (P.mode === "rep" ? "„" + esc((m[P.id] || {}).name || "") + "“ heute ersetzen durch" : "Übung für heute hinzufügen") + "</b></p>" +
+      '<label>Übung suchen<input id="tpq" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. Latzug"></label><div id="tpres" class="tpres">' + tpResults("") + "</div>";
+    if (P.mode === "add") h += '<label>Einfügen<select id="tpafter"><option value="">am Anfang</option>' + L.map(function (e) { return '<option value="' + e.id + '"' + (e.id === last ? " selected" : "") + ">nach " + esc(e.name) + "</option>"; }).join("") + "</select></label>";
+    return h + '<label class="chk"><input type="checkbox" id="tpplan"> auch in den Plan übernehmen</label><div class="row"><button class="ghost" data-act="tpcancel">Abbrechen</button></div></div>';
+  }
+  /* Übernimmt die Auswahl: nur für heute (draft.exs) und auf Wunsch an derselben Stelle in den Trainingstag. */
+  function tpApply(key) {
+    var P = S.tpick, d = day(), m = exById(), ex = null, isNew = false;
+    if (!P || !d) return;
+    if (key.indexOf("e:") === 0) ex = m[key.slice(2)];
+    else if (key.indexOf("c:") === 0) { var cc = CATALOG[+key.slice(2)]; if (cc) { ex = { id: rid("e"), name: cc[0], sets: 3, repMin: cc[2], repMax: cc[3], step: cc[4] }; isNew = true; } }
+    else {
+      var nm = ($("tpq") ? $("tpq").value : "").trim().slice(0, 60); if (!nm) return;
+      var c2 = CATALOG.filter(function (c) { return norm(c[0]) === norm(nm); })[0];
+      ex = { id: rid("e"), name: c2 ? c2[0] : nm, sets: 3, repMin: c2 ? c2[2] : 8, repMax: c2 ? c2[3] : 12, step: c2 ? c2[4] : 2.5 }; isNew = true;
+    }
+    if (!ex) return;
+    var L = sessList(), list = draft.exs ? clone(draft.exs) : L.map(function (e) { return { id: e.id, name: e.name }; });
+    if (list.some(function (x) { return x.id === ex.id; })) { S.tpick = null; renderTrain(); return; }
+    var toPlan = !!($("tpplan") && $("tpplan").checked), idx = function (arr, id) { var k = -1; arr.forEach(function (x, j) { if (x.id === id) k = j; }); return k; }, pos;
+    if (P.mode === "rep") { pos = idx(list, P.id); if (pos < 0) return; var old = list[pos]; list.splice(pos, 1, { id: ex.id, name: ex.name, was: old.was || old.name, wasId: old.wasId || old.id }); }
+    else { var af = $("tpafter") ? $("tpafter").value : ""; pos = af ? idx(list, af) + 1 : 0; list.splice(pos, 0, { id: ex.id, name: ex.name }); }
+    if (toPlan) {
+      var pl = d.exercises, at = 0;
+      if (P.mode === "rep" && idx(pl, P.id) >= 0) pl.splice(idx(pl, P.id), 1, clone(ex));
+      else { for (var j = pos - 1; j >= 0; j--) { var pj = idx(pl, list[j].id); if (pj >= 0) { at = pj + 1; break; } } pl.splice(at, 0, clone(ex)); }
+      list.forEach(function (x) { if (x.id === ex.id) { delete x.was; delete x.wasId; } });
+    }
+    if (isNew && !toPlan) setExercise(ex);
+    var same = list.length === d.exercises.length && list.every(function (x, j) { return x.id === d.exercises[j].id; });
+    draft.exs = same ? null : list;
+    if (!draft.rows[ex.id]) draft.rows[ex.id] = initRows(ex, null);
+    S.tpick = null; dirty = true; saveDraft();
+    if (toPlan || isNew) planChanged(true);
+    renderTrain();
   }
   /* Reiter „Training“: nur noch das Eintragen. Der Kalender steht auf der Startseite. */
   function trainViewChips() { return ""; }
@@ -1060,14 +1138,17 @@ button, select, input { touch-action: manipulation }
     var d = day(), h = trainViewChips();
     h += '<div class="block"><div class="row"><label style="flex:0 1 170px">Datum<input type="date" id="tdate" value="' + S.date + '" max="' + today() + '"></label></div>' + phaseLine() + (schedDay(S.date) ? '<p class="small muted">Für diesen Tag eingeplant: <b>' + esc(schedDay(S.date).name) + "</b></p>" : "") + '<div class="chips" role="group" aria-label="Trainingstag">' +
       S.plan.days.map(function (x) { return '<button data-act="day" data-id="' + x.id + '" aria-pressed="' + (x.id === d.id) + '">' + esc(x.name) + "</button>"; }).join("") + "</div>" +
-      (S.workouts[wid()] ? '<p class="small muted">Für diesen Tag ist schon ein Eintrag gespeichert. Änderungen überschreiben ihn.</p><div class="row"><label style="flex:0 1 170px">Eintrag verschieben auf<input type="date" id="mvdate" value="' + S.date + '" max="' + today() + '"></label><button data-act="move">Verschieben</button><span class="small muted" id="mvmsg"></span></div>' : "") + "</div>";
-    if (!d.exercises.length) h += '<p class="empty">Dieser Tag hat noch keine Übungen. Füge sie im Tab „Plan“ hinzu.</p>';
-    d.exercises.forEach(function (ex, xi) {
+      (S.workouts[wid()] && (S.workouts[wid()].entries || []).length ? '<p class="small muted">Für diesen Tag ist schon ein Eintrag gespeichert. Änderungen überschreiben ihn.</p><div class="row"><label style="flex:0 1 170px">Eintrag verschieben auf<input type="date" id="mvdate" value="' + S.date + '" max="' + today() + '"></label><button data-act="move">Verschieben</button><span class="small muted" id="mvmsg"></span></div>' : "") + "</div>";
+    var SL = sessList(), inPlan = {}, wasOf = {};
+    d.exercises.forEach(function (e) { inPlan[e.id] = 1; });
+    (draft.exs || []).forEach(function (x) { if (x.was) wasOf[x.id] = x.was; });
+    if (!SL.length) h += '<p class="empty">Dieser Tag hat noch keine Übungen. Füge sie im Tab „Plan“ hinzu oder unten nur für heute.</p>';
+    SL.forEach(function (ex, xi) {
       var last = lastBefore(ex.id, S.date), adv = advise(ex, S.date), rows = draft.rows[ex.id] || [], isTest = !!(draft.test && draft.test[ex.id]);
       var fh = "";
       if (ex.focus) {
         /* Schwerpunkt: Hinweis auf die Position, Aufwärmsätze zum heutigen Arbeitsgewicht, Krafttest. */
-        var before = d.exercises.slice(0, xi).filter(function (x) { return !x.focus; }).length;
+        var before = SL.slice(0, xi).filter(function (x) { return !x.focus; }).length;
         if (before) fh += '<p class="small focusnote">Steht an Position ' + (xi + 1) + '. Am Anfang des Trainings bist du am frischesten. <button class="ghost" data-act="focusfront" data-id="' + ex.id + '">Nach vorn</button></p>';
         var work = num((rows[0] || {}).w) || (adv ? adv.w : 0), wu = warmups(ex, work, xi === 0);
         if (isTest) {
@@ -1083,7 +1164,7 @@ button, select, input { touch-action: manipulation }
         if (isTest) fh += testBox(tw2);
         fh += warmHtml(warmups(ex, tw2 || work2, xi === 0), ex.id);
       }
-      h += '<div class="block' + (ex.focus ? " focusblk" : "") + '"><div class="exhead"><span class="extitle">' + exIcon(ex, 30) + "<h3>" + esc(ex.name) + "</h3>" + (ex.focus ? '<span class="fbadge">Schwerpunkt</span>' : "") + '</span><span class="small muted">' + ex.sets + " × " + ex.repMin + "–" + ex.repMax + " Wdh.</span></div>" + fh +
+      h += '<div class="block' + (ex.focus ? " focusblk" : "") + '"><div class="exhead"><span class="extitle">' + exIcon(ex, 30) + "<h3>" + esc(ex.name) + "</h3>" + (ex.focus ? '<span class="fbadge">Schwerpunkt</span>' : "") + (inPlan[ex.id] ? "" : '<span class="tbadge">' + (wasOf[ex.id] ? "heute statt " + esc(wasOf[ex.id]) : "nur heute") + "</span>") + '</span><span class="small muted">' + ex.sets + " × " + ex.repMin + "–" + ex.repMax + " Wdh.</span></div>" + fh +
         '<p class="small muted">' + (last ? "Zuletzt (" + dfmt(last.date) + (last.test ? ", Krafttest" : "") + "): " + setsText(last.sets) : "Noch kein früherer Eintrag. Ab dem zweiten Mal schlägt der Tracker hier ein Gewicht vor.") + "</p>" +
         (adv ? '<span class="hint ' + adv.kind + '">' + (isTest ? "Nach dem Test: " : "Vorschlag heute: ") + adv.text + "</span>" : "") +
         '<div class="sets"><span class="hd">Satz</span><span class="hd">Gewicht (kg)</span><span class="hd">Wdh.</span>' +
@@ -1092,8 +1173,12 @@ button, select, input { touch-action: manipulation }
           return '<span class="n' + (tz ? " tn" : "") + '">' + (tz ? "Test" : i + 1) + '</span><input id="w-' + ex.id + "-" + i + '"' + tc + ' inputmode="decimal" autocomplete="off" aria-label="Gewicht ' + lab + '" data-ex="' + ex.id + '" data-i="' + i + '" data-k="w" value="' + esc(r.w) + '">' +
             '<input id="r-' + ex.id + "-" + i + '"' + tc + ' inputmode="numeric" autocomplete="off" aria-label="Wiederholungen ' + lab + '" placeholder="' + ph + '" data-ex="' + ex.id + '" data-i="' + i + '" data-k="r" value="' + esc(r.r) + '">';
         }).join("") + '</div><div class="row srow"><button class="ghost" data-act="addset" data-id="' + ex.id + '">+ Satz</button>' +
-        (ex.focus ? "" : '<button class="ghost' + (isTest ? " on" : "") + '" data-act="testtoggle" data-id="' + ex.id + '" aria-pressed="' + isTest + '">' + (isTest ? "Krafttest: aktiv" : "Krafttest") + "</button>") + '</div><p class="small" id="nx-' + ex.id + '"' + (nextText(ex) ? "" : " hidden") + "><b>" + esc(nextText(ex)) + '</b></p><p class="prnote" id="pr-' + ex.id + '"' + (prText(ex) ? "" : " hidden") + "><span>" + esc(prText(ex)) + "</span></p></div>";
+        (ex.focus ? "" : '<button class="ghost' + (isTest ? " on" : "") + '" data-act="testtoggle" data-id="' + ex.id + '" aria-pressed="' + isTest + '">' + (isTest ? "Krafttest: aktiv" : "Krafttest") + "</button>") +
+        '<button class="ghost" data-act="trep" data-id="' + ex.id + '">Ersetzen</button>' +
+        (!inPlan[ex.id] && !rows.some(function (r) { return num(r.r) > 0; }) ? '<button class="ghost" data-act="tdel" data-id="' + ex.id + '">' + (wasOf[ex.id] ? "Rückgängig" : "Entfernen") + "</button>" : "") +
+        "</div>" + (S.tpick && S.tpick.mode === "rep" && S.tpick.id === ex.id ? tpickHtml() : "") + '<p class="small" id="nx-' + ex.id + '"' + (nextText(ex) ? "" : " hidden") + "><b>" + esc(nextText(ex)) + '</b></p><p class="prnote" id="pr-' + ex.id + '"' + (prText(ex) ? "" : " hidden") + "><span>" + esc(prText(ex)) + "</span></p></div>";
     });
+    h += S.tpick && S.tpick.mode === "add" ? tpickHtml() : '<button class="ghost tadd" data-act="tadd">+ Übung für heute</button>';
     h += tip("save", "Wann zählt ein Satz?", "Ein Satz zählt, sobald Wiederholungen eingetragen sind. Gespeichert wird automatisch.");
     el.innerHTML = h;
   }
@@ -1439,7 +1524,7 @@ button, select, input { touch-action: manipulation }
     ["Bankdrücken", "Brust", 6, 10, 2.5], ["Schrägbankdrücken Langhantel", "Brust", 6, 10, 2.5], ["Schrägbankdrücken Kurzhantel", "Brust", 8, 12, 2.5], ["Kurzhantel-Bankdrücken", "Brust", 8, 12, 2.5],
     ["Butterfly", "Brust", 12, 15, 2.5], ["Kabelzug-Flys", "Brust", 12, 15, 2.5], ["Dips", "Brust", 8, 12, 2.5], ["Brustpresse Maschine", "Brust", 8, 12, 5],
     ["Klimmzüge", "Rücken", 6, 10, 2.5], ["Latzug", "Rücken", 8, 12, 2.5], ["Langhantelrudern", "Rücken", 8, 12, 2.5], ["Kurzhantelrudern einarmig", "Rücken", 8, 12, 2.5],
-    ["Rudern am Kabel", "Rücken", 10, 12, 2.5], ["T-Bar-Rudern", "Rücken", 8, 12, 2.5], ["Rudern Maschine", "Rücken", 8, 12, 5], ["Face Pulls", "Rücken", 12, 15, 2.5], ["Hyperextensions", "Rücken", 10, 15, 2.5],
+    ["Rudern am Kabel", "Rücken", 10, 12, 2.5], ["T-Bar-Rudern", "Rücken", 8, 12, 2.5], ["Rudern Maschine", "Rücken", 8, 12, 5], ["Latzug Maschine", "Rücken", 8, 12, 5], ["Face Pulls", "Rücken", 12, 15, 2.5], ["Hyperextensions", "Rücken", 10, 15, 2.5],
     ["Schulterdrücken Langhantel", "Schultern", 6, 10, 2.5], ["Schulterdrücken Kurzhantel", "Schultern", 8, 12, 2.5], ["Schulterpresse Maschine", "Schultern", 8, 12, 5],
     ["Seitheben", "Schultern", 12, 20, 2.5], ["Seitheben am Kabel", "Schultern", 12, 20, 2.5], ["Reverse Flys", "Schultern", 12, 15, 2.5],
     ["Langhantel-Curls", "Arme", 8, 12, 2.5], ["Kurzhantel-Curls", "Arme", 10, 15, 2.5], ["Hammer-Curls", "Arme", 10, 15, 2.5], ["Scottcurls", "Arme", 10, 12, 2.5], ["Kabel-Curls", "Arme", 10, 15, 2.5],
@@ -1567,6 +1652,7 @@ button, select, input { touch-action: manipulation }
       pullup: X("8,6 40,6") + F("18,6 20,17 28,17 30,6") + F("24,17 24,31") + F("20,41 24,31 28,41") + H(24, 12.5),
       latpull: X("24,1 24,6") + Q("12,6 36,6") + F("15,7 16,15 20,19 28,19 32,15 33,7") + F("24,19 24,32") + X("14,33 34,33") + F("18,42 21,33 27,33 30,42") + H(24, 13.5),
       rowbent: X("4,42 44,42") + F("23,42 21,34 27,26 13,20") + H(9, 17.5) + F("14,21 21,24 16,29") + P(15, 32),
+      rowmachine: X("22,36 38,36") + X("30,36 30,42") + F("29,34 19,33 19,42") + F("29,34 28,20") + H(29, 15) + R(19.5, 17, 3.5, 13) + F("28,21 34,25 26,25") + Q("26,25 12,31") + P(11, 32, 4.5),
       rowcable: X("8,30 8,41") + X("20,36 38,36") + F("9,35 17,30 29,34") + F("29,34 28,20") + H(29, 15) + F("28,21 33,26 23,26") + Q("23,26 5,26") + P(4, 26, 2),
       ohp: stand() + F("19,17 17,5") + F("29,17 31,5") + bar(4),
       lateral: stand() + F("19,17 7,19") + F("29,17 41,19") + D(6, 19) + D(42, 19),
@@ -1604,7 +1690,7 @@ button, select, input { touch-action: manipulation }
     ["legraise", /beinheben h|hanging|knee raise/], ["crunch", /crunch|sit-?up|ab wheel|russian|twist|holzhacker|plank|beinheben/],
     ["lunge", /glute kick/], ["lateral", /reverse fl|reverse butter/], ["hold", /aufrechtes|shrug|farmer/], ["calf", /wade|calf/], ["legcurl", /beinbeug|nordic|leg curl/], ["dips", /dips/], ["pushup", /liegest|push-?up/], ["pullup", /klimm|chin-?up|pull-?up/], ["latpull", /latzug|lat pull/],
     ["fly", /butterfly|fly|flieg|überz|pullover/], ["incline", /schrägbank(?!.*curl)|incline/], ["press", /brustpresse|chest press/],
-    ["bench", /bankdr|bench/], ["rowcable", /rudern am kabel|kabelrudern|rudern maschine|rudern sitzend|face pull|cable row/],
+    ["bench", /bankdr|bench/], ["rowmachine", /rudern maschine|row machine|ruder ?maschine/], ["rowcable", /rudern am kabel|kabelrudern|rudern sitzend|face pull|cable row/],
     ["rowbent", /ruder|row|kickback/], ["ohp", /schulterdr|schulterpresse|arnold|overhead press|military|aufrechtes/],
     ["lateral", /seitheb|frontheb|reverse fl|reverse butter|lateral/], ["hold", /shrug|farmer/],
     ["overhead", /über kopf|overhead|french|skull/], ["pushdown", /trizeps|pushdown/], ["curl", /curl(?!.*bein)|bizeps/],
@@ -1848,12 +1934,14 @@ button, select, input { touch-action: manipulation }
       }
       if (k.indexOf("w_") === 0) {
         if (!DRE.test(d.date) || !IRE.test(d.dayId) || k !== "w_" + d.date + "_" + d.dayId) throw 0;
-        return { kind: "workout", date: d.date, dayId: d.dayId, dayName: txt80(d.dayName), updated: String(d.updated || "").slice(0, 40), entries: d.entries.map(function (e) {
+        var cw = { kind: "workout", date: d.date, dayId: d.dayId, dayName: txt80(d.dayName), updated: String(d.updated || "").slice(0, 40), entries: d.entries.map(function (e) {
           if (!IRE.test(e.exId)) throw 0;
           var ce = { exId: e.exId, name: txt80(e.name), sets: e.sets.map(function (s) { if (!isN(s.w) || !isN(s.r)) throw 0; return { w: s.w, r: s.r }; }) };
           if (e.test === true) ce.test = true;
           return ce;
         }) };
+        if (Array.isArray(d.exs)) cw.exs = d.exs.filter(function (x) { return x && IRE.test(x.id); }).slice(0, 40).map(function (x) { var o = { id: x.id, name: txt80(x.name) }; if (x.was) o.was = txt80(x.was); if (IRE.test(x.wasId || "")) o.wasId = x.wasId; return o; });
+        return cw;
       }
       if (k === "food") {
         var fid = {};
@@ -2418,6 +2506,16 @@ button, select, input { touch-action: manipulation }
       var moved = clone(cur0); moved.date = nd; moved.updated = new Date().toISOString();
       put(newId, moved); put(oldId, null); S.date = nd; draft = null; renderTrain(); renderProgress();
     }
+    else if (a === "tadd" || a === "trep") { S.tpick = a === "tadd" ? { mode: "add" } : { mode: "rep", id: id }; renderTrain(); var tq = $("tpq"); if (tq) { tq.scrollIntoView({ block: "center" }); tq.focus(); } }
+    else if (a === "tpcancel") { S.tpick = null; renderTrain(); }
+    else if (a === "tpick") tpApply(id);
+    else if (a === "tdel") {
+      /* Ersetzte Übung: die ursprüngliche kommt zurück; nur heute hinzugefügte fällt weg. */
+      var dl = [], dd0 = day();
+      (draft.exs || []).forEach(function (x) { if (x.id !== id) dl.push(x); else if (x.wasId) dl.push({ id: x.wasId, name: x.was }); });
+      var same0 = dl.length === dd0.exercises.length && dl.every(function (x, j) { return x.id === dd0.exercises[j].id; });
+      draft.exs = same0 ? null : dl; delete draft.rows[id]; dirty = true; saveDraft(); renderTrain();
+    }
     else if (a === "addset") { var rows = draft.rows[id], l = rows[rows.length - 1]; rows.push({ w: l ? l.w : "", r: "" }); renderTrain(); var el = $("r-" + id + "-" + (rows.length - 1)); if (el) el.focus(); }
     else if (a === "metric") { S.metric = id; renderProgress(); }
     else if (a === "open") { S.trainView = "edit"; S.date = b.dataset.date; S.dayId = id; draft = null; showTab("train"); }
@@ -2628,7 +2726,7 @@ button, select, input { touch-action: manipulation }
     else if (a === "volmode") { S.volMode = id; renderProgress(); }
     else if (a === "testtoggle") {
       draft.test = draft.test || {};
-      var ton = !draft.test[id], tex = day() ? day().exercises.filter(function (x) { return x.id === id; })[0] : null, r0 = (draft.rows[id] || [])[0];
+      var ton = !draft.test[id], tex = sessList().filter(function (x) { return x.id === id; })[0], r0 = (draft.rows[id] || [])[0];
       if (ton) draft.test[id] = true; else delete draft.test[id];
       /* Zeile 1 mit dem Testgewicht vorbelegen bzw. zurücksetzen, solange dort noch keine Wiederholungen stehen. */
       if (tex && r0 && !r0.r) {
@@ -2691,11 +2789,12 @@ button, select, input { touch-action: manipulation }
   document.addEventListener("input", function (ev) {
     var t = ev.target, ds = t.dataset;
     if (t.id === "plancode") { S.planCode = t.value; return; }
+    if (t.id === "tpq") { $("tpres").innerHTML = tpResults(t.value); return; }
     if (t.id === "ffilter") { S.fFilter = t.value; $("flist").innerHTML = foodListHtml(foodDoc()); var fcb = document.querySelector("[data-act=fclear]"); if (fcb) fcb.hidden = !t.value; return; }
     if (t.id === "exfilter") { S.exFilter = t.value; $("exlist").innerHTML = exListHtml(); var cb = document.querySelector("[data-act=exclear]"); if (cb) cb.hidden = !t.value; return; }
     if (ds.k && draft) {
       draft.rows[ds.ex][+ds.i][ds.k] = t.value; dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 900);
-      var exo = day() && day().exercises.filter(function (x) { return x.id === ds.ex; })[0], nxe = $("nx-" + ds.ex);
+      var exo = sessList().filter(function (x) { return x.id === ds.ex; })[0], nxe = $("nx-" + ds.ex);
       if (exo && nxe) { var nt = nextText(exo); nxe.hidden = !nt; nxe.firstChild.textContent = nt; }
       var pre = $("pr-" + ds.ex); if (exo && pre) { var pt = prText(exo); pre.hidden = !pt; pre.firstChild.textContent = pt; }
     }
