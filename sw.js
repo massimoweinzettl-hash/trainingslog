@@ -1,6 +1,7 @@
 /* Trainingslog – Service Worker: macht die App offline nutzbar.
-   Bei jeder Änderung an den App-Dateien die Versionsnummer erhöhen. */
-const CACHE = "trainingslog-v1";
+   Antwortet aus dem Cache und holt im Hintergrund die neue Fassung. Anfragen mit dem Parameter „fresh“
+   (Versionsprüfung der App) gehen direkt ans Netz. CACHE nur ändern, wenn sich FILES ändert. */
+const CACHE = "trainingslog-v2";
 const FILES = [
   "./",
   "./index.html",
@@ -28,7 +29,8 @@ self.addEventListener("activate", (event) => {
    Eine aktualisierte App erscheint dadurch beim übernächsten Öffnen. */
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
+  const url = new URL(req.url);
+  if (req.method !== "GET" || url.origin !== self.location.origin || url.searchParams.has("fresh")) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const hit = await cache.match(req, { ignoreSearch: true });
