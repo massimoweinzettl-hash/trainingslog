@@ -26,8 +26,10 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-/* Sofort aus dem Cache antworten, im Hintergrund die neue Fassung holen.
-   Eine aktualisierte App erscheint dadurch beim übernächsten Öffnen. */
+/* Die App selbst (index.html) seit v84: zuerst aus dem Netz, damit Updates sofort ankommen. Antwortet das Netz nicht
+   innerhalb von 2,5 s oder ist es weg, kommt die gespeicherte Fassung – offline bleibt alles nutzbar.
+   Alles andere (Schriften, Icons, zxing): sofort aus dem Cache, im Hintergrund auffrischen. */
+const isPage = (req, url) => req.mode === "navigate" || url.pathname.endsWith("/") || url.pathname.endsWith("/index.html");
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
@@ -39,6 +41,13 @@ self.addEventListener("fetch", (event) => {
       if (res.ok) cache.put(req, res.clone());
       return res;
     });
+    if (isPage(req, url)) {
+      const timeout = new Promise((r) => setTimeout(() => r(null), 2500));
+      const net = await Promise.race([fresh.catch(() => null), timeout]);
+      if (net && net.ok) return net;
+      if (hit) { event.waitUntil(fresh.catch(() => {})); return hit; }
+      return fresh;
+    }
     if (hit) { event.waitUntil(fresh.catch(() => {})); return hit; }
     return fresh;
   })());
