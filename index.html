@@ -2869,7 +2869,8 @@ button, select, input { touch-action: manipulation }
     if (warnMsg) return notice(warnMsg);
     if (dataNote) return notice(dataNote);
     var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
-    var app = navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+    /* Als iPhone-App (Capacitor) gilt die App ebenfalls als installiert. */
+    var app = navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
     var lb = lastBackup(), days = lb ? Math.floor((Date.now() - Date.parse(lb)) / 864e5) : 0, nW = Object.keys(S.workouts).length;
     if (ios && !app) notice("Zum Installieren: in Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“. Trag deine Daten erst in der installierten App ein, sie speichert getrennt von Safari.");
     else if (lb ? days > 14 : nW >= 3) notice(lb ? "Dein letztes Backup ist " + days + " Tage alt. Sichere deine Daten im Tab „Daten“." : "Du hast noch kein Backup. Sichere deine Daten im Tab „Daten“, sie liegen nur auf diesem Gerät.");

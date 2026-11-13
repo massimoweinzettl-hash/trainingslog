@@ -1,0 +1,9 @@
+{
+  "appId": "io.github.massimoweinzettl.trainingslog",
+  "appName": "Trainingslog",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#f1f3f7"
+  }
+}

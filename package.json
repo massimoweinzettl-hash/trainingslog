@@ -1,0 +1,17 @@
+{
+  "name": "trainingslog-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Trainingslog als iPhone-App (Capacitor). Die Web-App bleibt index.html im Hauptordner.",
+  "scripts": {
+    "web": "node app/copy-web.mjs",
+    "ios": "npm run web && npx cap sync ios && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2"
+  }
+}
