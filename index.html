@@ -617,7 +617,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 66;
+  var APP_VERSION = 67;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -694,6 +694,7 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
+    { v: 67, tab: "data", text: "Alltag und Training getrennt: Unter Daten → Persönlich wählst du, wie aktiv dein Alltag ist (Büro bis Baustelle) und wie lange eine Einheit dauert. Zusammen mit den Trainingstagen ergibt das deinen Verbrauch. Bisherige Angaben gelten weiter, bis du den Alltag wählst." },
     { v: 66, tab: "data", text: "Neue Profile werden jetzt Schritt für Schritt eingerichtet: Angaben, Körper, Training und Ziel, danach ein kurzer Rundgang. Alles lässt sich überspringen." },
     { v: 66, tab: "body", text: "Eiweiß bei höherem Körperfett: Die App rechnet jetzt mit dem Gewicht bei 15 % Körperfett (Frauen 25 %) statt mit dem ganzen Gewicht. Bis 15 % (Frauen 25 %) ändert sich nichts." },
     { v: 65, tab: "body", text: "Essen im Rückblick zeigt jetzt immer jeden Tag als eigenen Balken, damit Ausreißer sichtbar bleiben. Bei längeren Zeiträumen kommt eine Linie mit dem Wochenschnitt dazu." },
@@ -1390,6 +1391,13 @@ button, select, input { touch-action: manipulation }
     if (v <= hi) return ["up", "Im Zielbereich"];
     return ["low", type === "cut" ? "Schneller als die Faustregel, das kostet eher Muskelmasse" : "Schneller als die Faustregel, der Überschuss wird eher Fett"];
   }
+  /* Seit v67: Alltag und Training getrennt. Faktor = Alltag + 0,06 je Trainingseinheit pro Woche (bei 60 min, anteilig nach Dauer).
+     Gespeichert wird weiter act (berechnet), dazu job und tmin. Alte Profile ohne job behalten ihr act aus der ACT-Liste. */
+  var JOB = [["sit", "Überwiegend sitzend", "Büro, Homeoffice, viel Auto fahren", 1.25], ["mix", "Sitzen und Gehen gemischt", "z. B. Lehrkraft, Labor, Werkstatt", 1.4],
+    ["feet", "Viel auf den Beinen", "z. B. Kellnerin, Pflege, Verkauf", 1.55], ["hard", "Körperlich schwer", "z. B. Bau, Landwirtschaft, Umzüge", 1.75]];
+  var TMIN = [30, 45, 60, 90];
+  function jobOf(k) { return JOB.filter(function (j) { return j[0] === k; })[0] || null; }
+  function actOf(job, tdays, tmin) { var j = jobOf(job); return j ? Math.round((j[3] + 0.06 * (tdays || []).length * (tmin || 60) / 60) * 1000) / 1000 : null; }
   var ACT = [[1.2, "Kaum aktiv: Büro, kein Sport"], [1.375, "Leicht aktiv: Büro, 1–2× Training pro Woche"], [1.55, "Mäßig aktiv: Büro, 3–5× Training pro Woche"], [1.725, "Sehr aktiv: 6–7× Training oder körperliche Arbeit"], [1.9, "Extrem aktiv: körperliche Arbeit plus Training"]];
   var kc = function (n) { return (Math.round(n / 50) * 50).toLocaleString("de-DE"); };
   function saveSettings(phases, person) { put("settings", { kind: "settings", phases: phases || S.phases, person: person || S.person || null, sched: S.sched || {}, macro: S.macro || null, hide: S.hide || [] }); }
@@ -1496,7 +1504,7 @@ button, select, input { touch-action: manipulation }
   }
   function kcalBlock(list) {
     var P = S.person, E = energy(list), ph = phaseAt(today()), cur = ph ? ph.type : null, title = "<h2>Kalorien und Makros</h2>";
-    if (!P) return title + '<p class="small muted">Trag im Reiter „Daten“ unter „Persönlich“ Geschlecht, Geburtsjahr, Größe und Aktivität ein. Dann berechnet der Tracker deinen Grundumsatz, deine Erhaltungskalorien und die Makros für Cut und Aufbau.</p>';
+    if (!P) return title + '<p class="small muted">Trag im Reiter „Daten“ unter „Persönlich“ Geschlecht, Geburtsjahr, Größe und Alltag ein. Dann berechnet der Tracker deinen Grundumsatz, deine Erhaltungskalorien und die Makros für Cut und Aufbau.</p>';
     if (!E) return title + '<p class="small muted">Es fehlt noch eine Gewichtsmessung. Trag oben dein Gewicht ein, dann erscheinen hier Kalorien und Makros.</p>';
     var nf = function (n) { return Math.round(n).toLocaleString("de-DE"); }, order = ["maintain", "cut", "bulk"], head = { maintain: "Erhaltung", cut: "Cut", bulk: "Aufbau" };
     var on = function (t) { return t === cur ? ' class="on"' : ""; };
@@ -1512,7 +1520,7 @@ button, select, input { touch-action: manipulation }
       '<p class="small muted">Erhaltung ' + (E.src === "log" ? "abgeleitet aus deinem Gewichtsverlauf und deinen Essenseinträgen (Ø " + kc(E.kin) + " kcal an " + E.log.n + " von " + E.log.days + " Tagen; nach Formel wären es " + kc(E.formula) + ")"
         : E.src === "fixed" ? "abgeleitet aus deinem Gewichtsverlauf bei " + P.intake.toLocaleString("de-DE") + " kcal pro Tag (nach Formel wären es " + kc(E.formula) + ")"
         : E.kf ? "geschätzt über deine fettfreie Masse (Katch-McArdle) mit " + fmt(E.kf.v) + " % Körperfett " + (E.kf.src === "scale" ? "von der Waage" : E.kf.src === "tape" ? "aus Taille und Hals (Maßband)" : "laut Körperbau „" + BUILD[P.build][0] + "“") + ", dazu Aktivität"
-        : "geschätzt nach der Mifflin-St-Jeor-Formel aus " + fmt(E.w) + " kg, Größe, Alter und Aktivität") +
+        : "geschätzt nach der Mifflin-St-Jeor-Formel aus " + fmt(E.w) + " kg, Größe, Alter, Alltag und Training") +
       ". Cut: " + kc(E.range.cut[0]) + "–" + kc(E.range.cut[1]) + " kcal für 0,5–1 % Abnahme pro Woche. Aufbau: " + kc(E.range.bulk[0]) + "–" + kc(E.range.bulk[1]) + " kcal für 0,25–0,5 % Zunahme. Die Tabelle nutzt jeweils das mildere Ende." +
       (E.clip ? " Die Untergrenze im Cut ist auf deinen Grundumsatz angehoben." : "") + "</p>" +
       '<p class="small muted">Eiweiß und Fett stellst du im Reiter „Daten“ unter „Persönlich“ ein. Kohlenhydrate füllen den Rest der Kalorien auf. ' +
@@ -1534,7 +1542,10 @@ button, select, input { touch-action: manipulation }
       '<label style="flex:1 1 110px">Größe (cm)<input id="pe-height" inputmode="decimal" autocomplete="off" value="' + esc(P.height ? fmt(P.height) : "") + '"></label>' +
       '<label style="flex:1 1 100%"><span>Körperbau' + ib("build") + '</span><select id="pe-build">' + opt("", "Nicht angeben", P.build || "") + Object.keys(BUILD).map(function (k) { return opt(k, BUILD[k][0] + " – " + BUILD[k][1], P.build); }).join("") + "</select></label>" +
       itx("build", "Muskeln verbrauchen mehr Energie als Fett. Mit dem Körperbau schätzt die App deinen Körperfettanteil und rechnet den Grundumsatz über die fettfreie Masse. Genauer geht es mit einer Körperfettwaage oder mit Taille (auf Bauchnabelhöhe) und Hals vom Maßband, bei Frauen zusätzlich der Hüfte (breiteste Stelle), unter „Körper“. Gibt es solche Messungen aus den letzten 60 Tagen, nutzt die App diese statt des Körperbaus.") +
-      '<label style="flex:1 1 100%">Aktivität<select id="pe-act">' + opt("", "Bitte wählen", P.act || "") + ACT.map(function (a) { return opt(a[0], a[1], P.act); }).join("") + "</select></label>" +
+      '<label style="flex:1 1 100%"><span>Alltag (ohne Training)' + ib("job") + '</span><select id="pe-job">' + opt("", "Bitte wählen", P.job || "") + JOB.map(function (j) { return opt(j[0], j[1] + " – " + j[2], P.job); }).join("") + "</select></label>" +
+      itx("job", "Wie viel du dich im Alltag bewegst, macht oft mehr aus als das Training: Wer den ganzen Tag läuft oder schwer arbeitet, verbraucht deutlich mehr als jemand im Büro. Das Training kommt über Trainingstage und Dauer dazu.") +
+      (!P.job && P.act ? '<p class="small fmiss" style="flex:1 1 100%">Bisher gewählt: „' + ((ACT.filter(function (x) { return x[0] === P.act; })[0] || [0, "eigener Wert"])[1]) + "“. Wähl deinen Alltag, dann rechnet die App Alltag und Training getrennt.</p>" : "") +
+      '<label style="flex:1 1 150px">Training pro Einheit<select id="pe-tmin">' + TMIN.map(function (m) { return opt(m, m + " min", P.tmin || 60); }).join("") + "</select></label>" +
       '<label style="flex:1 1 170px">Aktuelle Kalorien pro Tag (optional, nur ohne Essenseinträge)<input id="pe-intake" inputmode="numeric" autocomplete="off" value="' + esc(P.intake || "") + '"></label>' +
       '<label style="flex:1 1 150px">Diese Kalorien seit<input type="date" id="pe-since" value="' + esc(P.since || today()) + '" max="' + today() + '"></label>' +
       '<div class="lab" style="flex:1 1 100%">An diesen Tagen trainiere ich meistens<div class="chips" id="pe-days" role="group" aria-label="Trainingstage">' +
@@ -2998,7 +3009,7 @@ button, select, input { touch-action: manipulation }
         Object.keys(rawS).slice(0, 400).forEach(function (ks) { if (DRE.test(ks) && typeof rawS[ks] === "string" && IRE.test(rawS[ks])) sched[ks] = rawS[ks]; });
         var mq = d.macro, macro = mq && [mq.pc, mq.pm, mq.pb, mq.fat].every(isN) ? { pc: mq.pc, pm: mq.pm, pb: mq.pb, fat: mq.fat } : null;
         return { kind: "settings", sched: sched, macro: macro, hide: (Array.isArray(d.hide) ? d.hide : []).filter(function (x) { return typeof x === "string"; }).map(txt80).slice(0, 300),
-          person: okP ? { sex: q.sex, year: q.year, height: q.height, act: q.act, intake: isN(q.intake) ? q.intake : null, since: DRE.test(q.since) ? q.since : null,
+          person: okP ? { sex: q.sex, year: q.year, height: q.height, act: q.act, job: jobOf(q.job) ? q.job : null, tmin: TMIN.indexOf(q.tmin) >= 0 ? q.tmin : null, intake: isN(q.intake) ? q.intake : null, since: DRE.test(q.since) ? q.since : null,
             tdays: (Array.isArray(q.tdays) ? q.tdays : []).filter(function (x, i, arr) { return isN(x) && x >= 0 && x <= 6 && x % 1 === 0 && arr.indexOf(x) === i; }),
             build: BUILD[q.build] ? q.build : null, buildW: isN(q.buildW) ? q.buildW : null } : null,
           phases: (d.phases || []).map(function (p) {
@@ -3121,7 +3132,7 @@ button, select, input { touch-action: manipulation }
   /* ---------- Handbuch (seit v58) ----------
      Bei jeder Version, die die Bedienung ändert, hier mitpflegen. Kurz halten, Details stehen hinter den blauen i. */
   var HELP = [
-    ["Erste Schritte", "<ol><li>Ein neues Profil führt dich durch eine kurze Einrichtung (über dich, Körper, Training, Ziel). Ändern kannst du alles unter <b>Daten → Persönlich</b>; daraus kommen Kalorien und Makros.</li><li>Unter <b>Plan</b> auf „Plan erstellen“ tippen oder Trainingstage selbst zusammenstellen.</li><li>Auf <b>Start</b> im Kalender das Training wählen und „Training starten“ tippen.</li><li>Unter <b>Körper</b> regelmäßig das Gewicht eintragen, am besten morgens.</li><li>Ab und zu unter <b>Daten → Sicherung</b> ein Backup speichern.</li></ol><p>Auf dem iPhone die App über Safari → Teilen → „Zum Home-Bildschirm“ installieren. Die installierte App speichert getrennt von Safari.</p>"],
+    ["Erste Schritte", "<ol><li>Ein neues Profil führt dich durch eine kurze Einrichtung (über dich, Körper, Alltag, Training, Ziel). Ändern kannst du alles unter <b>Daten → Persönlich</b>; daraus kommen Kalorien und Makros.</li><li>Unter <b>Plan</b> auf „Plan erstellen“ tippen oder Trainingstage selbst zusammenstellen.</li><li>Auf <b>Start</b> im Kalender das Training wählen und „Training starten“ tippen.</li><li>Unter <b>Körper</b> regelmäßig das Gewicht eintragen, am besten morgens.</li><li>Ab und zu unter <b>Daten → Sicherung</b> ein Backup speichern.</li></ol><p>Auf dem iPhone die App über Safari → Teilen → „Zum Home-Bildschirm“ installieren. Die installierte App speichert getrennt von Safari.</p>"],
     ["Start", "<ul><li><b>Heute:</b> wie viele Kalorien noch offen sind, der Balken zeigt Eiweiß, Fett und Kohlenhydrate. Darunter Defizit bzw. Überschuss und geschätzter Verbrauch.</li><li><b>Essen eintragen:</b> ins Suchfeld tippen, Lebensmittel oder Mahlzeit wählen, Menge angeben, „Eintragen“. „Mittag schätzen“ für Essen ohne Waage. Die Uhrzeit eines Eintrags lässt sich antippen und ändern.</li><li><b>Kalender:</b> Tag antippen, dann „Training starten“ oder ein vergangenes Training öffnen und nachtragen.</li><li><b>Apple Health:</b> holt Gewicht und Körperfett über den Kurzbefehl „Trainingslog Health“.</li></ul>"],
     ["Training", "<ul><li>Gewicht und Wiederholungen eintragen, gespeichert wird automatisch. Ein Satz zählt, sobald Wiederholungen drinstehen.</li><li><b>Gewichtsvorschlag:</b> erst die Wiederholungen bis zur oberen Grenze steigern, in allen Sätzen. Dann schlägt die App mehr Gewicht vor (um den „Schritt“ der Übung).</li><li><b>Aufwärmsätze</b> stehen eingeklappt über jeder Übung.</li><li><b>Krafttest:</b> ein Satz mit etwa 85 % deines geschätzten Maximums bis kurz vor Schluss. Für Schwerpunktübungen erinnert die App alle 4 Wochen.</li><li><b>+ Übung für heute</b> und <b>Ersetzen</b> ändern nur diese Einheit, mit Häkchen auch den Plan. Beim Ersetzen nimmt „eingetragene Sätze mitnehmen“ die Sätze mit.</li></ul>"],
     ["Fortschritt", "<ul><li><b>Schwerpunkt:</b> geschätztes Maximum (1RM), Veränderung in der Phase, Rekord und nächster Krafttest.</li><li><b>Verlauf pro Übung</b> als 1RM, schwerstes Gewicht oder Volumen.</li><li><b>Kraft nach Körperbereichen:</b> Körperkarte (orange = gleich, tiefrot = ab +20 %, graublau = schwächer; mit ▶ oder Regler im Zeitraffer) und Prozent für Ober- und Unterkörper, wie sehr dein geschätztes Maximum im Zeitraum gestiegen ist. Varianten einer Muskelgruppe zählen gemeinsam. Mit dem Zeitraum „Phase“ siehst du, ob du im Cut deine Kraft hältst. Im Diagramm wählst du, welche Bereiche als Linie erscheinen.</li><li><b>Sätze pro Muskelgruppe:</b> 10–20 Sätze pro Woche sind ein üblicher Bereich für Muskelaufbau.</li><li><b>Rekorde</b> und Krafttest-Ergebnisse.</li></ul>"],
@@ -3138,8 +3149,8 @@ button, select, input { touch-action: manipulation }
   /* ---------- Einführung für neue Nutzer (seit v58) ----------
      Kleine Karte unten, je Schritt wird der passende Reiter geöffnet. Merker je Profil in localStorage (nur Anzeige). */
   /* ---------- Einrichtung für neue Profile (seit v66): vier kurze Schritte vor der Einführung, jederzeit „Alles überspringen“ ----------
-     Schritte: 0 Willkommen · 1 Über dich · 2 Dein Körper · 3 Alltag und Training · 4 Dein Ziel · 5 Fertig (Empfehlung, weiter zum Rundgang ab TOUR[1]).
-     Gespeichert wird beim Abschluss von Schritt 4: Angaben (wie „Speichern“ unter Persönlich), Gewicht/KFA von heute, Phase ab heute. */
+     Schritte: 0 Willkommen · 1 Über dich · 2 Dein Körper · 3 Dein Alltag · 4 Dein Training · 5 Dein Ziel · 6 Fertig (Empfehlung, weiter zum Rundgang ab TOUR[1]).
+     Gespeichert wird beim Abschluss von Schritt 5: Angaben (wie „Speichern“ unter Persönlich), Gewicht/KFA von heute, Phase ab heute. */
   var setupStep = -1, SU = null;
   function startIntro() { SU = null; setupShow(0); }
   function setupHide() { setupStep = -1; var el = $("setup"); if (el) el.remove(); }
@@ -3147,7 +3158,7 @@ button, select, input { touch-action: manipulation }
     var v = function (id) { var x = $(id); return x ? x.value.trim() : null; };
     if (setupStep === 1) { SU.year = v("su-year"); SU.height = v("su-height"); }
     if (setupStep === 2) { SU.w = v("su-w"); SU.fat = v("su-fat"); }
-    if (setupStep === 4 && $("su-goal")) SU.goal = v("su-goal");
+    if (setupStep === 5 && $("su-goal")) SU.goal = v("su-goal");
   }
   function setupCheck() {
     var yr = num(SU.year), hg = num(SU.height), age = new Date().getFullYear() - yr, w = num(SU.w), f = num(SU.fat), g = num(SU.goal);
@@ -3157,12 +3168,12 @@ button, select, input { touch-action: manipulation }
       if (SU.height && (!hg || hg < 120 || hg > 230)) return "Bitte die Größe in cm angeben, z. B. 178.";
     }
     if (setupStep === 2) { if (SU.w && (!w || w < 20 || w > 400)) return "Bitte das Gewicht in kg angeben, z. B. 82,5."; if (SU.fat && (!f || f < 2 || f > 75)) return "Der Körperfettanteil sieht nicht plausibel aus."; }
-    if (setupStep === 4 && SU.goal && (!g || g < 20 || g > 400)) return "Bitte das Zielgewicht in kg angeben.";
+    if (setupStep === 5 && SU.goal && (!g || g < 20 || g > 400)) return "Bitte das Zielgewicht in kg angeben.";
     return "";
   }
   function setupSave() {
     var P = clone(S.person || {}), yr = num(SU.year), hg = num(SU.height), w = num(SU.w), f = num(SU.fat), g = num(SU.goal), t = today();
-    if (SU.sex) P.sex = SU.sex; if (yr) P.year = Math.round(yr); if (hg) P.height = hg; if (SU.act) P.act = SU.act; P.tdays = SU.tdays.slice();
+    if (SU.sex) P.sex = SU.sex; if (yr) P.year = Math.round(yr); if (hg) P.height = hg; P.tdays = SU.tdays.slice(); P.tmin = SU.tmin; if (SU.job) { P.job = SU.job; P.act = actOf(SU.job, SU.tdays, SU.tmin); }
     P.build = SU.build || null; P.buildW = SU.build && w ? w : null;
     var ph = S.phases;
     if (SU.ph) { ph = S.phases.filter(function (x) { return x.start !== t; }); var np = { start: t, type: SU.ph }; if (g && SU.ph !== "maintain") np.goal = Math.round(g * 10) / 10; ph.push(np); ph.sort(function (a, b) { return a.start < b.start ? -1 : 1; }); }
@@ -3171,32 +3182,35 @@ button, select, input { touch-action: manipulation }
     renderAll(false);
   }
   function setupShow(i) {
-    if (!SU) { var P = S.person || {}; SU = { sex: P.sex || "", year: P.year ? String(P.year) : "", height: P.height ? fmt(P.height) : "", build: P.build || "", act: P.act || "", tdays: (P.tdays || []).slice(), w: "", fat: "", ph: "", goal: "" }; }
+    if (!SU) { var P = S.person || {}; SU = { sex: P.sex || "", year: P.year ? String(P.year) : "", height: P.height ? fmt(P.height) : "", build: P.build || "", job: P.job || "", tmin: P.tmin || 60, tdays: (P.tdays || []).slice(), w: "", fat: "", ph: "", goal: "" }; }
     setupStep = i;
     var el = $("setup"); if (!el) { el = document.createElement("div"); el.id = "setup"; el.className = "overlay"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-labelledby", "su-h"); document.body.appendChild(el); }
     var chip = function (k, v, l, on) { return '<button type="button" data-act="sux" data-k="' + k + '" data-id="' + v + '" aria-pressed="' + !!on + '">' + l + "</button>"; };
     var inp = function (id, l, val, hint) { return '<label>' + l + '<input id="' + id + '" inputmode="decimal" autocomplete="off" value="' + esc(val || "") + '"' + (hint ? ' placeholder="' + hint + '"' : "") + "></label>"; };
     var h = "", nav = "";
     if (i === 0) {
-      h = '<h2 id="su-h">Willkommen!</h2><p>In vier kurzen Schritten richtest du die App ein: wer du bist, dein Körper, dein Training und dein Ziel. Daraus berechnet sie deine Kalorien und Makros.</p><p class="small muted">Danach zeigt dir ein kurzer Rundgang, wo du was findest. Alles kannst du später unter Daten → Persönlich ändern.</p>';
+      h = '<h2 id="su-h">Willkommen!</h2><p>In fünf kurzen Schritten richtest du die App ein: wer du bist, dein Körper, dein Alltag, dein Training und dein Ziel. Daraus berechnet sie deine Kalorien und Makros.</p><p class="small muted">Danach zeigt dir ein kurzer Rundgang, wo du was findest. Alles kannst du später unter Daten → Persönlich ändern.</p>';
       nav = '<button class="ghost" data-act="suskip">Alles überspringen</button><button class="primary" data-act="sunext">Los geht’s</button>';
-    } else if (i <= 4) {
+    } else if (i <= 5) {
       if (i === 1) h = '<h2 id="su-h">Über dich</h2><div class="chips" role="group" aria-label="Geschlecht">' + chip("sex", "m", "Männlich", SU.sex === "m") + chip("sex", "w", "Weiblich", SU.sex === "w") + "</div>" +
         '<div class="sugrid">' + inp("su-year", "Geburtsjahr", SU.year, "z. B. 1990") + inp("su-height", "Größe (cm)", SU.height, "z. B. 178") + "</div>" +
         '<p class="small muted">Geschlecht, Alter und Größe bestimmen deinen Grundumsatz.</p>';
       if (i === 2) h = '<h2 id="su-h">Dein Körper</h2><div class="sugrid">' + inp("su-w", "Gewicht heute (kg)", SU.w, "z. B. 82,5") + inp("su-fat", "Körperfett (%, optional)", SU.fat, "nur mit Waage") + "</div>" +
         '<p class="lab">Wie würdest du dich beschreiben?</p><div class="sulist">' + Object.keys(BUILD).map(function (k) { return chip("build", k, "<b>" + BUILD[k][0] + "</b><span>" + BUILD[k][1] + "</span>", SU.build === k); }).join("") + chip("build", "", "<b>Weiß nicht</b><span>dann rechnet die App ohne Körperbau</span>", !SU.build) + "</div>";
-      if (i === 3) h = '<h2 id="su-h">Alltag und Training</h2><p class="lab">Wie aktiv bist du?</p><div class="sulist">' + ACT.map(function (a) { var p = a[1].split(": "); return chip("act", a[0], "<b>" + p[0] + "</b>" + (p[1] ? "<span>" + p[1] + "</span>" : ""), String(SU.act) === String(a[0])); }).join("") + "</div>" +
-        '<p class="lab">An welchen Tagen trainierst du meistens?</p><div class="chips" role="group" aria-label="Trainingstage">' + [1, 2, 3, 4, 5, 6, 0].map(function (n, k) { return chip("tdays", n, ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][k], SU.tdays.indexOf(n) >= 0); }).join("") + "</div>";
-      if (i === 4) h = '<h2 id="su-h">Dein Ziel</h2><div class="sulist">' + chip("ph", "cut", "<b>Abnehmen</b><span>Fett verlieren, Kraft halten (Cut)</span>", SU.ph === "cut") + chip("ph", "bulk", "<b>Muskeln aufbauen</b><span>langsam zunehmen (Aufbau)</span>", SU.ph === "bulk") + chip("ph", "maintain", "<b>Gewicht halten</b><span>in Form bleiben</span>", SU.ph === "maintain") + "</div>" +
+      if (i === 3) h = '<h2 id="su-h">Dein Alltag</h2><p class="lab">Wie bewegst du dich im Alltag, ohne Training?</p><div class="sulist">' + JOB.map(function (j) { return chip("job", j[0], "<b>" + j[1] + "</b><span>" + j[2] + "</span>", SU.job === j[0]); }).join("") + "</div>" +
+        '<p class="small muted">Das macht oft mehr aus als das Training: Wer den ganzen Tag läuft, verbraucht deutlich mehr als jemand am Schreibtisch.</p>';
+      if (i === 4) h = '<h2 id="su-h">Dein Training</h2><p class="lab">An welchen Tagen trainierst du meistens?</p><div class="chips" role="group" aria-label="Trainingstage">' + [1, 2, 3, 4, 5, 6, 0].map(function (n, k) { return chip("tdays", n, ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][k], SU.tdays.indexOf(n) >= 0); }).join("") + "</div>" +
+        '<p class="lab">Wie lange dauert eine Einheit?</p><div class="chips" role="group" aria-label="Dauer">' + TMIN.map(function (m) { return chip("tmin", m, m + " min", SU.tmin === m); }).join("") + "</div>" +
+        '<p class="small muted">An Trainingstagen bekommst du etwas mehr Kalorien als an Ruhetagen.</p>';
+      if (i === 5) h = '<h2 id="su-h">Dein Ziel</h2><div class="sulist">' + chip("ph", "cut", "<b>Abnehmen</b><span>Fett verlieren, Kraft halten (Cut)</span>", SU.ph === "cut") + chip("ph", "bulk", "<b>Muskeln aufbauen</b><span>langsam zunehmen (Aufbau)</span>", SU.ph === "bulk") + chip("ph", "maintain", "<b>Gewicht halten</b><span>in Form bleiben</span>", SU.ph === "maintain") + "</div>" +
         (SU.ph === "cut" || SU.ph === "bulk" ? '<div class="sugrid">' + inp("su-goal", "Zielgewicht (kg, optional)", SU.goal, SU.ph === "cut" ? "z. B. 78" : "z. B. 85") + "</div>" : "") +
         '<p class="small muted">Die Phase beginnt heute. Weitere Phasen legst du unter „Körper“ an.</p>';
-      h = '<div class="suhead"><span class="small muted">Schritt ' + i + ' von 4</span><button class="linkbtn small" data-act="suskip">Alles überspringen</button></div><div class="sudots">' + [1, 2, 3, 4].map(function (k) { return "<span" + (k <= i ? ' class="on"' : "") + "></span>"; }).join("") + "</div>" + h + '<p class="small fmiss" id="su-msg" hidden></p>';
-      nav = '<button class="ghost" data-act="suprev">Zurück</button><button class="primary" data-act="sunext">' + (i === 4 ? "Fertig" : "Weiter") + "</button>";
+      h = '<div class="suhead"><span class="small muted">Schritt ' + i + ' von 5</span><button class="linkbtn small" data-act="suskip">Alles überspringen</button></div><div class="sudots">' + [1, 2, 3, 4, 5].map(function (k) { return "<span" + (k <= i ? ' class="on"' : "") + "></span>"; }).join("") + "</div>" + h + '<p class="small fmiss" id="su-msg" hidden></p>';
+      nav = '<button class="ghost" data-act="suprev">Zurück</button><button class="primary" data-act="sunext">' + (i === 5 ? "Fertig" : "Weiter") + "</button>";
     } else {
       var E = energy(bodyList()), di = E ? dayKcal(today(), E, false) : null, mc = di ? macros(di.kcal, di.type, E.pw) : null;
       h = '<h2 id="su-h">Alles eingerichtet</h2>' + (mc ? '<p>Deine Empfehlung für heute' + (E.n ? " (" + (di.train ? "Trainingstag" : "Ruhetag") + ")" : "") + ':</p><p class="sures"><b>' + di.kcal.toLocaleString("de-DE") + " kcal</b> · <b>" + Math.round(mc.p) + " g</b> Eiweiß</p><p class=\"small muted\">Das ist ein Startwert. Trägst du Gewicht und Essen ein, passt die App ihn nach zwei Wochen an deinen echten Verbrauch an.</p>"
-        : '<p>Für eine Kalorienempfehlung fehlen noch Angaben (Geschlecht, Geburtsjahr, Größe, Gewicht oder Aktivität). Du kannst sie jederzeit unter Daten → Persönlich und Körper nachtragen.</p>') +
+        : '<p>Für eine Kalorienempfehlung fehlen noch Angaben (Geschlecht, Geburtsjahr, Größe, Gewicht oder Alltag). Du kannst sie jederzeit unter Daten → Persönlich und Körper nachtragen.</p>') +
         '<p class="small muted">Jetzt zeigen wir dir in fünf Schritten, wo du deine Angaben, deinen Plan, dein Training, dein Essen und dein Backup findest.</p>';
       nav = '<button class="ghost" data-act="suskip">Ohne Rundgang starten</button><button class="primary" data-act="sutour">Rundgang starten</button>';
     }
@@ -3205,7 +3219,7 @@ button, select, input { touch-action: manipulation }
   }
   var TOUR = [
     ["Willkommen", "Der Trainingslog hält Training, Essen und Gewicht fest und schlägt dir vor, wie es weitergeht. Alles bleibt auf diesem Gerät.", "home", null],
-    ["Deine Angaben", "Hier stehen Geschlecht, Geburtsjahr, Größe, Körperbau, Aktivität und Trainingstage. Ändert sich etwas, passt du es hier an und tippst „Speichern“. Daraus berechnet die App Kalorien und Makros.", "me", function () { var x = $("pe-sex"); return x ? [x.closest(".block")] : []; }],
+    ["Deine Angaben", "Hier stehen Geschlecht, Geburtsjahr, Größe, Körperbau, Alltag, Trainingstage und Dauer. Ändert sich etwas, passt du es hier an und tippst „Speichern“. Daraus berechnet die App Kalorien und Makros.", "me", function () { var x = $("pe-sex"); return x ? [x.closest(".block")] : []; }],
     ["Dein Plan", "Wähle Tage pro Woche, Dauer und Geräte. Der Assistent baut den Plan, mit ↻ tauschst du Übungen. Danach „Plan übernehmen“.", "plan", function () { return [document.querySelector(".wiz") || document.querySelector("[data-act=wizopen]")]; }],
     ["Training eintragen", "Wähle auf Start im Kalender dein Training und tippe „Training starten“. Gespeichert wird automatisch. Ab dem zweiten Mal schlägt die App dir das Gewicht vor.", "home", function () { return [$("calwrap")]; }],
     ["Essen", "Unter „Eintragen“ suchst du ein Lebensmittel oder eine Mahlzeit, gibst die Menge an und tippst „Eintragen“. Ohne Waage hilft „Mittag schätzen“.", "home", function () { return [document.querySelector(".nadd"), document.querySelector(".nlinks")]; }],
@@ -3882,13 +3896,14 @@ button, select, input { touch-action: manipulation }
       $("mcmsg").textContent = nm ? "Gespeichert. Ringdiagramm, Tabelle und Kalender rechnen jetzt damit." : "Auf Standard zurückgesetzt.";
     }
     else if (a === "pesave") {
-      var sx = $("pe-sex").value, yr = num($("pe-year").value), hg = num($("pe-height").value), ac = num($("pe-act").value), it = num($("pe-intake").value), age = new Date().getFullYear() - yr;
-      if (!sx || !yr || age > 100 || age < 0 || !hg || hg < 120 || hg > 230 || !ac) { $("pemsg").textContent = "Bitte Geschlecht, Geburtsjahr, Größe in cm und Aktivität angeben."; return; }
+      var sx = $("pe-sex").value, yr = num($("pe-year").value), hg = num($("pe-height").value), jb = $("pe-job").value || null, tm = +$("pe-tmin").value || 60, it = num($("pe-intake").value), age = new Date().getFullYear() - yr;
+      var td = []; $("pe-days").querySelectorAll('[aria-pressed="true"]').forEach(function (x) { td.push(+x.dataset.id); });
+      var ac = jb ? actOf(jb, td, tm) : (S.person && S.person.act) || null;
+      if (!sx || !yr || age > 100 || age < 0 || !hg || hg < 120 || hg > 230 || !ac) { $("pemsg").textContent = "Bitte Geschlecht, Geburtsjahr, Größe in cm und Alltag angeben."; return; }
       if (age < 18) { $("pemsg").textContent = "Die Kalorienempfehlung ist nur für Erwachsene ausgelegt."; return; }
       if (it != null && (it < 800 || it > 8000)) { $("pemsg").textContent = "Die Kalorienangabe sieht nicht plausibel aus."; return; }
-      var td = []; $("pe-days").querySelectorAll('[aria-pressed="true"]').forEach(function (x) { td.push(+x.dataset.id); });
       var bd = $("pe-build").value || null, lw = lastWeight(bodyList());
-      saveSettings(null, { sex: sx, year: Math.round(yr), height: hg, act: ac, intake: it == null ? null : Math.round(it), since: it == null ? null : ($("pe-since").value || today()), tdays: td,
+      saveSettings(null, { sex: sx, year: Math.round(yr), height: hg, act: ac, job: jb, tmin: tm, intake: it == null ? null : Math.round(it), since: it == null ? null : ($("pe-since").value || today()), tdays: td,
         build: bd, buildW: bd && lw ? lw.weight : null });
       renderBody(true); renderHome(); renderData(); $("pemsg").textContent = "Gespeichert. Kalorien und Makros stehen im Reiter „Körper“.";
     }
@@ -3960,16 +3975,16 @@ button, select, input { touch-action: manipulation }
     else if (a === "sux") {
       setupRead(); var k = b.dataset.k;
       if (k === "tdays") { var dn = +id, di2 = SU.tdays.indexOf(dn); if (di2 >= 0) SU.tdays.splice(di2, 1); else SU.tdays.push(dn); }
-      else SU[k] = k === "act" ? +id : id;
+      else SU[k] = k === "tmin" ? +id : id;
       setupShow(setupStep);
     }
     else if (a === "sunext") {
       if (setupStep > 0) { setupRead(); var se = setupCheck(); if (se) { var sm = $("su-msg"); sm.textContent = se; sm.hidden = false; return; } }
-      if (setupStep === 4) setupSave();
+      if (setupStep === 5) setupSave();
       setupShow(setupStep + 1);
     }
     else if (a === "suprev") { setupRead(); setupShow(Math.max(0, setupStep - 1)); }
-    else if (a === "suskip") { if (setupStep >= 1 && setupStep <= 4) { setupRead(); if (!setupCheck() && (SU.sex || SU.year || SU.w || SU.act || SU.ph)) setupSave(); } setupHide(); tourEnd(); }
+    else if (a === "suskip") { if (setupStep >= 1 && setupStep <= 5) { setupRead(); if (!setupCheck() && (SU.sex || SU.year || SU.w || SU.job || SU.ph)) setupSave(); } setupHide(); tourEnd(); }
     else if (a === "sutour") { setupHide(); tourFrom = 1; tourShow(1); }
     else if (a === "tourstart") { tourFrom = 0; tourShow(0); }
     else if (a === "wizstart") { if (!S.plan) { S.plan = { kind: "plan", fav3: 1, m58: 1, days: [] }; planChanged(true); } wizStart(); showTab("plan"); }
