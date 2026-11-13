@@ -542,7 +542,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 56;
+  var APP_VERSION = 57;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -619,6 +619,8 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
+    { v: 57, tab: "body", text: "Kalorien berücksichtigen jetzt deinen Körperfettanteil: von der Waage, aus Taille und Hals vom Maßband (neue Felder Hals und Hüfte) oder aus dem Körperbau, den du unter „Daten → Persönlich“ wählst. Der Grundumsatz wird dann über die fettfreie Masse gerechnet." },
+    { v: 57, tab: "body", text: "Erhaltungsbedarf aus deinen echten Essenseinträgen: Trägst du an mindestens 70 % der Tage ein, rechnet die App nach zwei Wochen mit dem, was du wirklich isst, statt mit der festen Kalorienangabe." },
     { v: 56, tab: "plan", text: "Neu: „Plan erstellen“ baut dir nach Trainingstagen, Dauer und Geräten einen Plan (Ganzkörper, Oberkörper/Unterkörper, Push/Pull/Beine), mit Vorschau und ↻ zum Tauschen." },
     { v: 56, tab: "plan", text: "Im Plan siehst du jetzt die Sätze pro Woche je Muskelgruppe und je Tag die geschätzte Dauer. Tage lassen sich duplizieren, Übungen zu einem anderen Tag verschieben, und in der Auswahl „Übung hinzufügen“ stehen oben Vorschläge für Muskelgruppen mit zu wenig Sätzen." },
     { v: 55, tab: "plan", text: "Der Plan zeigt nur noch, welche Übungen an welchem Tag in welcher Reihenfolge kommen. Sätze und Wiederholungen änderst du über „Einstellungen“ bei der Übung." },
@@ -1321,13 +1323,53 @@ button, select, input { touch-action: manipulation }
      Zufuhr bekannt und gibt es dazu mindestens 14 Tage Gewichtsverlauf, wird der Erhaltungsbedarf daraus
      abgeleitet (1 kg pro Woche entspricht rund 1100 kcal pro Tag). Zielbereich wie bei der Trend-Faustregel. */
   var PROT = { maintain: 1.8, cut: 2.2, bulk: 1.8 }; /* g Eiweiß pro kg Körpergewicht */
+  /* Körperbau (seit v57): grobe Selbsteinschätzung, daraus ein geschätzter Körperfettanteil [Mann, Frau]. */
+  var BUILD = { slim: ["Schlank", "wenig Muskeln, wenig Fett", 15, 23], athl: ["Sportlich", "muskulös, wenig Fett", 12, 20],
+    normal: ["Normal", "durchschnittlich", 20, 28], over: ["Übergewichtig", "deutliche Fettpolster", 30, 38] };
+  /* Körperfett: zuerst Waage (Messung höchstens 60 Tage alt), dann Maßband (Navy-Methode: Taille, Hals, bei Frauen Hüfte),
+     zuletzt der gewählte Körperbau. Ohne alles: null, dann rechnet die App nur mit Mifflin-St Jeor. */
+  function kfaEst(list) {
+    var P = S.person || {}, from = addDays(today(), -60), sc = null, tp = null;
+    list.forEach(function (x) {
+      if (x.date < from) return;
+      if (isN(x.fat)) sc = x;
+      if (isN(x.waist) && isN(x.neck) && (P.sex !== "w" || isN(x.hip))) tp = x;
+    });
+    if (sc) return { v: sc.fat, src: "scale", date: sc.date };
+    if (tp && P.height) {
+      var L = Math.log10, v = P.sex === "w" ? 495 / (1.29579 - 0.35004 * L(tp.waist + tp.hip - tp.neck) + 0.221 * L(P.height)) - 450
+        : 495 / (1.0324 - 0.19077 * L(tp.waist - tp.neck) + 0.15456 * L(P.height)) - 450;
+      if (isFinite(v) && v >= 3 && v <= 60) return { v: Math.round(v * 10) / 10, src: "tape", date: tp.date };
+    }
+    if (P.build && BUILD[P.build]) return { v: BUILD[P.build][P.sex === "w" ? 3 : 2], src: "build" };
+    return null;
+  }
+  /* Durchschnittliche Zufuhr aus den Essenseinträgen: nur Tage, die vollständig wirken (mindestens die Hälfte des
+     Grundumsatzes), heute nicht mitgezählt. Gilt erst, wenn an mindestens 70 % der Tage eingetragen wurde. */
+  function intakeLog(from, bmr) {
+    var t = today(), days = 0, sum = 0, n = 0;
+    for (var d = from; d < t; d = addDays(d, 1)) {
+      days++; var nd = S.nutri["n_" + d]; if (!nd) continue;
+      var k = (nd.entries || []).reduce(function (a, e) { return a + (e.kcal || 0); }, 0);
+      if (k >= bmr * 0.5) { sum += k; n++; }
+    }
+    return days >= 14 && n >= 14 && n / days >= 0.7 ? { avg: sum / n, n: n, days: days } : null;
+  }
   function energy(list) {
     var P = S.person, w = null; list.forEach(function (x) { if (x.weight != null) w = x.weight; });
     if (!P || w == null) return null;
-    var age = new Date().getFullYear() - P.year, bmr = 10 * w + 6.25 * P.height - 5 * age + (P.sex === "m" ? 5 : -161), formula = bmr * P.act;
-    var tr = P.intake && P.since ? trendOf(list, P.since) : null;
-    var measured = tr && tr.span >= 14 && tr.n >= 3 ? P.intake - tr.perWeek * 1100 : null;
+    var age = new Date().getFullYear() - P.year, mif = 10 * w + 6.25 * P.height - 5 * age + (P.sex === "m" ? 5 : -161), kf = kfaEst(list);
+    /* Mit Körperfett: Katch-McArdle über die fettfreie Masse, sonst Mifflin-St Jeor. */
+    var bmr = kf ? 370 + 21.6 * w * (1 - kf.v / 100) : mif, formula = bmr * P.act;
+    /* Erhaltung aus dem Verlauf: bevorzugt aus den eingetragenen Mahlzeiten der letzten bis zu 28 Tage, sonst aus der festen Angabe. */
+    var lf = null, first = null; Object.keys(S.nutri).forEach(function (k) { var d = k.slice(2); if (!first || d < first) first = d; });
+    if (first) { var from0 = addDays(today(), -28); if (first > from0) from0 = first; lf = intakeLog(from0, bmr); if (lf) lf.from = from0; }
+    var tr = null, src = null, kin = null;
+    if (lf) { tr = trendOf(list, lf.from); kin = lf.avg; src = "log"; }
+    if (!(tr && tr.span >= 14 && tr.n >= 3) && P.intake && P.since) { tr = trendOf(list, P.since); kin = P.intake; src = "fixed"; }
+    var measured = tr && tr.span >= 14 && tr.n >= 3 ? kin - tr.perWeek * 1100 : null;
     if (measured != null && (measured < bmr || measured > formula * 1.6)) measured = null;
+    if (measured == null) src = null;
     var maint = measured || formula, k = 11 * w; /* k: kcal pro Tag für 1 % Körpergewicht pro Woche */
     var range = { cut: [Math.max(bmr, maint - k), Math.max(bmr, maint - 0.5 * k)], bulk: [maint + 0.25 * k, maint + 0.5 * k] };
     var target = { maintain: maint, cut: range.cut[1], bulk: range.bulk[0] }, cols = {};
@@ -1336,7 +1378,7 @@ button, select, input { touch-action: manipulation }
        Wochenschnitt bleibt beim Zielwert. Ohne gewählte Trainingstage gilt an jedem Tag der Schnitt. */
     var n = (P.tdays || []).length, d = n ? 3.5 * w : 0;
     var split = function (t) { return { train: target[t] + d * (7 - n) / 7, rest: Math.max(bmr, target[t] - d * n / 7) }; };
-    return { w: w, bmr: bmr, formula: formula, measured: measured, maint: maint, range: range, cols: cols, clip: maint - k < bmr, target: target, n: n, d: d, split: split };
+    return { w: w, bmr: bmr, formula: formula, measured: measured, maint: maint, range: range, cols: cols, clip: maint - k < bmr, target: target, n: n, d: d, split: split, kf: kf, src: src, log: lf, kin: kin };
   }
   /* Makros: Eiweiß nach Körpergewicht, Fett 1 g pro kg, höchstens 30 % der Kalorien (DGE), Kohlenhydrate als Rest. */
   /* Makro-Einstellungen: Eiweiß in g pro kg je Phase, Fett als Anteil der Kalorien. Änderbar im Tab „Körper“. */
@@ -1379,21 +1421,33 @@ button, select, input { touch-action: manipulation }
       '<div class="tablewrap"><table class="macro"><thead><tr><th></th>' + order.map(function (t) { return "<th" + on(t) + ">" + head[t] + "</th>"; }).join("") + "</tr></thead><tbody>" +
       row(E.n ? "Kalorien Ø" : "Kalorien", "kcal", "") + (E.n ? srow("Trainingstag", "train") + srow("Ruhetag", "rest") : "") + row("Eiweiß", "p", " g") + row("Fett", "f", " g") + row("Kohlenhydrate", "c", " g") + "</tbody></table></div>" +
       '<p class="small">' + head[cur || "maintain"] + ": " + a.p + " g Eiweiß = " + nf(a.p * 4) + " kcal, " + a.f + " g Fett = " + nf(a.f * 9) + " kcal, " + a.c + " g Kohlenhydrate = " + nf(a.c * 4) + " kcal.</p>" +
-      '<p class="small muted">Erhaltung ' + (E.measured ? "abgeleitet aus deinem Gewichtsverlauf bei " + P.intake.toLocaleString("de-DE") + " kcal pro Tag (nach Formel wären es " + kc(E.formula) + ")" : "geschätzt nach der Mifflin-St-Jeor-Formel aus " + fmt(E.w) + " kg, Größe, Alter und Aktivität") +
+      '<p class="small muted">Erhaltung ' + (E.src === "log" ? "abgeleitet aus deinem Gewichtsverlauf und deinen Essenseinträgen (Ø " + kc(E.kin) + " kcal an " + E.log.n + " von " + E.log.days + " Tagen; nach Formel wären es " + kc(E.formula) + ")"
+        : E.src === "fixed" ? "abgeleitet aus deinem Gewichtsverlauf bei " + P.intake.toLocaleString("de-DE") + " kcal pro Tag (nach Formel wären es " + kc(E.formula) + ")"
+        : E.kf ? "geschätzt über deine fettfreie Masse (Katch-McArdle) mit " + fmt(E.kf.v) + " % Körperfett " + (E.kf.src === "scale" ? "von der Waage" : E.kf.src === "tape" ? "aus Taille und Hals (Maßband)" : "laut Körperbau „" + BUILD[P.build][0] + "“") + ", dazu Aktivität"
+        : "geschätzt nach der Mifflin-St-Jeor-Formel aus " + fmt(E.w) + " kg, Größe, Alter und Aktivität") +
       ". Cut: " + kc(E.range.cut[0]) + "–" + kc(E.range.cut[1]) + " kcal für 0,5–1 % Abnahme pro Woche. Aufbau: " + kc(E.range.bulk[0]) + "–" + kc(E.range.bulk[1]) + " kcal für 0,25–0,5 % Zunahme. Die Tabelle nutzt jeweils das mildere Ende." +
       (E.clip ? " Die Untergrenze im Cut ist auf deinen Grundumsatz angehoben." : "") + "</p>" +
       '<p class="small muted">Eiweiß und Fett stellst du im Reiter „Daten“ unter „Persönlich“ ein. Kohlenhydrate füllen den Rest der Kalorien auf. ' +
       (E.n ? "Trainingstage bekommen rund " + Math.round(E.d / 10) * 10 + " kcal mehr als Ruhetage, im Wochenschnitt bleibt es beim Zielwert. Die Makros oben gelten für den Schnitt, die für einzelne Tage zeigt der Kalender auf der Startseite. " : "Wähle unten deine Trainingstage, dann unterscheidet der Tracker zwischen Trainings- und Ruhetagen. ") +
-      "Alles sind Schätzwerte: Liegt dein Trend zwei Wochen außerhalb des Zielbereichs, passe um 100–200 kcal an.</p>";
+      "Alles sind Schätzwerte: Liegt dein Trend zwei Wochen außerhalb des Zielbereichs, passe um 100–200 kcal an.</p>" + buildHint(E);
+  }
+  /* Körperbau ist nur eine Selbsteinschätzung: hat sich das Gewicht seitdem um mehr als 5 % geändert, kurz nachfragen. */
+  function buildHint(E) {
+    var P = S.person || {};
+    if (!E || !E.kf || E.kf.src !== "build" || !P.buildW || Math.abs(E.w - P.buildW) / P.buildW <= 0.05) return "";
+    return '<p class="small fmiss">Dein Gewicht hat sich seit der Wahl „' + BUILD[P.build][0] + "“ um mehr als 5 % verändert. Passt der Körperbau noch? Genauer wird es mit Taille und Hals vom Maßband unter „Körper“.</p>" +
+      '<button class="ghost xs" data-act="gome">Körperbau prüfen</button>';
   }
   function personForm() {
     var P = S.person || {}, opt = function (v, l, cur) { return '<option value="' + v + '"' + (String(cur) === String(v) ? " selected" : "") + ">" + l + "</option>"; };
-    return '<div class="block"><h2>Angaben für die Kalorienempfehlung' + ib("pe") + "</h2>" + itx("pe", "Daraus berechnet der Tracker Grundumsatz, Erhaltungskalorien und Makros. Kennt er deine aktuellen Kalorien, leitet er nach zwei Wochen deinen Erhaltungsbedarf aus dem Gewichtsverlauf ab. Die Trainingstage bestimmen, an welchen Tagen es mehr Kalorien gibt.") + '<div class="row">' +
+    return '<div class="block"><h2>Angaben für die Kalorienempfehlung' + ib("pe") + "</h2>" + itx("pe", "Daraus berechnet der Tracker Grundumsatz, Erhaltungskalorien und Makros. Trägst du dein Essen ein (an mindestens 70 % der Tage), leitet er nach zwei Wochen deinen Erhaltungsbedarf aus Gewichtsverlauf und Essenseinträgen ab; sonst aus der festen Kalorienangabe. Die Trainingstage bestimmen, an welchen Tagen es mehr Kalorien gibt.") + '<div class="row">' +
       '<label style="flex:1 1 130px">Geschlecht<select id="pe-sex">' + opt("", "Bitte wählen", P.sex || "") + opt("m", "Männlich", P.sex) + opt("w", "Weiblich", P.sex) + "</select></label>" +
       '<label style="flex:1 1 110px">Geburtsjahr<input id="pe-year" inputmode="numeric" autocomplete="off" value="' + esc(P.year || "") + '"></label>' +
       '<label style="flex:1 1 110px">Größe (cm)<input id="pe-height" inputmode="decimal" autocomplete="off" value="' + esc(P.height ? fmt(P.height) : "") + '"></label>' +
+      '<label style="flex:1 1 100%"><span>Körperbau' + ib("build") + '</span><select id="pe-build">' + opt("", "Nicht angeben", P.build || "") + Object.keys(BUILD).map(function (k) { return opt(k, BUILD[k][0] + " – " + BUILD[k][1], P.build); }).join("") + "</select></label>" +
+      itx("build", "Muskeln verbrauchen mehr Energie als Fett. Mit dem Körperbau schätzt die App deinen Körperfettanteil und rechnet den Grundumsatz über die fettfreie Masse. Genauer geht es mit einer Körperfettwaage oder mit Taille (auf Bauchnabelhöhe) und Hals vom Maßband, bei Frauen zusätzlich der Hüfte (breiteste Stelle), unter „Körper“. Gibt es solche Messungen aus den letzten 60 Tagen, nutzt die App diese statt des Körperbaus.") +
       '<label style="flex:1 1 100%">Aktivität<select id="pe-act">' + opt("", "Bitte wählen", P.act || "") + ACT.map(function (a) { return opt(a[0], a[1], P.act); }).join("") + "</select></label>" +
-      '<label style="flex:1 1 170px">Aktuelle Kalorien pro Tag (optional)<input id="pe-intake" inputmode="numeric" autocomplete="off" value="' + esc(P.intake || "") + '"></label>' +
+      '<label style="flex:1 1 170px">Aktuelle Kalorien pro Tag (optional, nur ohne Essenseinträge)<input id="pe-intake" inputmode="numeric" autocomplete="off" value="' + esc(P.intake || "") + '"></label>' +
       '<label style="flex:1 1 150px">Diese Kalorien seit<input type="date" id="pe-since" value="' + esc(P.since || today()) + '" max="' + today() + '"></label>' +
       '<div class="lab" style="flex:1 1 100%">An diesen Tagen trainiere ich meistens<div class="chips" id="pe-days" role="group" aria-label="Trainingstage">' +
       [1, 2, 3, 4, 5, 6, 0].map(function (n, i) { return '<button type="button" data-act="peday" data-id="' + n + '" aria-pressed="' + ((P.tdays || []).indexOf(n) >= 0) + '">' + ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][i] + "</button>"; }).join("") + "</div></div>" +
@@ -1891,7 +1945,7 @@ button, select, input { touch-action: manipulation }
   }
 
   /* ---------- Körper ---------- */
-  var BF = [["weight", "Gewicht", "kg"], ["fat", "Körperfett", "%"], ["arm", "Arm", "cm"], ["chest", "Brust", "cm"], ["waist", "Taille", "cm"], ["thigh", "Oberschenkel", "cm"]];
+  var BF = [["weight", "Gewicht", "kg"], ["fat", "Körperfett", "%"], ["arm", "Arm", "cm"], ["chest", "Brust", "cm"], ["waist", "Taille", "cm"], ["neck", "Hals", "cm"], ["hip", "Hüfte", "cm"], ["thigh", "Oberschenkel", "cm"]];
   var BM = BF.concat([["ffm", "Fettfreie Masse", "kg"]]);
   function bodyVal(b, k) { return k === "ffm" ? (b.weight != null && b.fat != null ? b.weight * (1 - b.fat / 100) : null) : b[k]; }
   function renderBody(keepForm) {
@@ -2603,7 +2657,8 @@ button, select, input { touch-action: manipulation }
         var mq = d.macro, macro = mq && [mq.pc, mq.pm, mq.pb, mq.fat].every(isN) ? { pc: mq.pc, pm: mq.pm, pb: mq.pb, fat: mq.fat } : null;
         return { kind: "settings", sched: sched, macro: macro, hide: (Array.isArray(d.hide) ? d.hide : []).filter(function (x) { return typeof x === "string"; }).map(txt80).slice(0, 300),
           person: okP ? { sex: q.sex, year: q.year, height: q.height, act: q.act, intake: isN(q.intake) ? q.intake : null, since: DRE.test(q.since) ? q.since : null,
-            tdays: (Array.isArray(q.tdays) ? q.tdays : []).filter(function (x, i, arr) { return isN(x) && x >= 0 && x <= 6 && x % 1 === 0 && arr.indexOf(x) === i; }) } : null,
+            tdays: (Array.isArray(q.tdays) ? q.tdays : []).filter(function (x, i, arr) { return isN(x) && x >= 0 && x <= 6 && x % 1 === 0 && arr.indexOf(x) === i; }),
+            build: BUILD[q.build] ? q.build : null, buildW: isN(q.buildW) ? q.buildW : null } : null,
           phases: (d.phases || []).map(function (p) {
             if (!DRE.test(p.start) || !Object.prototype.hasOwnProperty.call(PH, p.type)) throw 0;
             var cp = { start: p.start, type: p.type }; if (isN(p.goal) && p.goal > 20 && p.goal < 400) cp.goal = p.goal;
@@ -3335,10 +3390,13 @@ button, select, input { touch-action: manipulation }
       if (age < 18) { $("pemsg").textContent = "Die Kalorienempfehlung ist nur für Erwachsene ausgelegt."; return; }
       if (it != null && (it < 800 || it > 8000)) { $("pemsg").textContent = "Die Kalorienangabe sieht nicht plausibel aus."; return; }
       var td = []; $("pe-days").querySelectorAll('[aria-pressed="true"]').forEach(function (x) { td.push(+x.dataset.id); });
-      saveSettings(null, { sex: sx, year: Math.round(yr), height: hg, act: ac, intake: it == null ? null : Math.round(it), since: it == null ? null : ($("pe-since").value || today()), tdays: td });
+      var bd = $("pe-build").value || null, lw = lastWeight(bodyList());
+      saveSettings(null, { sex: sx, year: Math.round(yr), height: hg, act: ac, intake: it == null ? null : Math.round(it), since: it == null ? null : ($("pe-since").value || today()), tdays: td,
+        build: bd, buildW: bd && lw ? lw.weight : null });
       renderBody(true); renderHome(); renderData(); $("pemsg").textContent = "Gespeichert. Kalorien und Makros stehen im Reiter „Körper“.";
     }
     else if (a === "pfswitch") switchProfile(id);
+    else if (a === "gome") { S.dataSec = "me"; showTab("data"); var pb = $("pe-build"); if (pb) { pb.scrollIntoView({ block: "center" }); pb.focus(); } }
     else if (a === "pfadd") {
       var pn = { id: rid("p"), name: $("pf-new").value.trim().slice(0, 30) || "Profil " + (PROF.list.length + 1) };
       PROF.list.push(pn); switchProfile(pn.id);
