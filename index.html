@@ -130,6 +130,7 @@ button.ibtn[aria-expanded="true"] { box-shadow: 0 0 0 3px var(--accent-soft) }
 .nlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column }
 .nlist li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 15px }
 button.xs { min-height: 32px; padding: 2px 10px }
+.dayacts { gap: 4px; margin: -4px 0 0 }
 .fmanage { border-top: 1px solid var(--line); padding-top: 10px }
 .fmanage summary { cursor: pointer; font-weight: 600; color: var(--accent) }
 .fmanage h3 { margin: 16px 0 8px }
@@ -516,7 +517,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 53;
+  var APP_VERSION = 54;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -593,6 +594,7 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
+    { v: 54, tab: "plan", text: "Der Name steht nur noch einmal oben am Trainingstag. Ändern geht über „Umbenennen“." },
     { v: 53, tab: "train", text: "„Ersetzen“ nimmt schon eingetragene Sätze mit (Häkchen „eingetragene Sätze mitnehmen“). Steht die gesuchte Übung schon in der Einheit, zeigt die Auswahl das an und bringt dich hin. Die Suche findet Übungen jetzt auch mit mehreren Wörtern, z. B. „hohe rud“." },
     { v: 53, tab: "home", text: "Essen eintragen mit Suchfeld: antippen, tippen, auswählen. Maschinenübungen starten mit 5–8 Wiederholungen; einmalig fragt die App, ob deine vorhandenen Maschinenübungen umgestellt werden sollen." },
     { v: 53, tab: "data", text: "„+ Zutat“ bei Mahlzeiten mit Suchfeld. In allen Suchen sind die getippten Buchstaben fett markiert." },
@@ -2368,7 +2370,9 @@ button, select, input { touch-action: manipulation }
       h += '<div class="block"><button class="dayhead" id="dh-' + d.id + '" data-act="daytoggle" data-id="' + d.id + '" aria-expanded="' + open + '"><span class="chev" aria-hidden="true">›</span><span class="dayname" id="dn-' + d.id + '">' + esc(d.name) +
         '</span><span class="cnt">' + cnt + (cnt === 1 ? " Übung" : " Übungen") + "</span></button>";
       if (!open) { h += (cnt ? '<p class="small muted clip">' + esc(d.exercises.map(function (e) { return e.name; }).join(", ")) + "</p>" : "") + "</div>"; return; }
-      h += '<div class="row"><label style="flex:1 1 200px">Name des Trainingstags<input id="pd-' + d.id + '" data-day="' + di + '" data-pf="dayname" value="' + esc(d.name) + '"></label><button class="danger" data-act="deld" data-id="' + di + '">Tag löschen</button></div>';
+      /* Der Name steht schon im Kopf: Namensfeld nur nach „Umbenennen“ (seit v54). */
+      h += S.dayRen === d.id ? '<div class="row"><label style="flex:1 1 200px">Name des Trainingstags<input id="pd-' + d.id + '" data-day="' + di + '" data-pf="dayname" value="' + esc(d.name) + '"></label><button class="ghost" data-act="dayren" data-id="' + d.id + '">Fertig</button></div>'
+        : '<div class="row dayacts"><button class="ghost xs" data-act="dayren" data-id="' + d.id + '">Umbenennen</button><button class="ghost xs danger" data-act="deld" data-id="' + di + '">Tag löschen</button></div>';
       d.exercises.forEach(function (e, ei) {
         var dup = dupOf(e);
         var f = function (k, l, mode) { return "<label>" + l + '<input id="p-' + di + "-" + e.id + "-" + k + '" inputmode="' + mode + '" data-day="' + di + '" data-exi="' + ei + '" data-pf="' + k + '" value="' + fmt(e[k]) + '"></label>'; };
@@ -3220,6 +3224,7 @@ button, select, input { touch-action: manipulation }
     }
     else if (a === "phdel") { if (arm(b, "Sicher?")) { saveSettings(S.phases.filter(function (p) { return p.start !== id; })); renderAll(false); } }
     else if (a === "addd") { S.plan.days.push({ id: rid("d"), name: "Neuer Tag", exercises: [] }); planChanged(true); renderPlan(); }
+    else if (a === "dayren") { S.dayRen = S.dayRen === id ? null : id; renderPlan(); var pdi = $("pd-" + id); if (pdi && S.dayRen) { pdi.focus(); pdi.select(); } }
     else if (a === "deld") { if (arm(b, "Sicher löschen?")) { S.plan.days.splice(+id, 1); planChanged(true); renderPlan(); } }
     else if (a === "plancheck") { planPatch = readPlanCode(S.planCode || ""); renderPlan(); }
     else if (a === "plancancel") { planPatch = null; renderPlan(); }
