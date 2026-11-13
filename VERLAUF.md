@@ -89,3 +89,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v72: Eiweiß-Abschnitt `.sg.pg` direkt hinter `.sg.p` (Klasse `pj` ohne Trennstrich); Legende `.mgrid.m4` mit vierter Spalte „offen ≈ … kcal“ (`.mdt.pg`).
 - v73: Legende Start: Reihenfolge Protein · offen · Fett · Kohlenh.
 - v74: grauer Rest-Abschnitt `.sg.x` nur noch, wenn Einträge ohne Makros vorhanden sind oder der Rest ≥ max(40 kcal, 6 %) ist (z. B. Alkohol); Rundungsreste ausgeblendet.
+- v75: Bibliothek durchstöbern: leere Suche zeigt nach Mahlzeiten/Favoriten/eigenen alle Bibliotheksgruppen (`libGroups`), Liste `#cbr-ni` bis 55vh hoch; Daten → Essen: je Gruppe `<details class="flib">` (Zustand `S.fLibOpen`).
