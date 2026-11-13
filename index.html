@@ -434,6 +434,26 @@ table.strength .exico, table.recs .exico, .testlist .exico, .focusrow .exico { v
 .testlist { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line) }
 .testlist h3, .testlist p { margin: 0 }
 .vol { display: flex; flex-direction: column; gap: 8px }
+.strsum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.strsum > div { background: var(--sunken); border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column }
+.strsum b { font-size: 22px }
+.bmwrap { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 8px; align-items: center }
+.bodymap { width: 100%; height: auto }
+.bodymap .bm { stroke: var(--line); stroke-width: 1 }
+.bodymap .head, .bodymap .neck, .bodymap .fore, .bodymap .hip, .bodymap .nd { fill: var(--sunken) }
+.bodymap .up { fill: var(--good) } .bodymap .down { fill: var(--pr) } .bodymap .same { fill: var(--muted) }
+.bodymap .bmlab { font-size: 10px; fill: var(--muted) }
+.bmlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px }
+.bmlist li { display: flex; align-items: center; gap: 6px }
+.bmlist li b { margin-left: auto }
+.bmdot { width: 10px; height: 10px; border-radius: 3px; background: var(--sunken); border: 1px solid var(--line) }
+.bmdot.up { background: var(--good) } .bmdot.down { background: var(--pr) } .bmdot.same { background: var(--muted) }
+.chg.nd { color: var(--muted) }
+.rl { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round }
+.rl.up1 { stroke: var(--accent) } .rl.lo1 { stroke: var(--good) }
+.rleg { margin: 2px 0 0 } .lg { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin: 0 4px 0 8px }
+.lg.up1 { background: var(--accent) } .lg.lo1 { background: var(--good) } .rleg .lg:first-child { margin-left: 0 }
+.strdet summary { font-weight: 600; cursor: pointer; padding: 4px 0 }
 .vrow { display: grid; grid-template-columns: 80px minmax(0, 1fr) 2.6em; align-items: center; gap: 10px; font-size: 14px }
 .vbar { position: relative; height: 14px; border-radius: 7px; background: var(--sunken); overflow: hidden }
 .vzone { position: absolute; top: 0; bottom: 0; background: var(--good-soft); opacity: .9 }
@@ -560,7 +580,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 60;
+  var APP_VERSION = 61;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -637,6 +657,7 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
+    { v: 61, tab: "prog", text: "Neu unter Fortschritt: „Kraft nach Körperbereichen“ mit Körperkarte (vorne/hinten), Prozent für Ober- und Unterkörper, Verlauf beider Bereiche und wählbarem Zeitraum. Ersetzt „Kraft seit Phasenstart“." },
     { v: 60, tab: "data", text: "Die Einführung startet jetzt auch, wenn du ein neues Profil anlegst oder zu einem leeren Profil wechselst." },
     { v: 59, tab: "data", text: "Die Einführung für neue Nutzer hebt jetzt den Bereich hervor, um den es gerade geht, mit kurzem Zoom; alles andere wird grau und unscharf." },
     { v: 58, tab: "data", text: "Neu unter Daten: „Hilfe“, ein kurzes Handbuch zu allen Reitern. Neue Nutzer bekommen beim ersten Start eine kurze Einführung, die sich dort auch noch einmal zeigen lässt." },
@@ -1902,25 +1923,91 @@ button, select, input { touch-action: manipulation }
   function exOrder(ids, m) {
     return ids.sort(function (a, b) { var fa = m[a] && m[a].focus ? 1 : 0, fb = m[b] && m[b].focus ? 1 : 0; return fb - fa || (m[a] ? m[a].name : a).localeCompare(m[b] ? m[b].name : b, "de"); });
   }
-  /* Kraft seit Phasenstart: geschätztes 1RM der ersten gegen die letzte Einheit im Zeitraum. */
-  function strengthBlock() {
-    var t = today(), ph = phaseAt(t), from = ph ? ph.start : addDays(t, -56), m = exById(), rows = [];
-    exOrder(Object.keys(m), m).forEach(function (id) {
-      var ss = sessions(id).filter(function (x) { return x.date >= from; });
+  /* ---------- Kraft nach Körperbereichen (seit v61, ersetzt „Kraft seit Phasenstart“) ----------
+     Je Übung: geschätztes 1RM, Schnitt der ersten zwei gegen die letzten zwei Einheiten im Zeitraum → Prozent.
+     Gruppen und Ober-/Unterkörper: nach Anzahl der Einheiten gewichteter Mittelwert. Übungen ohne Zusatzgewicht zählen nicht. */
+  var UPPER = ["Brust", "Rücken", "Schultern", "Arme"], LOWER = ["Beine"];
+  var STRP = [["phase", "Phase"], ["3m", "3 Mon."], ["6m", "6 Mon."], ["all", "Alles"]];
+  function strFrom() {
+    var t = today(), k = S.strP || "6m", ph = phaseAt(t);
+    if (k === "phase") return ph ? ph.start : addDays(t, -56);
+    return k === "3m" ? addDays(t, -91) : k === "6m" ? addDays(t, -182) : "0000-00-00";
+  }
+  function strengthData() {
+    var from = strFrom(), m = exById(), rows = [];
+    Object.keys(m).forEach(function (id) {
+      var ss = sessions(id).filter(function (x) { return x.date >= from && x.top > 0 && !x.test; });
       if (ss.length < 2) return;
-      var a = ss[0].e1rm, b = ss[ss.length - 1].e1rm, pct = a > 0 ? (b - a) / a * 100 : 0;
-      rows.push({ ex: m[id], a: a, b: b, pct: pct, n: ss.length });
+      var k = ss.length >= 4 ? 2 : 1, avg = function (a) { return a.reduce(function (s, x) { return s + x.e1rm; }, 0) / a.length; };
+      var a = avg(ss.slice(0, k)), b = avg(ss.slice(-k));
+      if (!(a > 0)) return;
+      rows.push({ id: id, ex: m[id], g: groupOf(m[id]) || "Sonstige", a: a, b: b, pct: (b - a) / a * 100, n: ss.length, ss: ss, base: a });
     });
-    var h = '<div class="block"><h2>Kraft ' + (ph ? "seit Beginn " + (ph.type === "cut" ? "des Cuts" : ph.type === "bulk" ? "des Aufbaus" : "der Phase") : "in den letzten 8 Wochen") + "</h2>";
-    if (!rows.length) return h + '<p class="small muted">Sobald eine Übung in diesem Zeitraum mindestens zwei Einheiten hat, siehst du hier, ob deine Kraft steigt, hält oder sinkt.</p></div>';
-    var up = 0, down = 0;
-    h += '<div class="tablewrap"><table class="strength"><thead><tr><th>Übung</th><th class="r">1RM gesch.</th><th class="r">Veränderung</th></tr></thead><tbody>' + rows.map(function (r) {
-      var cls = r.pct >= 2 ? "up" : r.pct <= -5 ? "down" : "same"; if (cls === "up") up++; if (cls === "down") down++;
-      return "<tr><td>" + exIcon(r.ex, 18) + " " + esc(r.ex.name) + (r.ex.focus ? ' <span class="fbadge sm">Schwerpunkt</span>' : "") + '</td><td class="r">' + fmt(Math.round(r.a)) + " → " + fmt(Math.round(r.b)) + ' kg</td><td class="r"><span class="chg ' + cls + '">' + (cls === "up" ? "↑" : cls === "down" ? "↓" : "→") + " " + sign(Math.round(r.pct * 10) / 10) + " %</span></td></tr>";
-    }).join("") + "</tbody></table></div>";
-    var downN = rows.filter(function (r) { return r.pct <= -5; }).map(function (r) { return r.ex.name; });
-    var msg = ph && ph.type === "cut" ? (down >= Math.max(2, Math.ceil(rows.length / 3)) ? "Bei mehreren Übungen sinkt die Kraft deutlich. Das kann ein Zeichen sein, dass das Defizit zu groß ist oder die Erholung fehlt." : down ? "Insgesamt hältst du deine Kraft, bei " + downN.join(", ") + " sinkt sie aber deutlich. Einzelne Ausreißer sind normal, beobachte es über die nächsten Einheiten." : "Im Cut ist es ein Erfolg, die Kraft zu halten. Das spricht dafür, dass du Muskeln bewahrst.") : (up >= rows.length / 2 ? "Die Mehrheit deiner Übungen wird stärker." : "Viele Übungen stehen. Prüfe dort Wiederholungsbereich, Schlaf und Kalorien.");
-    return h + '<p class="small">' + msg + '</p>' + tip("str", "Wie wird verglichen?", "Vergleich des geschätzten 1RM aus der ersten und der letzten Einheit im Zeitraum. Ab +2 % stärker, ab −5 % schwächer, dazwischen stabil. Einzelne Tagesformen schwanken.") + "</div>";
+    var mean = function (list) { var w = 0, s = 0; list.forEach(function (r) { w += r.n; s += r.pct * r.n; }); return w ? s / w : null; };
+    var grp = {}; CGROUPS.forEach(function (g) { var l = rows.filter(function (r) { return r.g === g; }); grp[g] = l.length ? { pct: mean(l), n: l.length } : null; });
+    return { rows: rows, grp: grp, upper: mean(rows.filter(function (r) { return UPPER.indexOf(r.g) >= 0; })), lower: mean(rows.filter(function (r) { return LOWER.indexOf(r.g) >= 0; })), from: from };
+  }
+  function pctTxt(v) { return v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "±") + fmt(Math.abs(Math.round(v))) + " %"; }
+  function pctCls(v) { return v == null ? "nd" : v >= 2 ? "up" : v <= -5 ? "down" : "same"; }
+  /* Körperkarte: vorne und hinten, Bereiche nach Veränderung eingefärbt (Deckkraft nach Größe). */
+  function bodyMap(grp) {
+    var st = function (g) { var x = grp[g]; if (!x) return 'class="bm nd"'; var c = pctCls(x.pct), o = c === "up" ? Math.min(1, 0.35 + x.pct / 40) : c === "down" ? Math.min(1, 0.4 - x.pct / 30) : 0.5; return 'class="bm ' + c + '" style="fill-opacity:' + o.toFixed(2) + '"'; };
+    var fig = function (x0, back) {
+      var g = function (s) { return s.replace(/X(-?\d+(\.\d+)?)/g, function (q, n) { return String(Math.round((x0 + +n) * 10) / 10); }); };
+      var h = '<circle class="bm head" cx="' + x0 + '" cy="20" r="11"/>' + g('<rect class="bm neck" x="X-4" y="30" width="8" height="7" rx="2"/>');
+      h += g('<ellipse ' + st("Schultern") + ' cx="X-22" cy="46" rx="9" ry="8"/><ellipse ' + st("Schultern") + ' cx="X22" cy="46" rx="9" ry="8"/>');
+      h += back ? g('<path ' + st("Rücken") + ' d="MX-16 40 QX0 36 X16 40 LX14 84 QX0 90 X-14 84 Z"/>')
+                : g('<path ' + st("Brust") + ' d="MX-16 40 QX0 37 X16 40 LX15 60 QX0 64 X-15 60 Z"/>') + g('<rect ' + st("Bauch") + ' x="X-12" y="64" width="24" height="24" rx="6"/>');
+      h += g('<rect ' + st("Arme") + ' x="X-33" y="54" width="10" height="34" rx="5"/><rect ' + st("Arme") + ' x="X23" y="54" width="10" height="34" rx="5"/>');
+      h += g('<rect class="bm fore" x="X-34" y="90" width="9" height="22" rx="4.5"/><rect class="bm fore" x="X25" y="90" width="9" height="22" rx="4.5"/>');
+      h += back ? g('<path class="bm hip" d="MX-15 88 LX15 88 LX16 100 LX-16 100 Z"/>') : g('<path class="bm hip" d="MX-14 88 LX14 88 LX16 100 LX-16 100 Z"/>');
+      h += g('<rect ' + st("Beine") + ' x="X-16" y="100" width="14" height="46" rx="7"/><rect ' + st("Beine") + ' x="X2" y="100" width="14" height="46" rx="7"/>');
+      h += g('<rect ' + st("Beine") + ' x="X-15" y="149" width="12" height="36" rx="6"/><rect ' + st("Beine") + ' x="X3" y="149" width="12" height="36" rx="6"/>');
+      return h + '<text class="bmlab" x="' + x0 + '" y="200" text-anchor="middle">' + (back ? "hinten" : "vorne") + "</text>";
+    };
+    return '<svg class="bodymap" viewBox="0 0 200 206" role="img" aria-label="Kraftveränderung nach Muskelgruppen">' + fig(52, false) + fig(148, true) + "</svg>";
+  }
+  /* Verlauf Ober- und Unterkörper: je Woche Mittel aus (1RM / Ausgangswert) aller Übungen des Bereichs, 100 = Ausgangswert. */
+  function regionTrend(rows) {
+    var wk = function (d) { var x = dateOf(d); return addDays(d, -((x.getDay() + 6) % 7)); }, S2 = {};
+    rows.forEach(function (r) {
+      var reg = UPPER.indexOf(r.g) >= 0 ? "u" : LOWER.indexOf(r.g) >= 0 ? "l" : null; if (!reg) return;
+      r.ss.forEach(function (s) { var k = wk(s.date); S2[k] = S2[k] || { u: [], l: [] }; S2[k][reg].push(s.e1rm / r.base * 100); });
+    });
+    var weeks = Object.keys(S2).sort(); if (weeks.length < 2) return "";
+    var ser = { u: [], l: [] }, avg = function (a) { return a.reduce(function (s, x) { return s + x; }, 0) / a.length; };
+    weeks.forEach(function (k, i) { ["u", "l"].forEach(function (z) { if (S2[k][z].length) ser[z].push([i, avg(S2[k][z])]); }); });
+    var all = ser.u.concat(ser.l).map(function (p) { return p[1]; }), lo = Math.min(95, Math.floor(Math.min.apply(0, all) / 5) * 5), hi = Math.max(110, Math.ceil(Math.max.apply(0, all) / 5) * 5);
+    var W = 340, H = 150, L = 34, R = 8, T = 10, B = 22, xs = function (i) { return L + i / (weeks.length - 1) * (W - L - R); }, ys = function (v) { return T + (hi - v) / (hi - lo) * (H - T - B); };
+    /* Leicht geglättet (Mittel über 3 Wochen), sonst springt die Linie mit jeder Tagesform. */
+    var sm = function (a) { return a.map(function (p, i) { var s = a.slice(Math.max(0, i - 1), i + 2); return [p[0], avg(s.map(function (q) { return q[1]; }))]; }); };
+    var path = function (a) { return sm(a).map(function (p, i) { return (i ? "L" : "M") + xs(p[0]).toFixed(1) + " " + ys(p[1]).toFixed(1); }).join(""); };
+    var g = ""; for (var v = lo; v <= hi; v += (hi - lo > 40 ? 20 : 10)) g += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + ys(v).toFixed(1) + '" y2="' + ys(v).toFixed(1) + '"/><text x="' + (L - 4) + '" y="' + (ys(v) + 4).toFixed(1) + '" text-anchor="end">' + v + "</text>";
+    var xl = [0, weeks.length - 1].map(function (i) { return '<text x="' + xs(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (i ? "end" : "start") + '">' + dfmt(weeks[i]) + "</text>"; }).join("");
+    return '<div class="chart"><svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Kraftverlauf Ober- und Unterkörper">' + g + xl +
+      (ser.u.length > 1 ? '<path class="rl up1" d="' + path(ser.u) + '"/>' : "") + (ser.l.length > 1 ? '<path class="rl lo1" d="' + path(ser.l) + '"/>' : "") + "</svg></div>" +
+      '<p class="small muted rleg"><span class="lg up1"></span>Oberkörper <span class="lg lo1"></span>Unterkörper · 100 = Ausgangswert</p>';
+  }
+  function strengthBlock() {
+    var D = strengthData(), ph = phaseAt(today()), k = S.strP || "6m";
+    var h = '<div class="block strmap"><h2>Kraft nach Körperbereichen' + ib("strm") + "</h2>" +
+      itx("strm", "Je Übung wird das geschätzte Maximum (1RM) vom Anfang des Zeitraums mit dem Ende verglichen, jeweils als Schnitt aus zwei Einheiten. Weil in Prozent gerechnet wird, zählen Varianten wie Kniebeuge, Hackenschmidt und Beinpresse gemeinsam für die Beine. Übungen ohne Zusatzgewicht und Krafttests zählen nicht. Grün: ab +2 % stärker, orange: ab −5 % schwächer, grau: stabil, leer: keine Daten.") +
+      '<div class="chips" role="group" aria-label="Zeitraum">' + STRP.map(function (x) { return '<button data-act="strp" data-id="' + x[0] + '" aria-pressed="' + (x[0] === k) + '">' + x[1] + "</button>"; }).join("") + "</div>";
+    if (!D.rows.length) return h + '<p class="small muted">Sobald Übungen im Zeitraum mindestens zwei Einheiten mit Gewicht haben, siehst du hier, in welchen Bereichen du stärker wirst.</p></div>';
+    h += '<div class="strsum"><div><span class="small muted">Oberkörper</span><b class="chg ' + pctCls(D.upper) + '">' + pctTxt(D.upper) + '</b></div><div><span class="small muted">Unterkörper</span><b class="chg ' + pctCls(D.lower) + '">' + pctTxt(D.lower) + "</b></div></div>";
+    h += '<div class="bmwrap">' + bodyMap(D.grp) + '<ul class="bmlist">' + CGROUPS.map(function (g) { var x = D.grp[g]; return '<li><span class="bmdot ' + (x ? pctCls(x.pct) : "nd") + '"></span>' + g + ' <b class="chg ' + (x ? pctCls(x.pct) : "nd") + '">' + (x ? pctTxt(x.pct) : "–") + "</b></li>"; }).join("") + "</ul></div>";
+    h += regionTrend(D.rows);
+    var rows = D.rows.slice().sort(function (a, b) { return CGROUPS.indexOf(a.g) - CGROUPS.indexOf(b.g) || b.pct - a.pct; });
+    h += '<details class="strdet"><summary>Alle Übungen (' + rows.length + ')</summary><div class="tablewrap"><table class="strength"><thead><tr><th>Übung</th><th class="r">1RM gesch.</th><th class="r">Veränderung</th></tr></thead><tbody>' + rows.map(function (r) {
+      var c = pctCls(r.pct);
+      return "<tr><td>" + exIcon(r.ex, 18) + " " + esc(r.ex.name) + '<br><span class="small muted">' + r.g + " · " + r.n + ' Einheiten</span></td><td class="r">' + fmt(Math.round(r.a)) + " → " + fmt(Math.round(r.b)) + ' kg</td><td class="r"><span class="chg ' + c + '">' + pctTxt(r.pct) + "</span></td></tr>";
+    }).join("") + "</tbody></table></div></details>";
+    /* Im Cut: Hinweis, wenn mehrere Übungen deutlich schwächer werden (wie bisher). */
+    if (ph && ph.type === "cut" && k === "phase") {
+      var down = rows.filter(function (r) { return r.pct <= -5; });
+      if (down.length >= Math.max(2, Math.ceil(rows.length / 3))) h += '<p class="small fmiss">Bei mehreren Übungen sinkt die Kraft deutlich. Das kann ein Zeichen sein, dass das Defizit zu groß ist oder die Erholung fehlt.</p>';
+    }
+    return h + "</div>";
   }
   /* Sätze pro Muskelgruppe und Woche, Zielbereich 10–20 Arbeitssätze. */
   function volumeBlock() {
@@ -2803,7 +2890,7 @@ button, select, input { touch-action: manipulation }
     ["Erste Schritte", "<ol><li>Unter <b>Daten → Persönlich</b> Geschlecht, Geburtsjahr, Größe, Körperbau und Aktivität eintragen. Daraus kommen Kalorien und Makros.</li><li>Unter <b>Plan</b> auf „Plan erstellen“ tippen oder Trainingstage selbst zusammenstellen.</li><li>Auf <b>Start</b> im Kalender das Training wählen und „Training starten“ tippen.</li><li>Unter <b>Körper</b> regelmäßig das Gewicht eintragen, am besten morgens.</li><li>Ab und zu unter <b>Daten → Sicherung</b> ein Backup speichern.</li></ol><p>Auf dem iPhone die App über Safari → Teilen → „Zum Home-Bildschirm“ installieren. Die installierte App speichert getrennt von Safari.</p>"],
     ["Start", "<ul><li><b>Heute:</b> wie viele Kalorien noch offen sind, der Balken zeigt Eiweiß, Fett und Kohlenhydrate. Darunter Defizit bzw. Überschuss und geschätzter Verbrauch.</li><li><b>Essen eintragen:</b> ins Suchfeld tippen, Lebensmittel oder Mahlzeit wählen, Menge angeben, „Eintragen“. „Mittag schätzen“ für Essen ohne Waage. Die Uhrzeit eines Eintrags lässt sich antippen und ändern.</li><li><b>Kalender:</b> Tag antippen, dann „Training starten“ oder ein vergangenes Training öffnen und nachtragen.</li><li><b>Apple Health:</b> holt Gewicht und Körperfett über den Kurzbefehl „Trainingslog Health“.</li></ul>"],
     ["Training", "<ul><li>Gewicht und Wiederholungen eintragen, gespeichert wird automatisch. Ein Satz zählt, sobald Wiederholungen drinstehen.</li><li><b>Gewichtsvorschlag:</b> erst die Wiederholungen bis zur oberen Grenze steigern, in allen Sätzen. Dann schlägt die App mehr Gewicht vor (um den „Schritt“ der Übung).</li><li><b>Aufwärmsätze</b> stehen eingeklappt über jeder Übung.</li><li><b>Krafttest:</b> ein Satz mit etwa 85 % deines geschätzten Maximums bis kurz vor Schluss. Für Schwerpunktübungen erinnert die App alle 4 Wochen.</li><li><b>+ Übung für heute</b> und <b>Ersetzen</b> ändern nur diese Einheit, mit Häkchen auch den Plan. Beim Ersetzen nimmt „eingetragene Sätze mitnehmen“ die Sätze mit.</li></ul>"],
-    ["Fortschritt", "<ul><li><b>Schwerpunkt:</b> geschätztes Maximum (1RM), Veränderung in der Phase, Rekord und nächster Krafttest.</li><li><b>Verlauf pro Übung</b> als 1RM, schwerstes Gewicht oder Volumen.</li><li><b>Kraft seit Phasenstart:</b> zeigt, ob du im Cut deine Kraft hältst.</li><li><b>Sätze pro Muskelgruppe:</b> 10–20 Sätze pro Woche sind ein üblicher Bereich für Muskelaufbau.</li><li><b>Rekorde</b> und Krafttest-Ergebnisse.</li></ul>"],
+    ["Fortschritt", "<ul><li><b>Schwerpunkt:</b> geschätztes Maximum (1RM), Veränderung in der Phase, Rekord und nächster Krafttest.</li><li><b>Verlauf pro Übung</b> als 1RM, schwerstes Gewicht oder Volumen.</li><li><b>Kraft nach Körperbereichen:</b> Körperkarte und Prozent für Ober- und Unterkörper, wie sehr dein geschätztes Maximum im Zeitraum gestiegen ist. Varianten einer Muskelgruppe zählen gemeinsam. Mit dem Zeitraum „Phase“ siehst du, ob du im Cut deine Kraft hältst.</li><li><b>Sätze pro Muskelgruppe:</b> 10–20 Sätze pro Woche sind ein üblicher Bereich für Muskelaufbau.</li><li><b>Rekorde</b> und Krafttest-Ergebnisse.</li></ul>"],
     ["Körper", "<ul><li><b>Messwerte:</b> Gewicht, Körperfett und Umfänge. Ohne Körperfettwaage reicht ein Maßband: Taille auf Höhe des Bauchnabels und Hals, bei Frauen zusätzlich die Hüfte an der breitesten Stelle.</li><li><b>Phasen:</b> Cut, Aufbau oder Halten mit Zeitraum und Zielgewicht. Der Korridor zeigt, ob du im Plan liegst, und schlägt Aufholen oder Neustart vor.</li><li><b>Kalorien und Makros:</b> Der Grundumsatz kommt aus Gewicht, Größe, Alter und Geschlecht, mit Körperfett genauer über die fettfreie Masse. Trägst du dein Essen ein, lernt die App nach zwei Wochen deinen echten Bedarf aus dem Gewichtsverlauf.</li></ul>"],
     ["Plan", "<ul><li><b>Plan erstellen:</b> Tage pro Woche, Dauer und Geräte wählen. Der Assistent zeigt eine Vorschau, mit ↻ tauschst du einzelne Übungen. Danach Plan ersetzen oder Tage hinzufügen; dein Verlauf bleibt.</li><li><b>Sätze pro Woche:</b> oben im Plan, ↓ heißt unter 10, ↑ über 20.</li><li><b>Tage:</b> umbenennen, duplizieren, löschen. Unter dem Tag stehen geschätzte Dauer und Sätze.</li><li><b>Übungen:</b> Reihenfolge mit ↑ ↓, „Verschieben“ zu einem anderen Tag, „Einstellungen“ für Sätze, Wiederholungen und Schritt. In „Übung hinzufügen“ stehen oben Vorschläge für Muskelgruppen mit zu wenig Sätzen.</li><li><b>Plan-Code:</b> wenn Claude deinen Plan anpasst, hier einfügen, prüfen, übernehmen.</li></ul>"],
     ["Daten", "<ul><li><b>Essen:</b> Mahlzeiten aus Lebensmitteln zusammenstellen; Lebensmittel antippen und Werte von der Verpackung übernehmen.</li><li><b>Übungen:</b> Einstellungen, Bewertung, Schwerpunkt, Muskelgruppe, Zusammenführen doppelter Übungen. „Katalog anpassen“ blendet Übungen aus, die du nie machst.</li><li><b>Persönlich:</b> Angaben für die Kalorien, Trainingstage der Woche, Makros, Profile für mehrere Personen.</li><li><b>Sicherung:</b> Backup speichern und einspielen, Export für Excel.</li></ul>"],
@@ -3416,6 +3503,7 @@ button, select, input { touch-action: manipulation }
     }
     else if (a === "addset") { var rows = draft.rows[id] || (draft.rows[id] = []), l = rows[rows.length - 1]; rows.push({ w: l ? l.w : "", r: "" }); renderTrain(); var el = $("r-" + id + "-" + (rows.length - 1)); if (el) el.focus(); }
     else if (a === "metric") { S.metric = id; renderProgress(); }
+    else if (a === "strp") { S.strP = id; var yp = window.scrollY; renderProgress(); window.scrollTo(0, yp); }
     else if (a === "open") { S.trainView = "edit"; S.date = b.dataset.date; S.dayId = id; draft = null; showTab("train"); }
     else if (a === "calsel") { S.calSel = S.calSel === id ? null : id; renderCal(); }
     else if (a === "calnav") {
