@@ -22,7 +22,7 @@ html { -webkit-text-size-adjust: 100% }
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px) }
 /* Layout: eine schmale Spalte wie ein Trainingsheft; oben Tabs, darunter pro Übung ein Block mit Satz-Zeilen. */
 :root {
-  --s2: #e8590c; --s3: #7048e8; --s4: #0c8599; --s5: #d6336c; --s6: #9c6b00;
+  --pg-op: .3; --s2: #e8590c; --s3: #7048e8; --s4: #0c8599; --s5: #d6336c; --s6: #9c6b00;
   --heat-lo: #f0a070; --heat-hi: #a3170e; --heat-dn: #8ea2c2; --ms-nd: #d6d3d2; --ms-base: #d9937a; --ms-gap: #6e2416; --tendon: #f5ecdc; --ms-line: rgba(70, 15, 5, .45); --fib: rgba(255, 235, 220, .4);
   --bg: #f1f3f7; --surface: #ffffff; --sunken: #e8ebf1; --ink: #151a22; --muted: #5a6474; --line: #d6dbe4;
   --accent: #2447d6; --accent-ink: #ffffff; --accent-soft: #e4e9fb;
@@ -33,14 +33,14 @@ html { -webkit-text-size-adjust: 100% }
   --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --s2: #ff8a4c; --s3: #a48bff; --s4: #3bc9db; --s5: #f783ac; --s6: #e0b44a;
+  --pg-op: .5; --s2: #ff8a4c; --s3: #a48bff; --s4: #3bc9db; --s5: #f783ac; --s6: #e0b44a;
   --heat-lo: #b8653f; --heat-hi: #ff4a2a; --heat-dn: #5a6f96; --ms-nd: #4a4c52; --ms-base: #8a4c3a; --ms-gap: #2e120c; --tendon: #cfc2aa; --ms-line: rgba(0, 0, 0, .55); --fib: rgba(255, 230, 210, .25);
   --bg: #0e1116; --surface: #171b22; --sunken: #1f242d; --ink: #e9ecf1; --muted: #9aa4b3; --line: #2b313c;
   --accent: #8ea5ff; --accent-ink: #0c1124; --accent-soft: #1d2647;
   --good: #62d39b; --good-soft: #143325; --warn: #e8b85a; --warn-soft: #3a2c0c; --bad: #ff8a80; --dot: #f5c542; --scrim: rgba(0, 0, 0, .66);
   --c1: #8ea5ff; --c2: #f0a868; --c3: #62d39b; --c4: #c79bf2; --c5: #f28fb1; --c6: #66c9d9; --c-ink: #0e1116; --ph-cut: #ff8a2b; --ph-bulk: #8ce99a; --band-op: .36; --m-p: #8ea5ff; --pr: #ff922b; --m-f: #ffd43b; --m-c: #3bc9db; --ph-maint: #adb5bd; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --s2: #ff8a4c; --s3: #a48bff; --s4: #3bc9db; --s5: #f783ac; --s6: #e0b44a;
+  --pg-op: .5; --s2: #ff8a4c; --s3: #a48bff; --s4: #3bc9db; --s5: #f783ac; --s6: #e0b44a;
   --heat-lo: #b8653f; --heat-hi: #ff4a2a; --heat-dn: #5a6f96; --ms-nd: #4a4c52; --ms-base: #8a4c3a; --ms-gap: #2e120c; --tendon: #cfc2aa; --ms-line: rgba(0, 0, 0, .55); --fib: rgba(255, 230, 210, .25);
   --bg: #0e1116; --surface: #171b22; --sunken: #1f242d; --ink: #e9ecf1; --muted: #9aa4b3; --line: #2b313c;
   --accent: #8ea5ff; --accent-ink: #0c1124; --accent-soft: #1d2647;
@@ -239,6 +239,7 @@ body.tfocusing .tfocus { position: relative; outline: 2px solid var(--accent); o
 .dtrack.sgs.over { box-shadow: 0 0 0 2px var(--warn) }
 .sg { height: 100%; border-right: 2px solid var(--surface) } .sg:last-child { border-right: 0 }
 .sg.p, .mdt.p { background: var(--pr) } .sg.f, .mdt.f { background: var(--m-f) } .sg.c, .mdt.c { background: var(--m-c) } .sg.x { background: var(--muted); opacity: .45 }
+.sg.pg { background: var(--pr); opacity: var(--pg-op) } .sg.pg.gov { background: var(--bad) }
 .mgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; font-variant-numeric: tabular-nums }
 .mcol { display: flex; flex-direction: column; gap: 1px; min-width: 0 }
 .mlab { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted) }
@@ -617,7 +618,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 69;
+  var APP_VERSION = 70;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -694,6 +695,7 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
+    { v: 70, tab: "home", text: "Im Kalorienbalken auf Start zeigt ein blasser oranger Abschnitt, wie viele Kalorien das noch fehlende Eiweiß ungefähr kostet (≈ 5 kcal je Gramm). So siehst du, wie viel danach noch übrig bleibt. Reicht es übers Ziel, wird der Abschnitt rötlich. Die Zahlen stehen hinter dem i bei Defizit und Verbrauch." },
     { v: 69, tab: "data", text: "Mehr Lebensmittel: Schwein (Filet, Schnitzel, Kotelett, Nacken), Hackfleisch gemischt, Wurst und Aufschnitt, Brötchen, Brezel, Spätzle, Gemüse, Butter sowie eine neue Gruppe „Fertiges & Süßes“ mit Pizza, Döner, Currywurst, Schokolade, Bier und mehr. Deine eigenen Einträge bleiben unverändert." },
     { v: 68, tab: "plan", text: "Plan ändern leichter gemacht: Im Reiter Training führt „Plan ändern“ direkt zum Assistenten, die Trainingstage aus deinen Angaben sind vorausgewählt. Passt dein Plan nicht mehr zu deinen Trainingstagen, weist der Reiter Plan darauf hin." },
     { v: 67, tab: "data", text: "Alltag und Training getrennt: Unter Daten → Persönlich wählst du, wie aktiv dein Alltag ist (Büro bis Baustelle) und wie lange eine Einheit dauert. Zusammen mit den Trainingstagen ergibt das deinen Verbrauch. Bisherige Angaben gelten weiter, bis du den Alltag wählst." },
@@ -3651,6 +3653,16 @@ button, select, input { touch-action: manipulation }
     /* Kalorienbalken in Makrofarben: Anteile aus Eiweiß × 4, Fett × 9, Kohlenhydrate × 4. Kalorien ohne Makroangabe (ältere Einträge) grau. */
     var km = { p: sum.p * 4, f: sum.f * 9, c: sum.c * 4 }, kx = Math.max(0, sum.kcal - km.p - km.f - km.c), ks = km.p + km.f + km.c + kx, full = kc ? Math.min(100, sum.kcal / kc * 100) : 0;
     var segs = ks > 0 && full > 0 ? [["p", km.p], ["f", km.f], ["c", km.c], ["x", kx]].filter(function (x) { return x[1] > 0; }).map(function (x) { return '<div class="sg ' + x[0] + '" style="width:' + (x[1] / ks * full).toFixed(2) + '%"></div>'; }).join("") : "";
+    /* Seit v70: blasser oranger Abschnitt = Kalorien für das noch offene Eiweiß (≈ 5 kcal je g, magere Quellen bringen etwas Fett/KH mit).
+       Reicht er übers Ziel, wird er rötlich. Zahlen stehen im i neben Defizit/Verbrauch. */
+    var gp = Math.max(0, pg - sum.p), gk = gp * 5, gtxt = "";
+    if (kc && gp >= 1 && sum.kcal < kc) {
+      var gfit = Math.min(gk, kc - sum.kcal), gover = sum.kcal + gk > kc;
+      segs += '<div class="sg pg' + (gover ? " gov" : "") + '" style="width:' + (gfit / kc * 100).toFixed(2) + '%"></div>';
+      gtxt = " Blass im Balken: Kalorien für das noch fehlende Eiweiß, " + nf(gp) + " g × ≈ 5 kcal ≈ " + nf(Math.round(gk / 10) * 10) + " kcal (magere Quellen wie Hähnchen, Skyr oder Shake bringen etwas Fett und Kohlenhydrate mit)." +
+        (gover ? " Damit landest du ≈ " + nf(Math.round((sum.kcal + gk - kc) / 10) * 10) + " kcal über dem Ziel." : " Danach bleiben ≈ " + nf(Math.round((kc - sum.kcal - gk) / 10) * 10) + " kcal.");
+      stats = (stats || "").replace(/(id="tip-gap"[^>]*>[\s\S]*?)(<\/p>)/, "$1" + gtxt.replace(/\$/g, "$$$$") + "$2");
+    }
     if (kc) top += '<div class="drow"><div class="dline"><span class="dlab">' + ic("flame", "dk") + (rest >= 0 ? 'Noch <b class="dbig">' + nf(rest) + "</b> kcal" : '<b class="dbig fover">' + nf(-rest) + "</b> kcal drüber") + '</span><span class="dside">' + nf(sum.kcal) + " / " + nf(kc) + "</span></div>" +
       '<div class="dtrack sgs' + (rest < 0 ? " over" : "") + '" role="img" aria-label="' + nf(sum.kcal) + " von " + nf(kc) + ' kcal gegessen">' + segs + "</div></div>";
     else top += '<div class="drow"><div class="dline"><span class="dlab">' + ic("flame", "dk") + 'Gegessen <b class="dbig">' + nf(sum.kcal) + '</b> kcal</span></div><p class="small muted">Für dein Kalorienziel trag im Reiter „Körper“ dein Gewicht und die Angaben für die Kalorienempfehlung ein.</p></div>';
