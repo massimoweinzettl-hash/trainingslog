@@ -353,6 +353,19 @@ button.danger { color: var(--bad) }
 .chart text { fill: var(--muted); font: 12px var(--body) }
 .chart text.val { fill: var(--ink); font-weight: 600; font-size: 13px }
 .chart .mk { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4 }
+.eatchart .eb { fill: var(--m-c); opacity: .75 } .eatchart .eb.over { fill: var(--bad); opacity: .85 } .eatchart .eb.now { opacity: .4 }
+.eatchart .eb.sel { opacity: 1; stroke: var(--ink); stroke-width: .8 }
+.eatchart .egoal { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 4 3; opacity: .7; stroke-linejoin: round }
+.eatchart .egap { fill: var(--muted); opacity: .14 } .eatchart .egl { fill: var(--ink); font-weight: 600; font-size: 11px }
+.eatchart .ew { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round } .eatchart text.ewt { fill: var(--accent); font-size: 11px }
+.eatchart .ehit { fill: transparent; cursor: pointer }
+.eleg { margin: 2px 0 8px; font-size: 12px } .ek { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin: 0 3px 0 8px } .eleg .ek:first-child { margin-left: 0 }
+.ek.eb { background: var(--m-c); opacity: .75 } .ek.over { background: var(--bad) } .ek.gl { height: 0; border-top: 2px dashed var(--ink); opacity: .6; border-radius: 0 }
+.ek.wl { height: 3px; background: var(--accent); vertical-align: 2px } .ek.gp { background: var(--muted); opacity: .3 }
+.eatnav { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; margin-bottom: 4px }
+.eatnav button { width: 40px; height: 36px; padding: 0; font-size: 20px } .eatnav button:disabled { opacity: .35 }
+.eatlist { list-style: none; margin: 4px 0 0; padding: 0 } .eatlist li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 14px }
+.eatlist li span:last-child { white-space: nowrap; color: var(--muted) } .eover { color: var(--bad) } .eok { color: var(--good) }
 .chart .cband { opacity: var(--band-op); fill: var(--muted) }
 .chart .cband.ph-cut { fill: var(--ph-cut) } .chart .cband.ph-bulk { fill: var(--ph-bulk) } .chart .cband.ph-maintain { fill: var(--ph-maint) }
 .mring { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center }
@@ -594,7 +607,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 63;
+  var APP_VERSION = 64;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -671,6 +684,7 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
+    { v: 64, tab: "body", text: "Neu unter Körper: „Essen im Rückblick“ mit Kalorien pro Tag gegen Ziel, Gewichtstrend und markierten Tagen ohne Eintrag. Tippe auf einen Tag, um zu sehen, was du gegessen hast." },
     { v: 63, tab: "prog", text: "Kraft nach Körperbereichen: Zeitraffer für die Körperkarte (▶ oder Regler), tiefrot schon ab +20 %, größeres Diagramm mit wählbaren Linien für Brust, Rücken, Schultern, Arme und Bauch." },
     { v: 62, tab: "prog", text: "Die Körperkarte unter „Kraft nach Körperbereichen“ ist neu gezeichnet wie eine Anatomie-Tafel: einzelne Muskeln mit Fasern, Sehnen hell, Vorder- und Rückseite. Orange heißt gleich geblieben, tiefrot stark verbessert." },
     { v: 61, tab: "prog", text: "Neu unter Fortschritt: „Kraft nach Körperbereichen“ mit Körperkarte (vorne/hinten), Prozent für Ober- und Unterkörper, Verlauf beider Bereiche und wählbarem Zeitraum. Ersetzt „Kraft seit Phasenstart“." },
@@ -1939,6 +1953,91 @@ button, select, input { touch-action: manipulation }
   function exOrder(ids, m) {
     return ids.sort(function (a, b) { var fa = m[a] && m[a].focus ? 1 : 0, fb = m[b] && m[b].focus ? 1 : 0; return fb - fa || (m[a] ? m[a].name : a).localeCompare(m[b] ? m[b].name : b, "de"); });
   }
+  /* ---------- Essen im Rückblick (seit v64): Kalorien pro Tag gegen Ziel, Gewichtstrend, Lücken ohne Einträge ----------
+     Ziel je Tag mit dayKcal (Phase des Tages, Verbrauch nach heutigem Stand). Lücke = ab 2 Tage ohne Eintrag (heute zählt nicht).
+     Gewicht an der Lücke: Schnitt der Messungen 7 Tage davor gegen 7 Tage danach (glättet Wasserschwankungen etwas). */
+  var EATP = [["1m", "4 Wo."], ["3m", "3 Mon."], ["6m", "6 Mon."], ["all", "Alles"]];
+  function eatData() {
+    var t = today(), k = S.eatP || "3m", keys = Object.keys(S.nutri).filter(function (x) { var n = S.nutri[x]; return n && n.entries && n.entries.length; }).map(function (x) { return x.slice(2); }).sort();
+    if (!keys.length) return null;
+    var from = k === "1m" ? addDays(t, -27) : k === "3m" ? addDays(t, -90) : k === "6m" ? addDays(t, -181) : keys[0];
+    if (from < keys[0]) from = keys[0];
+    var bl = bodyList(), E = energy(bl), days = [];
+    for (var d = from; d <= t; d = addDays(d, 1)) {
+      var nd = S.nutri["n_" + d], kc = nd && nd.entries && nd.entries.length ? nd.entries.reduce(function (s, e) { return s + (e.kcal || 0); }, 0) : null;
+      days.push({ d: d, kcal: kc, goal: E ? dayKcal(d, E, workoutsOn(d).length > 0).kcal : null });
+    }
+    var ws = bl.filter(function (b) { return b.weight != null; });
+    var wmean = function (a, b) { var l = ws.filter(function (x) { return x.date >= a && x.date <= b; }); return l.length ? l.reduce(function (s, x) { return s + x.weight; }, 0) / l.length : null; };
+    var gaps = [], run = null;
+    days.forEach(function (x, i) {
+      var miss = x.kcal == null && x.d < t;
+      if (miss) { if (!run) run = { i: i, a: x.d }; run.j = i; run.b = x.d; }
+      if ((!miss || i === days.length - 1) && run) { if (run.j - run.i >= 1) gaps.push(run); run = null; }
+    });
+    gaps.forEach(function (g) { var w0 = wmean(addDays(g.a, -7), addDays(g.a, -1)), w1 = wmean(addDays(g.b, 1), addDays(g.b, 7)); g.n = g.j - g.i + 1; g.dw = w0 != null && w1 != null ? w1 - w0 : null; });
+    var wl = days.map(function (x) { return wmean(addDays(x.d, -3), addDays(x.d, 3)); });
+    var past = days.filter(function (x) { return x.kcal != null && x.d < t; });
+    return { days: days, gaps: gaps, wl: wl, keys: keys, past: past, over: past.filter(function (x) { return x.goal && x.kcal > x.goal * 1.1; }).length,
+      avg: past.length ? past.reduce(function (s, x) { return s + x.kcal; }, 0) / past.length : null,
+      gavg: past.length && past[0].goal ? past.reduce(function (s, x) { return s + x.goal; }, 0) / past.length : null };
+  }
+  function eatChart(D) {
+    var n = D.days.length, W = 340, H = 210, L = 38, R = 34, T = 20, B = 22, bw = (W - L - R) / n, nf = function (v) { return Math.round(v).toLocaleString("de-DE"); };
+    var mx = Math.max.apply(0, D.days.map(function (x) { return Math.max(x.kcal || 0, x.goal || 0); })), top = Math.max(1000, Math.ceil(mx * 1.08 / 500) * 500);
+    var y = function (v) { return T + (1 - v / top) * (H - T - B); }, x = function (i) { return L + i * bw; }, h = "", st = top > 3000 ? 1000 : 500;
+    for (var v = 0; v <= top; v += st) h += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '"/><text x="' + (L - 4) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end">' + nf(v) + "</text>";
+    D.gaps.forEach(function (g) {
+      var gx = x(g.i), gw = g.n * bw;
+      h += '<rect class="egap" x="' + gx.toFixed(1) + '" y="' + T + '" width="' + gw.toFixed(1) + '" height="' + (H - T - B) + '"/>';
+      if (g.n >= 5 && g.dw != null && Math.abs(g.dw) >= 0.3) h += '<text class="egl" x="' + (gx + gw / 2).toFixed(1) + '" y="' + (T - 6) + '" text-anchor="middle">' + (g.dw > 0 ? "+" : "−") + fmt(Math.round(Math.abs(g.dw) * 10) / 10) + " kg</text>";
+    });
+    /* Bis 70 Tage ein Balken je Tag, darüber je Woche (Schnitt der erfassten Tage). Ziellinie geglättet. */
+    var sel = S.eatSel, it = [], wk = n > 70, avg = function (a) { return a.length ? a.reduce(function (s, v) { return s + v; }, 0) / a.length : null; };
+    D.days.forEach(function (d, i) {
+      var last = it[it.length - 1];
+      if (!wk || !last || dateOf(d.d).getDay() === 1) it.push(last = { i: i, n: 0, ks: [], gs: [], ds: [] });
+      last.n++; if (d.goal) last.gs.push(d.goal); if (d.kcal != null) { last.ks.push(d.kcal); last.ds.push(d.d); }
+    });
+    it.forEach(function (o, j) {
+      o.k = avg(o.ks); o.g = wk ? avg(o.gs) : avg(D.days.slice(Math.max(0, o.i - 3), o.i + 4).map(function (d) { return d.goal; }).filter(function (v) { return v; }));
+      o.d = o.ds.length ? o.ds[o.ds.length - 1] : D.days[o.i].d;
+      if (o.k == null) return;
+      var cls = "eb" + (o.g && o.k > o.g * 1.1 ? " over" : "") + (sel >= D.days[o.i].d && sel <= D.days[o.i + o.n - 1].d ? " sel" : "") + (!wk && o.d === today() ? " now" : "");
+      h += '<rect class="' + cls + '" x="' + (x(o.i) + o.n * bw * 0.12).toFixed(2) + '" y="' + y(o.k).toFixed(1) + '" width="' + Math.max(0.8, o.n * bw * 0.76).toFixed(2) + '" height="' + (y(0) - y(o.k)).toFixed(1) + '"/>';
+    });
+    var gp = ""; it.forEach(function (o) { if (o.g) gp += (gp ? "L" : "M") + (x(o.i) + o.n * bw / 2).toFixed(1) + " " + y(o.g).toFixed(1); });
+    if (gp) h += '<path class="egoal" d="' + gp + '"/>';
+    var wv = D.wl.filter(function (w) { return w != null; });
+    if (wv.length > 1) {
+      var wlo = Math.floor(Math.min.apply(0, wv) - 0.5), whi = Math.ceil(Math.max.apply(0, wv) + 0.5), wy = function (w) { return T + (whi - w) / (whi - wlo) * (H - T - B); }, wp = "";
+      D.wl.forEach(function (w, i) { if (w != null) wp += (wp ? "L" : "M") + (x(i) + bw / 2).toFixed(1) + " " + wy(w).toFixed(1); });
+      h += '<path class="ew" d="' + wp + '"/>' + [whi, wlo].map(function (w) { return '<text class="ewt" x="' + (W - R + 4) + '" y="' + (wy(w) + 4).toFixed(1) + '">' + fmt(w) + "</text>"; }).join("");
+    }
+    it.forEach(function (o) { h += '<rect class="ehit" data-eat="' + o.d + '" x="' + x(o.i).toFixed(2) + '" y="' + T + '" width="' + (o.n * bw).toFixed(2) + '" height="' + (H - T - B) + '"/>'; });
+    h += [0, n - 1].map(function (i) { return '<text x="' + (i ? W - R : L) + '" y="' + (H - 6) + '" text-anchor="' + (i ? "end" : "start") + '">' + dfmt(D.days[i].d) + "</text>"; }).join("");
+    return '<div class="chart eatchart"><svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Kalorien pro Tag, Ziel und Gewichtstrend">' + h + "</svg></div>";
+  }
+  function eatDay(d, D) {
+    var nd = S.nutri["n_" + d], ent = nd && nd.entries ? nd.entries.slice() : [], t = today(), nf = function (v) { return Math.round(v).toLocaleString("de-DE"); };
+    ent.sort(function (a, b) { return (a.t || "") < (b.t || "") ? -1 : 1; });
+    var dd = D.days.filter(function (x) { return x.d === d; })[0], goal = dd ? dd.goal : null;
+    var h = '<div class="eatnav"><button data-act="eatd" data-id="' + addDays(d, -1) + '" aria-label="Tag davor"' + (d <= D.keys[0] ? " disabled" : "") + ">‹</button><b>" + WDAYS[dateOf(d).getDay()].slice(0, 2) + ". " + dfmt(d, 1) + "</b><button data-act=\"eatd\" data-id=\"" + addDays(d, 1) + '" aria-label="Tag danach"' + (d >= t ? " disabled" : "") + ">›</button></div>";
+    if (!ent.length) return h + '<p class="small muted">Keine Einträge an diesem Tag.</p>';
+    var s = ent.reduce(function (a, e) { return { k: a.k + (e.kcal || 0), p: a.p + (e.p || 0) }; }, { k: 0, p: 0 });
+    h += '<p class="small"><b>' + nf(s.k) + " kcal</b> · " + nf(s.p) + " g Eiweiß" + (goal ? ' · Ziel ' + nf(goal) + ' kcal <b class="' + (s.k > goal * 1.1 ? "eover" : s.k <= goal ? "eok" : "") + '">' + (s.k > goal ? "+" : "−") + nf(Math.abs(s.k - goal)) + "</b>" : "") + "</p>";
+    return h + '<ul class="eatlist">' + ent.map(function (e) { return "<li><span>" + esc(e.name) + (e.est ? ' <span class="muted">(geschätzt)</span>' : "") + "</span><span>" + nf(e.kcal || 0) + " kcal · " + nf(e.p || 0) + " g</span></li>"; }).join("") + "</ul>";
+  }
+  function eatBlock() {
+    var k = S.eatP || "3m", D = eatData(), nf = function (v) { return Math.round(v).toLocaleString("de-DE"); };
+    var h = "<h2>Essen im Rückblick" + ib("eatr") + "</h2>" + itx("eatr", "Balken: gegessene Kalorien pro Tag, rot ab 10 % über dem Ziel; bei mehr als 70 Tagen ein Balken je Woche (Schnitt der erfassten Tage). Gestrichelt: Ziel (Phase des Tages, Verbrauch nach heutigem Stand, geglättet). Blaue Linie: Gewicht in kg (Skala rechts), geglättet über 7 Tage. Grau: mindestens zwei Tage ohne Eintrag; ab 5 Tagen steht darüber, wie sich das Gewicht in dieser Zeit verändert hat (Schnitt der Woche davor gegen die Woche danach). Ein Sprung direkt nach Feiertagen ist oft zum Teil Wasser. Tippe auf einen Tag, um zu sehen, was du gegessen hast.");
+    if (!D) return h + '<p class="small muted">Sobald du Essen einträgst, siehst du hier jeden Tag im Rückblick.</p>';
+    if (!S.eatSel || S.eatSel < D.days[0].d || S.eatSel > today()) { var lp = D.past.length ? D.past[D.past.length - 1].d : today(); S.eatSel = D.days[D.days.length - 1].kcal != null ? today() : lp; }
+    h += '<div class="chips" role="group" aria-label="Zeitraum">' + EATP.map(function (x) { return '<button data-act="eatp" data-id="' + x[0] + '" aria-pressed="' + (x[0] === k) + '">' + x[1] + "</button>"; }).join("") + "</div>";
+    h += '<p class="small muted">' + (D.avg != null ? "Schnitt <b>" + nf(D.avg) + " kcal</b>" + (D.gavg ? " (Ziel " + nf(D.gavg) + ")" : "") + " · " : "") + D.past.length + " von " + (D.days.length - 1 || 1) + " Tagen erfasst" + (D.over ? " · " + D.over + "× über Ziel" : "") + "</p>";
+    h += eatChart(D) + '<p class="small muted eleg"><span class="ek eb"></span>gegessen <span class="ek over"></span>über Ziel <span class="ek gl"></span>Ziel <span class="ek wl"></span>Gewicht <span class="ek gp"></span>ohne Eintrag</p>';
+    return h + '<div id="eatday">' + eatDay(S.eatSel, D) + "</div>";
+  }
   /* ---------- Kraft nach Körperbereichen (seit v61, ersetzt „Kraft seit Phasenstart“) ----------
      Je Übung: geschätztes 1RM, Schnitt der ersten zwei gegen die letzten zwei Einheiten im Zeitraum → Prozent.
      Gruppen und Ober-/Unterkörper: nach Anzahl der Einheiten gewichteter Mittelwert. Übungen ohne Zusatzgewicht zählen nicht. */
@@ -2173,7 +2272,7 @@ button, select, input { touch-action: manipulation }
       el.innerHTML = '<div class="block" id="phstat"></div><div class="block" id="wcorr"></div><div class="block" id="bform"><h2>Gewicht, Körperfett und Umfänge eintragen</h2><div class="bgrid"><label class="full">Datum<input type="date" id="b-date" value="' + today() + '" max="' + today() + '"></label>' +
         BF.map(function (f) { return "<label>" + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
         '</div><div class="row" style="align-items:center"><button class="primary" data-act="bsave">Speichern</button><span class="small muted" id="bmsg">Leere Felder werden übersprungen.</span></div><div class="hbox" id="hbody"></div></div><div id="bout" style="display:flex;flex-direction:column;gap:16px"></div>' +
-        '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="">Bitte wählen</option><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div><div class="block" id="kcalbox"></div>';
+        '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="">Bitte wählen</option><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div><div class="block" id="kcalbox"></div><div class="block" id="eatbox"></div>';
     }
     var h = "";
     if (!list.length) h = '<p class="empty">Noch keine Messung. Trag oben Gewicht, Körperfett oder Umfänge ein, dann erscheint hier der Verlauf.</p>';
@@ -2190,6 +2289,7 @@ button, select, input { touch-action: manipulation }
     $("hbody").innerHTML = healthRow(true);
     $("phstat").innerHTML = phaseStatus(list);
     $("kcalbox").innerHTML = kcalBlock(list);
+    $("eatbox").innerHTML = eatBlock();
     $("phlist").innerHTML = phaseList(list);
     var phw = phaseAt(today());
     $("wcorr").innerHTML = '<p class="eyebrow">Gewicht' + (phw ? " im " + PH[phw.type] : "") + "</p>" + weightCorridor(list).html;
@@ -3001,7 +3101,7 @@ button, select, input { touch-action: manipulation }
     ["Start", "<ul><li><b>Heute:</b> wie viele Kalorien noch offen sind, der Balken zeigt Eiweiß, Fett und Kohlenhydrate. Darunter Defizit bzw. Überschuss und geschätzter Verbrauch.</li><li><b>Essen eintragen:</b> ins Suchfeld tippen, Lebensmittel oder Mahlzeit wählen, Menge angeben, „Eintragen“. „Mittag schätzen“ für Essen ohne Waage. Die Uhrzeit eines Eintrags lässt sich antippen und ändern.</li><li><b>Kalender:</b> Tag antippen, dann „Training starten“ oder ein vergangenes Training öffnen und nachtragen.</li><li><b>Apple Health:</b> holt Gewicht und Körperfett über den Kurzbefehl „Trainingslog Health“.</li></ul>"],
     ["Training", "<ul><li>Gewicht und Wiederholungen eintragen, gespeichert wird automatisch. Ein Satz zählt, sobald Wiederholungen drinstehen.</li><li><b>Gewichtsvorschlag:</b> erst die Wiederholungen bis zur oberen Grenze steigern, in allen Sätzen. Dann schlägt die App mehr Gewicht vor (um den „Schritt“ der Übung).</li><li><b>Aufwärmsätze</b> stehen eingeklappt über jeder Übung.</li><li><b>Krafttest:</b> ein Satz mit etwa 85 % deines geschätzten Maximums bis kurz vor Schluss. Für Schwerpunktübungen erinnert die App alle 4 Wochen.</li><li><b>+ Übung für heute</b> und <b>Ersetzen</b> ändern nur diese Einheit, mit Häkchen auch den Plan. Beim Ersetzen nimmt „eingetragene Sätze mitnehmen“ die Sätze mit.</li></ul>"],
     ["Fortschritt", "<ul><li><b>Schwerpunkt:</b> geschätztes Maximum (1RM), Veränderung in der Phase, Rekord und nächster Krafttest.</li><li><b>Verlauf pro Übung</b> als 1RM, schwerstes Gewicht oder Volumen.</li><li><b>Kraft nach Körperbereichen:</b> Körperkarte (orange = gleich, tiefrot = ab +20 %, graublau = schwächer; mit ▶ oder Regler im Zeitraffer) und Prozent für Ober- und Unterkörper, wie sehr dein geschätztes Maximum im Zeitraum gestiegen ist. Varianten einer Muskelgruppe zählen gemeinsam. Mit dem Zeitraum „Phase“ siehst du, ob du im Cut deine Kraft hältst. Im Diagramm wählst du, welche Bereiche als Linie erscheinen.</li><li><b>Sätze pro Muskelgruppe:</b> 10–20 Sätze pro Woche sind ein üblicher Bereich für Muskelaufbau.</li><li><b>Rekorde</b> und Krafttest-Ergebnisse.</li></ul>"],
-    ["Körper", "<ul><li><b>Messwerte:</b> Gewicht, Körperfett und Umfänge. Ohne Körperfettwaage reicht ein Maßband: Taille auf Höhe des Bauchnabels und Hals, bei Frauen zusätzlich die Hüfte an der breitesten Stelle.</li><li><b>Phasen:</b> Cut, Aufbau oder Halten mit Zeitraum und Zielgewicht. Der Korridor zeigt, ob du im Plan liegst, und schlägt Aufholen oder Neustart vor.</li><li><b>Kalorien und Makros:</b> Der Grundumsatz kommt aus Gewicht, Größe, Alter und Geschlecht, mit Körperfett genauer über die fettfreie Masse. Trägst du dein Essen ein, lernt die App nach zwei Wochen deinen echten Bedarf aus dem Gewichtsverlauf.</li></ul>"],
+    ["Körper", "<ul><li><b>Messwerte:</b> Gewicht, Körperfett und Umfänge. Ohne Körperfettwaage reicht ein Maßband: Taille auf Höhe des Bauchnabels und Hals, bei Frauen zusätzlich die Hüfte an der breitesten Stelle.</li><li><b>Essen im Rückblick:</b> ganz unten. Kalorien pro Tag gegen dein Ziel, dazu der Gewichtstrend. Tage ohne Eintrag sind schraffiert, darüber steht die Gewichtsveränderung in dieser Zeit. Tippe auf einen Tag (oder blättere mit ‹ ›), um zu sehen, was du gegessen hast.</li><li><b>Phasen:</b> Cut, Aufbau oder Halten mit Zeitraum und Zielgewicht. Der Korridor zeigt, ob du im Plan liegst, und schlägt Aufholen oder Neustart vor.</li><li><b>Kalorien und Makros:</b> Der Grundumsatz kommt aus Gewicht, Größe, Alter und Geschlecht, mit Körperfett genauer über die fettfreie Masse. Trägst du dein Essen ein, lernt die App nach zwei Wochen deinen echten Bedarf aus dem Gewichtsverlauf.</li></ul>"],
     ["Plan", "<ul><li><b>Plan erstellen:</b> Tage pro Woche, Dauer und Geräte wählen. Der Assistent zeigt eine Vorschau, mit ↻ tauschst du einzelne Übungen. Danach Plan ersetzen oder Tage hinzufügen; dein Verlauf bleibt.</li><li><b>Sätze pro Woche:</b> oben im Plan, ↓ heißt unter 10, ↑ über 20.</li><li><b>Tage:</b> umbenennen, duplizieren, löschen. Unter dem Tag stehen geschätzte Dauer und Sätze.</li><li><b>Übungen:</b> Reihenfolge mit ↑ ↓, „Verschieben“ zu einem anderen Tag, „Einstellungen“ für Sätze, Wiederholungen und Schritt. In „Übung hinzufügen“ stehen oben Vorschläge für Muskelgruppen mit zu wenig Sätzen.</li><li><b>Plan-Code:</b> wenn Claude deinen Plan anpasst, hier einfügen, prüfen, übernehmen.</li></ul>"],
     ["Daten", "<ul><li><b>Essen:</b> Mahlzeiten aus Lebensmitteln zusammenstellen; Lebensmittel antippen und Werte von der Verpackung übernehmen.</li><li><b>Übungen:</b> Einstellungen, Bewertung, Schwerpunkt, Muskelgruppe, Zusammenführen doppelter Übungen. „Katalog anpassen“ blendet Übungen aus, die du nie machst.</li><li><b>Persönlich:</b> Angaben für die Kalorien, Trainingstage der Woche, Makros, Profile für mehrere Personen.</li><li><b>Sicherung:</b> Backup speichern und einspielen, Export für Excel.</li></ul>"],
     ["Gut zu wissen", "<ul><li>Alle Daten liegen nur auf diesem Gerät. Ohne Backup sind sie weg, wenn die App oder die Website-Daten gelöscht werden.</li><li>Neue Versionen kündigt die App mit „Neu laden“ an. Was neu ist, zeigt ein gelber Punkt am Reiter.</li><li>Hinter jedem blauen <b>i</b> steht eine kurze Erklärung.</li></ul>"]
@@ -3549,6 +3649,8 @@ button, select, input { touch-action: manipulation }
   }
 
   document.addEventListener("click", function (ev) {
+    var eh = ev.target.closest && ev.target.closest("[data-eat]");
+    if (eh && S.ready) { S.eatSel = eh.getAttribute("data-eat"); $("eatbox").innerHTML = eatBlock(); return; }
     var b = ev.target.closest("button"); if (!b) return;
     if (b.dataset.tab) return showTab(b.dataset.tab);
     var a = b.dataset.act, id = b.dataset.id; if (!a) return;
@@ -3613,6 +3715,8 @@ button, select, input { touch-action: manipulation }
     }
     else if (a === "addset") { var rows = draft.rows[id] || (draft.rows[id] = []), l = rows[rows.length - 1]; rows.push({ w: l ? l.w : "", r: "" }); renderTrain(); var el = $("r-" + id + "-" + (rows.length - 1)); if (el) el.focus(); }
     else if (a === "metric") { S.metric = id; renderProgress(); }
+    else if (a === "eatp") { S.eatP = id; S.eatSel = null; $("eatbox").innerHTML = eatBlock(); }
+    else if (a === "eatd") { S.eatSel = id; $("eatbox").innerHTML = eatBlock(); }
     else if (a === "strl") { var sl = (S.strL || ["u", "l"]).slice(), si = sl.indexOf(id); if (si >= 0) { if (sl.length > 1) sl.splice(si, 1); } else sl.push(id); S.strL = sl; var yq = window.scrollY; renderProgress(); window.scrollTo(0, yq); }
     else if (a === "bmplay") { if (S.bmTimer) bmStop(); else { var rg = $("bmt"); if (!rg) return; if (+rg.value >= S.bmWeeks.length - 1) bmAt(0); b.textContent = "⏸"; b.setAttribute("aria-label", "Anhalten"); S.bmTimer = setInterval(function () { var r2 = $("bmt"); if (!r2) { bmStop(); return; } var n = +r2.value + 1; bmAt(n); if (n >= S.bmWeeks.length - 1) bmStop(); }, 220); } }
     else if (a === "strp") { S.strP = id; var yp = window.scrollY; renderProgress(); window.scrollTo(0, yp); }
