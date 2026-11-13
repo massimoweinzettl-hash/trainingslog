@@ -7,7 +7,7 @@ import { join } from "node:path";
 
 const WANT = Math.min(5000, Math.max(100, +(process.argv[2] || 3000)));
 const PAGE = 100, WAIT = 7000;
-const FIELDS = "code,product_name,product_name_de,brands,quantity,serving_quantity,nutriments,categories_tags";
+const FIELDS = "code,product_name,product_name_de,brands,quantity,serving_quantity,nutriments,categories_tags,lang";
 const UA = "Trainingslog/1.0 (private Trainings-App, einmaliger Export)";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const urls = (p) => [
@@ -47,12 +47,12 @@ for (let p = 1; out.length < WANT && p <= Math.ceil(WANT / PAGE) + 15; p++) {
     const q = String(x.quantity || "").toLowerCase(), ml = /\d\s*(ml|cl|l)\b/.test(q) && !/\d\s*(g|kg)\b/.test(q);
     const sv = num(x.serving_quantity);
     seen.add(code);
-    out.push([code, name.slice(0, 60), String(x.brands || "").split(",")[0].trim().slice(0, 30), ml ? "ml" : "g", r1(pr), Math.round(kcal), r1(f), r1(c), sv > 0 && sv <= 1000 ? Math.round(sv) : 100]);
+    out.push([code, name.slice(0, 60), String(x.brands || "").split(",")[0].trim().slice(0, 30), ml ? "ml" : "g", r1(pr), Math.round(kcal), r1(f), r1(c), sv > 0 && sv <= 1000 ? Math.round(sv) : 100, x.lang === "de" || x.product_name_de ? 1 : 0]);
   }
   console.log(`Seite ${p}: ${out.length} Produkte übernommen, ${skipped} aussortiert`);
   if (out.length < WANT) await sleep(WAIT);
 }
 const file = join(homedir(), "Desktop", "trainingslog-produkte.json");
 writeFileSync(file, JSON.stringify({ source: "Open Food Facts", license: "ODbL 1.0", url: "https://openfoodfacts.org", date: new Date().toISOString().slice(0, 10),
-  fields: ["barcode", "name", "marke", "einheit", "eiweiss", "kcal", "fett", "kh", "portion"], products: out }));
+  fields: ["barcode", "name", "marke", "einheit", "eiweiss", "kcal", "fett", "kh", "portion", "deutsch"], products: out }));
 console.log(`Fertig: ${out.length} Produkte in ${file}`);
