@@ -92,6 +92,8 @@ button:disabled { opacity: .4; cursor: default }
 .pill.c4 { background: var(--c4) } .pill.c5 { background: var(--c5) } .pill.c6 { background: var(--c6) }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px }
 .legend span { display: inline-flex; align-items: center; gap: 6px }
+.calhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px } .calt { display: flex; align-items: baseline; gap: 8px } .calt b { font-size: 18px }
+.calnb { width: 40px; height: 36px; padding: 0; font-size: 20px }
 .caldet { display: flex; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 1px solid var(--line) }
 .calw { display: flex; flex-direction: column; gap: 4px }
 .calw button { margin-top: 6px }
@@ -634,7 +636,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 85;
+  var APP_VERSION = 86;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -711,6 +713,7 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
+    { v: 86, tab: "train", text: "Der Kalender im Training ist oben schlanker: nur noch eine Zeile mit Monat, Anzahl der Einheiten und Pfeilen. Das nächste Training ist unter dem Kalender ausgewählt." },
     { v: 85, tab: "data", text: "Gibt es eine neue Version, erscheint jetzt ein Hinweis in der Bildschirmmitte. Mit „Jetzt aktualisieren“ lädst du sie, mit „Später“ wartet sie bis zum nächsten Mal." },
     { v: 84, tab: "data", text: "Automatische Updates: Mit Internet startet die App immer in der neuesten Fassung. Kommst du aus dem Hintergrund zurück, lädt sie neue Versionen still nach – nur wenn du gerade nichts eintippst. Offline bleibt alles wie gewohnt." },
     { v: 83, tab: "train", text: "Der Trainingskalender steht jetzt ganz oben im Reiter Training. Der erste Reiter heißt „Ernährung“ und ist nur noch fürs Essen und deine Tageskalorien da; Apple Health findest du unter „Körper“." },
@@ -1943,13 +1946,12 @@ button, select, input { touch-action: manipulation }
     }
     var phLegend = ["cut", "bulk", "maintain"].filter(function (x) { return phSeen[x]; }).map(function (x) { return '<span><span class="swatch ph-' + x + '"></span>' + PH[x] + "</span>"; }).join("");
     var legend = (S.plan && S.plan.days || []).map(function (d) { return dayMeta(d.id); }).concat(Object.keys(extra).map(function (n) { return extra[n]; }));
-    var NT = nextTraining(), done = workoutsOn(t), top = '<p class="eyebrow">Training</p>';
-    if (done.length) top += done.map(function (w) { var k = dayMeta(w.dayId, w.dayName), n = (w.entries || []).reduce(function (a, e) { return a + e.sets.length; }, 0); return "<p>" + pill(k) + " <b>Heute erledigt: " + esc(k.name) + '</b> <span class="small muted">' + n + " Sätze</span></p>"; }).join("");
-    if (!S.plan || !S.plan.days.length) top += '<p class="small muted">Leg im Reiter „Training“ zuerst einen Plan an.</p>';
-    else if (NT) { var kn = dayMeta(NT.day.id); top += '<button class="nextbtn" data-act="calgo" data-id="' + NT.date + '"><span class="pill ' + (NT.sure ? "c" + kn.c : "o c" + kn.c) + '">' + esc(kn.ab) + "</span><span>" + (done.length ? "Als Nächstes: " : "") + "<b>" + relDay(NT.date) + ": " + esc(NT.day.name) + '</b></span><span class="chev" aria-hidden="true">›</span></button>'; }
-    else top += '<p class="small muted">Kein nächstes Training bekannt. Plane unten eins oder wähle unter „Daten“ → „Persönlich“ deine üblichen Trainingstage.</p>';
-    var h = top + '<div class="row" style="align-items:center;justify-content:space-between"><h2>' + MONTHS[m - 1] + " " + y + '</h2><div class="row"><button data-act="calnav" data-id="-1" aria-label="Vorheriger Monat">‹</button><button data-act="calnav" data-id="1" aria-label="Nächster Monat">›</button></div></div>' +
-      '<p class="small muted">' + (count === 1 ? "1 Einheit" : count + " Einheiten") + " in diesem Monat</p>" +
+    /* Seit v86 schlanker Kopf (Wunsch des Nutzers): eine Zeile mit Monat, Anzahl und Pfeilen. „Heute/Als Nächstes“ entfällt,
+       weil das nächste Training unter dem Kalender ohnehin ausgewählt ist. Hinweise nur, wenn etwas fehlt. */
+    var NT = nextTraining(), top = "";
+    if (!S.plan || !S.plan.days.length) top = '<p class="small muted">Leg im Reiter „Plan“ zuerst einen Plan an.</p>';
+    else if (!NT) top = '<p class="small muted">Kein nächstes Training bekannt. Plane unten eins oder wähle unter „Daten“ → „Persönlich“ deine üblichen Trainingstage.</p>';
+    var h = '<div class="calhead"><button class="calnb" data-act="calnav" data-id="-1" aria-label="Vorheriger Monat">‹</button><div class="calt"><b>' + MONTHS[m - 1] + " " + y + '</b><span class="small muted">' + (count === 1 ? "1 Einheit" : count + " Einheiten") + '</span></div><button class="calnb" data-act="calnav" data-id="1" aria-label="Nächster Monat">›</button></div>' + top +
       '<div class="cal">' + cells + '</div><div class="legend">' + legend.map(function (k) { return "<span>" + pill(k) + esc(k.name) + "</span>"; }).join("") + (anySched ? '<span><span class="pill o">AB</span>eingeplantes Training</span>' : "") + (E && E.n ? "<span>" + planPill + "üblicher Trainingstag</span>" : "") + phLegend + "</div>" +
       tip("calk", "Was bedeuten die Zahlen?", (E ? "Die Zahl unter jedem Tag ist dein Kalorienbedarf in kcal, passend zur Phase" + (E.n ? " und an Trainingstagen höher." : ". Wähle unter „Daten“ → „Persönlich“ deine Trainingstage, dann unterscheidet der Kalender Trainings- und Ruhetage.") : "Kalorien pro Tag erscheinen hier, sobald du im Reiter „Körper“ dein Gewicht und unter „Daten“ die Angaben für die Kalorienempfehlung eingetragen hast."));
     if (S.calSel && S.calSel.slice(0, 7) === S.calMonth) {
