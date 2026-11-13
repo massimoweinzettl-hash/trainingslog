@@ -695,6 +695,7 @@ button, select, input { touch-action: manipulation }
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
     { v: 66, tab: "data", text: "Neue Profile werden jetzt Schritt für Schritt eingerichtet: Angaben, Körper, Training und Ziel, danach ein kurzer Rundgang. Alles lässt sich überspringen." },
+    { v: 66, tab: "body", text: "Eiweiß bei höherem Körperfett: Die App rechnet jetzt mit dem Gewicht bei 15 % Körperfett (Frauen 25 %) statt mit dem ganzen Gewicht. Bis 15 % (Frauen 25 %) ändert sich nichts." },
     { v: 65, tab: "body", text: "Essen im Rückblick zeigt jetzt immer jeden Tag als eigenen Balken, damit Ausreißer sichtbar bleiben. Bei längeren Zeiträumen kommt eine Linie mit dem Wochenschnitt dazu." },
     { v: 64, tab: "body", text: "Neu unter Körper: „Essen im Rückblick“ mit Kalorien pro Tag gegen Ziel, Gewichtstrend und markierten Tagen ohne Eintrag. Tippe auf einen Tag, um zu sehen, was du gegessen hast." },
     { v: 63, tab: "prog", text: "Kraft nach Körperbereichen: Zeitraffer für die Körperkarte (▶ oder Regler), tiefrot schon ab +20 %, größeres Diagramm mit wählbaren Linien für Brust, Rücken, Schultern, Arme und Bauch." },
@@ -1457,12 +1458,15 @@ button, select, input { touch-action: manipulation }
     var maint = measured || formula, k = 11 * w; /* k: kcal pro Tag für 1 % Körpergewicht pro Woche */
     var range = { cut: [Math.max(bmr, maint - k), Math.max(bmr, maint - 0.5 * k)], bulk: [maint + 0.25 * k, maint + 0.5 * k] };
     var target = { maintain: maint, cut: range.cut[1], bulk: range.bulk[0] }, cols = {};
-    ["maintain", "cut", "bulk"].forEach(function (t) { cols[t] = macros(Math.round(target[t] / 50) * 50, t, w); });
+    /* Eiweiß (seit v66): bei viel Körperfett nicht aufs ganze Gewicht, sondern aufs Gewicht bei 15 % (Frauen 25 %) Körperfett
+       mit gleicher fettfreier Masse. Ohne Körperfett-Schätzung zählt das Gewicht. */
+    var pw = w; if (kf) { var ref = w * (1 - kf.v / 100) / (1 - (P.sex === "w" ? 25 : 15) / 100); if (ref < w) pw = ref; }
+    ["maintain", "cut", "bulk"].forEach(function (t) { cols[t] = macros(Math.round(target[t] / 50) * 50, t, pw); });
     /* Trainings- und Ruhetage: Ein Trainingstag bekommt rund 3,5 kcal pro kg mehr als ein Ruhetag, der
        Wochenschnitt bleibt beim Zielwert. Ohne gewählte Trainingstage gilt an jedem Tag der Schnitt. */
     var n = (P.tdays || []).length, d = n ? 3.5 * w : 0;
     var split = function (t) { return { train: target[t] + d * (7 - n) / 7, rest: Math.max(bmr, target[t] - d * n / 7) }; };
-    return { w: w, bmr: bmr, formula: formula, measured: measured, maint: maint, range: range, cols: cols, clip: maint - k < bmr, target: target, n: n, d: d, split: split, kf: kf, src: src, log: lf, kin: kin };
+    return { w: w, pw: pw, bmr: bmr, formula: formula, measured: measured, maint: maint, range: range, cols: cols, clip: maint - k < bmr, target: target, n: n, d: d, split: split, kf: kf, src: src, log: lf, kin: kin };
   }
   /* Makros: Eiweiß nach Körpergewicht, Fett 1 g pro kg, höchstens 30 % der Kalorien (DGE), Kohlenhydrate als Rest. */
   /* Makro-Einstellungen: Eiweiß in g pro kg je Phase, Fett als Anteil der Kalorien. Änderbar im Tab „Körper“. */
@@ -1485,7 +1489,7 @@ button, select, input { touch-action: manipulation }
   function macroForm(E) {
     var M = macroSet(), f = function (id, lab, v, mode) { return '<label>' + lab + '<input id="' + id + '" inputmode="' + mode + '" autocomplete="off" value="' + fmt(v) + '"></label>'; };
     var fatG = E ? E.cols[phaseAt(today()) ? phaseAt(today()).type : "maintain"].f : 0, fatKg = E ? fatG / E.w : 1;
-    return '<div class="mform"><h3>Makros anpassen' + ib("macro") + "</h3>" + itx("macro", "Eiweiß in Gramm pro kg Körpergewicht, je nach Phase. Fett als Anteil der Kalorien. Was übrig bleibt, sind Kohlenhydrate.") +
+    return '<div class="mform"><h3>Makros anpassen' + ib("macro") + "</h3>" + itx("macro", "Eiweiß in Gramm pro kg Körpergewicht, je nach Phase. Bei höherem Körperfett rechnet die App mit dem Gewicht, das du mit gleicher Muskelmasse bei 15 % Körperfett (Frauen 25 %) hättest, sonst wird es unnötig viel. Fett als Anteil der Kalorien. Was übrig bleibt, sind Kohlenhydrate.") +
       '<div class="bgrid mgrid">' + f("mc-pc", "Eiweiß im Cut (g/kg)", M.pc, "decimal") + f("mc-pm", "Eiweiß beim Halten (g/kg)", M.pm, "decimal") + f("mc-pb", "Eiweiß im Aufbau (g/kg)", M.pb, "decimal") + f("mc-fat", "Fett (% der Kalorien)", M.fat, "numeric") + "</div>" +
       (!E ? "" : '<p class="small' + (fatKg < 0.6 ? '" style="color:var(--warn)' : " muted") + '">Fett aktuell: ' + fatG + " g, das sind " + fmt(Math.round(fatKg * 100) / 100) + " g pro kg." + (fatKg < 0.6 ? " Das ist wenig: Unter etwa 0,6 g pro kg wird es auf Dauer knapp." : "") + "</p>") +
       '<div class="row" style="align-items:center"><button class="primary" data-act="mcsave">Speichern</button><button class="ghost" data-act="mcreset">Standard (2,2 / 1,8 / 1,8 g/kg, 25 % Fett)</button></div><p class="small muted" id="mcmsg"></p></div>';
@@ -1891,7 +1895,7 @@ button, select, input { touch-action: manipulation }
     if (S.calSel && S.calSel.slice(0, 7) === S.calMonth) {
       var sel = by[S.calSel] || [], dd = new Date(y, m - 1, +S.calSel.slice(8, 10)), kd = "";
       if (E) {
-        var di = dayKcal(S.calSel, E, sel.length > 0), mc = macros(di.kcal, di.type, E.w);
+        var di = dayKcal(S.calSel, E, sel.length > 0), mc = macros(di.kcal, di.type, E.pw);
         var parts = [di.phase ? "" : "Erhaltung, keine Phase", E.n ? (di.plan ? "geplanter Trainingstag" : di.train ? "Trainingstag" : "Ruhetag") : ""].filter(Boolean).join(", ");
         kd = '<div class="calw"><p><b>' + nf(di.kcal) + " kcal</b>" + (parts ? ' <span class="small muted">' + parts + "</span>" : "") +
           '</p><p class="small muted">' + mc.p + " g Eiweiß · " + mc.f + " g Fett · " + mc.c + " g Kohlenhydrate</p></div>";
@@ -3190,7 +3194,7 @@ button, select, input { touch-action: manipulation }
       h = '<div class="suhead"><span class="small muted">Schritt ' + i + ' von 4</span><button class="linkbtn small" data-act="suskip">Alles überspringen</button></div><div class="sudots">' + [1, 2, 3, 4].map(function (k) { return "<span" + (k <= i ? ' class="on"' : "") + "></span>"; }).join("") + "</div>" + h + '<p class="small fmiss" id="su-msg" hidden></p>';
       nav = '<button class="ghost" data-act="suprev">Zurück</button><button class="primary" data-act="sunext">' + (i === 4 ? "Fertig" : "Weiter") + "</button>";
     } else {
-      var E = energy(bodyList()), di = E ? dayKcal(today(), E, false) : null, mc = di ? macros(di.kcal, di.type, E.w) : null;
+      var E = energy(bodyList()), di = E ? dayKcal(today(), E, false) : null, mc = di ? macros(di.kcal, di.type, E.pw) : null;
       h = '<h2 id="su-h">Alles eingerichtet</h2>' + (mc ? '<p>Deine Empfehlung für heute' + (E.n ? " (" + (di.train ? "Trainingstag" : "Ruhetag") + ")" : "") + ':</p><p class="sures"><b>' + di.kcal.toLocaleString("de-DE") + " kcal</b> · <b>" + Math.round(mc.p) + " g</b> Eiweiß</p><p class=\"small muted\">Das ist ein Startwert. Trägst du Gewicht und Essen ein, passt die App ihn nach zwei Wochen an deinen echten Verbrauch an.</p>"
         : '<p>Für eine Kalorienempfehlung fehlen noch Angaben (Geschlecht, Geburtsjahr, Größe, Gewicht oder Aktivität). Du kannst sie jederzeit unter Daten → Persönlich und Körper nachtragen.</p>') +
         '<p class="small muted">Jetzt zeigen wir dir in fünf Schritten, wo du deine Angaben, deinen Plan, dein Training, dein Essen und dein Backup findest.</p>';
@@ -3685,7 +3689,7 @@ button, select, input { touch-action: manipulation }
     S.homeDay = t;
     /* Heute */
     if (E) {
-      var di = dayKcal(t, E, done.length > 0), mc = macros(di.kcal, di.type, E.w);
+      var di = dayKcal(t, E, done.length > 0), mc = macros(di.kcal, di.type, E.pw);
 
       /* Defizit heute: Verbrauch des Tages minus Kalorienziel. Der Verbrauch wird wie das Ziel auf Trainings- und
          Ruhetage verteilt (Trainingstag rund 3,5 kcal pro kg mehr), im Wochenschnitt ergibt das die Erhaltungskalorien. */
