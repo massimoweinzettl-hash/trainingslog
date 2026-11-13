@@ -636,7 +636,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 86;
+  var APP_VERSION = 87;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -713,6 +713,7 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
+    { v: 87, tab: "body", text: "Unter „Körper“ steht das Gewichtsdiagramm jetzt ganz oben, Phase und Ziel darunter. Die Faustregel für die Abnahme steht nur noch einmal, direkt unter dem Diagramm." },
     { v: 86, tab: "train", text: "Der Kalender im Training ist oben schlanker: nur noch eine Zeile mit Monat, Anzahl der Einheiten und Pfeilen. Das nächste Training ist unter dem Kalender ausgewählt." },
     { v: 85, tab: "data", text: "Gibt es eine neue Version, erscheint jetzt ein Hinweis in der Bildschirmmitte. Mit „Jetzt aktualisieren“ lädst du sie, mit „Später“ wartet sie bis zum nächsten Mal." },
     { v: 84, tab: "data", text: "Automatische Updates: Mit Internet startet die App immer in der neuesten Fassung. Kommst du aus dem Hintergrund zurück, lädt sie neue Versionen still nach – nur wenn du gerade nichts eintippst. Offline bleibt alles wie gewohnt." },
@@ -1622,7 +1623,7 @@ button, select, input { touch-action: manipulation }
     if (left > 0.05) {
       var r = RULE[ph.type], eta = function (ratePct) { return addDays(lw.date, Math.ceil(left / (w * ratePct / 100) * 7)); };
       var fast = eta(r[1]), slow = eta(r[0]);
-      h += '<p class="small">Nach Faustregel (' + (cut ? "0,5–1 % Abnahme" : "0,25–0,5 % Zunahme") + " pro Woche) zwischen <b>" + dfmt(fast, 1) + "</b> und <b>" + dfmt(slow, 1) + "</b>.";
+      h += '<p class="small">Ziel voraussichtlich zwischen <b>' + dfmt(fast, 1) + "</b> und <b>" + dfmt(slow, 1) + "</b>.";
       var tr = trendOf(list, ph.start);
       if (tr && (cut ? tr.perWeek < -0.05 : tr.perWeek > 0.05)) h += " Bei deinem aktuellen Tempo (" + sign(Math.round(tr.perWeek * 100) / 100) + " kg pro Woche) etwa am <b>" + dfmt(addDays(lw.date, Math.ceil(left / Math.abs(tr.perWeek) * 7)), 1) + "</b>.";
       else if (tr) h += " Dein aktueller Trend geht nicht in Richtung Ziel.";
@@ -1648,7 +1649,8 @@ button, select, input { touch-action: manipulation }
     }
     var lo = RULE[p.type][0], hi = RULE[p.type][1];
     var kg = lastW == null ? "" : ", bei deinem Gewicht " + (p.type === "maintain" ? "±" + fmt(lastW * hi / 100) : fmt(lastW * lo / 100) + "–" + fmt(lastW * hi / 100)) + " kg";
-    return h + '<p class="small muted">' + (p.type === "cut" ? "Faustregel im Cut: 0,5–1 % des Körpergewichts pro Woche abnehmen" : p.type === "bulk" ? "Faustregel im Aufbau: 0,25–0,5 % des Körpergewichts pro Woche zunehmen" : "Faustregel beim Halten: höchstens ±0,25 % pro Woche") + kg + ".</p>" + (p.anchor ? '<p class="small">Korridor neu gestartet am ' + dfmt(p.anchor, 1) + '. <button class="ghost" data-act="corrundo">Neustart aufheben</button></p>' : "") + goalInfo(list, p) + goalForm(list, p);
+    /* Seit v87 steht die Faustregel nur noch unter dem Diagramm (Wunsch des Nutzers: nichts doppelt). */
+    return h + (p.anchor ? '<p class="small">Korridor neu gestartet am ' + dfmt(p.anchor, 1) + '. <button class="ghost" data-act="corrundo">Neustart aufheben</button></p>' : "") + goalInfo(list, p) + goalForm(list, p);
   }
   var dayBefore = function (s) { var x = new Date(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10) - 1); return x.getFullYear() + "-" + pad(x.getMonth() + 1) + "-" + pad(x.getDate()); };
   function phaseList(list) {
@@ -2355,7 +2357,7 @@ button, select, input { touch-action: manipulation }
     var el = $("tab-body"); if (!S.ready) return;
     var list = Object.keys(S.body).map(function (k) { return S.body[k]; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     if (!keepForm || !$("bform")) {
-      el.innerHTML = '<div class="block" id="phstat"></div><div class="block" id="wcorr"></div><div class="block" id="bform"><h2>Gewicht, Körperfett und Umfänge eintragen</h2><div class="bgrid"><label class="full">Datum<input type="date" id="b-date" value="' + today() + '" max="' + today() + '"></label>' +
+      el.innerHTML = '<div class="block" id="wcorr"></div><div class="block" id="phstat"></div><div class="block" id="bform"><h2>Gewicht, Körperfett und Umfänge eintragen</h2><div class="bgrid"><label class="full">Datum<input type="date" id="b-date" value="' + today() + '" max="' + today() + '"></label>' +
         BF.map(function (f) { return "<label>" + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
         '</div><div class="row" style="align-items:center"><button class="primary" data-act="bsave">Speichern</button><span class="small muted" id="bmsg">Leere Felder werden übersprungen.</span></div><div class="hbox" id="hbody"></div></div><div id="bout" style="display:flex;flex-direction:column;gap:16px"></div>' +
         '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="">Bitte wählen</option><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div><div class="block" id="kcalbox"></div><div class="block" id="eatbox"></div>';
@@ -3537,7 +3539,7 @@ button, select, input { touch-action: manipulation }
       var cls = where === "im Korridor" ? "up" : "low";
       info = '<p class="small">Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + " kg</b>. Korridor an diesem Tag: " + fmt(Math.round(cmin * 10) / 10) + "–" + fmt(Math.round(cmax * 10) / 10) + ' kg.</p><span class="hint ' + cls + '">' + where.charAt(0).toUpperCase() + where.slice(1) + "</span>" +
         catchUp(list, ph, lp, cmin, cmax) +
-        '<p class="small muted">' + (ph.anchor ? "Korridor neu gestartet am " + dfmt(ph.anchor, 1) + " bei " : "Ausgangsgewicht ") + fmt(base) + " kg. Die Linien zeigen " + (ph.type === "cut" ? "0,5 % und 1 % Abnahme" : ph.type === "bulk" ? "0,25 % und 0,5 % Zunahme" : "±0,25 %") + " pro Woche. Einzelne Messungen schwanken um 1–2 kg, achte auf den Verlauf.</p>" +
+        '<p class="small muted">' + (ph.anchor ? "Korridor neu gestartet am " + dfmt(ph.anchor, 1) + " bei " : "Ausgangsgewicht ") + fmt(base) + " kg. Die Linien zeigen " + (ph.type === "cut" ? "0,5 % und 1 % Abnahme" : ph.type === "bulk" ? "0,25 % und 0,5 % Zunahme" : "±0,25 %") + " pro Woche" + (lp ? " (bei dir " + (ph.type === "maintain" ? "±" + fmt(Math.round(lp.weight * 0.25) / 100) : fmt(Math.round(lp.weight * RULE[ph.type][0]) / 100) + "–" + fmt(Math.round(lp.weight * RULE[ph.type][1]) / 100)) + " kg)" : "") + ". Einzelne Messungen schwanken um 1–2 kg, achte auf den Verlauf.</p>" +
         (goal != null ? goalInfo(list, ph) + (gIn ? "" : '<p class="small muted">Das Ziel liegt außerhalb des gezeigten Bereichs, der Pfeil an der Achse zeigt die Richtung.</p>') : ph.type !== "maintain" ? '<p class="small muted">Leg im Tab „Körper“ ein Zielgewicht fest, dann siehst du hier die Ziellinie und wann du es voraussichtlich erreichst.</p>' : "");
       short = '<p>Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + " kg</b> · Korridor " + fmt(Math.round(cmin * 10) / 10) + "–" + fmt(Math.round(cmax * 10) / 10) + " kg</p>" + '<span class="hint ' + cls + '">' + where.charAt(0).toUpperCase() + where.slice(1) + "</span>" + (goal != null ? '<p class="small">Ziel ' + fmt(goal) + " kg · noch " + fmt(Math.max(0, Math.round(Math.abs(lp.weight - goal) * 10) / 10)) + " kg</p>" : "");
     } else info = '<p class="small">Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + ' kg</b>.</p><p class="small muted">Starte im Reiter „Körper“ einen Cut oder Aufbau, dann zeigt die Kurve deinen Zielkorridor.</p>';
