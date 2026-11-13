@@ -90,3 +90,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v73: Legende Start: Reihenfolge Protein · offen · Fett · Kohlenh.
 - v74: grauer Rest-Abschnitt `.sg.x` nur noch, wenn Einträge ohne Makros vorhanden sind oder der Rest ≥ max(40 kcal, 6 %) ist (z. B. Alkohol); Rundungsreste ausgeblendet.
 - v75: Bibliothek durchstöbern: leere Suche zeigt nach Mahlzeiten/Favoriten/eigenen alle Bibliotheksgruppen (`libGroups`), Liste `#cbr-ni` bis 55vh hoch; Daten → Essen: je Gruppe `<details class="flib">` (Zustand `S.fLibOpen`).
+- v76: `FOOD_V6` (250 weitere allgemeine Lebensmittel, Gerichte, Getränke; Daten in /home/claude/work/lib76.txt) → `FOODLIB` 568. Skript `app/off-export.mjs` (Node, lädt bis zu 3.000 in DE meistgescannte Produkte von Open Food Facts mit vollständigen Nährwerten, Plausibilitätsprüfung, schreibt ~/Desktop/trainingslog-produkte.json; 7 s Pause je Seite wegen Ratenlimit).
