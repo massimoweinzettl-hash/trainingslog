@@ -103,3 +103,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v86: Kalenderkopf eine Zeile (`.calhead`: ‹ Monat Jahr · n Einheiten ›), Eyebrow „Training“, „Heute erledigt“ und Knopf „Heute/Als Nächstes“ (`nextbtn`) entfernt; Hinweise nur ohne Plan bzw. ohne nächstes Training.
 - v87 (14.11.2026): Körper – Gewichtsdiagramm ganz oben, Phase/Ziel darunter, Faustregel nur noch einmal (unter dem Diagramm, mit kg-Wert).
 - v88: Essen-Suche – Wischen bei offener Trefferliste schließt die Tastatur (`touchmove` > 12 px → `blur`), Liste und Suchbegriff bleiben (`cbKept`); Antippen des Feldes tippt weiter, Antippen außerhalb schließt (`cbKeptClose`).
+- v89: übliche Trainingstage (`person.tdays`) zählen in `dayKcal` nicht mehr (nur eingetragen oder `schedDay`); `planPill` „T“, Legende und `.pill.plan` entfernt. `tdays` bleibt für Aktivitätsfaktor, Kalorien-Split (`E.n`) und `nextTraining`.
