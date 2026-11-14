@@ -1,7 +1,7 @@
 /* Trainingslog – Service Worker: macht die App offline nutzbar.
    Antwortet aus dem Cache und holt im Hintergrund die neue Fassung. Anfragen mit dem Parameter „fresh“
    (Versionsprüfung der App) gehen direkt ans Netz. CACHE nur ändern, wenn sich FILES ändert. */
-const CACHE = "trainingslog-v3";
+const CACHE = "trainingslog-v4";
 const FILES = [
   "./",
   "./index.html",
@@ -11,7 +11,9 @@ const FILES = [
   "./apple-touch-icon.png",
   "./inter.woff2",
   "./space-grotesk.woff2",
-  "./zxing.min.js"
+  "./zxing.min.js",
+  "./koerperkarte.png",
+  "./koerperkarte-licht.jpg"
 ];
 
 self.addEventListener("install", (event) => {

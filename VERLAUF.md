@@ -107,3 +107,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v90: `goalInfo` nicht mehr in `weightCorridor` (nur noch in `#phstat`); `catchUp`-Hinweis ohne Wiederholung von „schneller als …“ (steht schon in der Status-Pille).
 - v91: „Essen im Rückblick“ von Körper nach Ernährung (`details.eatdet`, zugeklappt, `S.eatOpen`, Inhalt erst beim Aufklappen); Erklärung als `tip` statt `ib` im Titel; Handbuch verschoben.
 - v92: 50er-Rundung der kcal entfernt (`kc`, `energy`.cols, `dayKcal`, Tabelle `srow`, Verbrauch/Defizit unter Ernährung); nur `catchUp`-Vorschlag bleibt in 50er-Schritten.
+- v93: Körperkarte als Bild (Vorlage vom Nutzer, mit ChatGPT erstellt): `koerperkarte.png` (R = Gruppe×32, G = Muskelanteil, B = Deckkraft) + `koerperkarte-licht.jpg` (Helligkeit), Einfärben per Canvas (`bodyMap`/`bmLoad`/`bmPaint`, `BMI`, `BMG`); SVG-Daten `BM_*` entfernt; sw.js Cache v4; Aufbereitung app/koerperkarte-prep.py.
