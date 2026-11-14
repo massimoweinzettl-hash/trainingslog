@@ -102,3 +102,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v85: Update-Hinweis `#upd` als Dialog in der Bildschirmmitte („Jetzt aktualisieren“ → `reload`, „Später“ → `updlater`), ersetzt Leiste und stilles Neuladen aus v84 (Wunsch des Nutzers); `safeToReload`/sessionStorage-Schutz entfernt. Seite kommt weiter zuerst aus dem Netz.
 - v86: Kalenderkopf eine Zeile (`.calhead`: ‹ Monat Jahr · n Einheiten ›), Eyebrow „Training“, „Heute erledigt“ und Knopf „Heute/Als Nächstes“ (`nextbtn`) entfernt; Hinweise nur ohne Plan bzw. ohne nächstes Training.
 - v87 (14.11.2026): Körper – Gewichtsdiagramm ganz oben, Phase/Ziel darunter, Faustregel nur noch einmal (unter dem Diagramm, mit kg-Wert).
+- v88: Essen-Suche – Wischen bei offener Trefferliste schließt die Tastatur (`touchmove` > 12 px → `blur`), Liste und Suchbegriff bleiben (`cbKept`); Antippen des Feldes tippt weiter, Antippen außerhalb schließt (`cbKeptClose`).
