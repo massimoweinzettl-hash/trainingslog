@@ -106,3 +106,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v89: übliche Trainingstage (`person.tdays`) zählen in `dayKcal` nicht mehr (nur eingetragen oder `schedDay`); `planPill` „T“, Legende und `.pill.plan` entfernt. `tdays` bleibt für Aktivitätsfaktor, Kalorien-Split (`E.n`) und `nextTraining`.
 - v90: `goalInfo` nicht mehr in `weightCorridor` (nur noch in `#phstat`); `catchUp`-Hinweis ohne Wiederholung von „schneller als …“ (steht schon in der Status-Pille).
 - v91: „Essen im Rückblick“ von Körper nach Ernährung (`details.eatdet`, zugeklappt, `S.eatOpen`, Inhalt erst beim Aufklappen); Erklärung als `tip` statt `ib` im Titel; Handbuch verschoben.
+- v92: 50er-Rundung der kcal entfernt (`kc`, `energy`.cols, `dayKcal`, Tabelle `srow`, Verbrauch/Defizit unter Ernährung); nur `catchUp`-Vorschlag bleibt in 50er-Schritten.
