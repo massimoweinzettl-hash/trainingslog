@@ -724,7 +724,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 117;
+  var APP_VERSION = 118;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -807,6 +807,7 @@ button, select, input { touch-action: manipulation }
     { v: 116, tab: "data", text: "Rundgang: Die Karte nennt jetzt den Reiter, in dem du bist. Beim Wechsel gleitet die Seite zur Seite und der Reiter oben leuchtet kurz auf." },
     { v: 117, tab: "home", text: "Das i neben „Defizit · Verbrauch“ zeigt jetzt Schritt für Schritt mit deinen Zahlen, wie dein Kalorienziel von heute zustande kommt: Grundumsatz, Alltag und Training, Phase, Trainings- oder Ruhetag." },
     { v: 117, tab: "body", text: "Messungen korrigieren: In der Tabelle „Messungen“ das Datum antippen, oben ändern oder ein Feld leeren, „Speichern“. Ältere Messungen blendest du mit „Alle anzeigen“ ein. In „Kalorien und Makros“ steht jetzt Ø an den Schnittwerten und darunter dein Ziel für heute." },
+    { v: 118, tab: "body", text: "Übergang zwischen Phasen (Reverse Diet): Startest du nach einem Cut einen Aufbau oder eine Haltephase, wählst du unter „Phasen“ einen Übergang von 2 bis 4 Wochen (3 sind vorausgewählt). Dein Kalorienziel steigt dann jeden Tag ein Stück, statt zu springen. Der Gewichtskorridor startet erst danach." },
     { v: 113, tab: "data", text: "Backup: Der Dateiname enthält jetzt immer den Namen des Profils, z. B. „trainingslog-backup-Max-2026-11-15.json“. Den Namen änderst du unter Daten → Sicherung → Profile („Name des aktiven Profils“)." },
     { v: 112, tab: "home", text: "Koffein: kleines Diagramm mit deinem Koffeinspiegel über den Tag. Jedes Getränk hebt die Kurve an – realistischer über etwa 45 Minuten statt sofort –, danach baut sie langsam ab. Gestrichelt: 30 mg, Strich: jetzt, rechts deine Schlafenszeit. Alle Koffeinzahlen rechnen jetzt mit dieser Aufnahme; direkt nach dem Trinken steht dabei, wie viel noch kommt." },
     { v: 111, tab: "home", text: "Vitamine: Bei Magnesium und Folsäure gilt die Obergrenze nur für Präparate. Dafür gibt es jetzt eine eigene kleine Zeile „davon Präparate … / 250 mg“ unter dem Balken – nur sie wird gelb oder orange. Der Balken selbst zeigt wie bei allen anderen, wie viel vom Ziel du erreicht hast." },
@@ -1573,6 +1574,14 @@ button, select, input { touch-action: manipulation }
   var RULE = { cut: [0.5, 1], bulk: [0.25, 0.5], maintain: [0, 0.25] }; /* % des Körpergewichts pro Woche */
   var sign = function (n) { return (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n)); };
   function phaseAt(date) { var r = null; S.phases.forEach(function (p) { if (p.start <= date) r = p; }); return r; }
+  /* v118 (Wunsch des Nutzers: Reverse Diet): Phase kann `ramp` (14/21/28 Tage) tragen. Solange der Übergang läuft, wandert das
+     Tagesziel gleichmäßig vom Ziel der Vorphase zum neuen Ziel. Liefert { n: Tag, days, end: erster Tag mit vollem Ziel, prev } oder null. */
+  function rampOf(p, date) {
+    if (!p || !p.ramp) return null;
+    var prev = S.phases[S.phases.indexOf(p) - 1]; if (!prev || prev.type === p.type) return null;
+    var n = Math.round((Date.parse(date) - Date.parse(p.start)) / 864e5) + 1;
+    return n >= 1 && n < p.ramp ? { n: n, days: p.ramp, end: addDays(p.start, p.ramp - 1), prev: prev.type } : null;
+  }
   function weekOf(p, date) { return Math.floor((Date.parse(date) - Date.parse(p.start)) / 864e5 / 7) + 1; }
   function phaseMarks(pts) {
     if (pts.length < 2) return [];
@@ -1718,7 +1727,10 @@ button, select, input { touch-action: manipulation }
       min = trainMin(ds, hasWorkout); var ref = planAvgMin();
       if (min > 0 && ref > 0) { fac = Math.max(0.25, Math.min(2.5, min / ref)); kcal = sp.rest + (sp.train - sp.rest) * fac; }
     }
-    return { kcal: Math.round(kcal), type: type, phase: !!ph, train: train, plan: train && !hasWorkout, min: min, fac: fac };
+    var rp = rampOf(ph, ds), off = 0;
+    if (rp) { var k0 = kcal; kcal = Math.max(E.bmr, kcal + (E.target[rp.prev] - E.target[type]) * (1 - rp.n / rp.days)); off = kcal - k0; rp.off = off; }
+    /* Eiweiß im Übergang: Cut-Wert, sobald eine der beiden Phasen ein Cut ist (sonst der der Vorphase). */
+    return { kcal: Math.round(kcal), type: type, mtype: rp ? (rp.prev === "cut" || type === "cut" ? "cut" : rp.prev) : type, ramp: rp, phase: !!ph, train: train, plan: train && !hasWorkout, min: min, fac: fac };
   }
   /* v117 (Wunsch des Nutzers: Berechnung transparent): Aufstellung Grundumsatz → Erhaltung → Phase → heute, mit den Zahlen des Nutzers. */
   function kcalSteps(E, di, use) {
@@ -1727,7 +1739,10 @@ button, select, input { touch-action: manipulation }
     var h = '<span class="ksteps">' + r("Grundumsatz <i>" + bsrc + "</i>", kc(E.bmr)) +
       r("Alltag und Training <i>" + (E.measured != null ? "gemessen aus Gewichtsverlauf und Essen" : "Faktor " + fmt(Math.round(P.act * 100) / 100) + ", geschätzt") + "</i>", sg(E.maint - E.bmr)) + r("Erhaltung", kc(E.maint), 1);
     if (di.type !== "maintain") h += r(PH[di.type] + " <i>" + (di.type === "cut" ? "0,5 % Abnahme pro Woche" : "0,25 % Zunahme pro Woche") + "</i>", sg(tgt - E.maint)) + r("Ziel im Wochenschnitt", kc(tgt), 1);
-    if (E.n) h += r((di.train ? "Trainingstag" : "Ruhetag") + " heute" + (di.train && di.min ? " <i>≈ " + Math.round(di.min) + " min" + (di.plan ? ", eingeplant" : "") + "</i>" : ""), sg(di.kcal - tgt)) + r("Ziel heute", kc(di.kcal), 1);
+    var ro = di.ramp ? di.ramp.off : 0;
+    if (di.ramp) h += r("Übergang vom " + PH[di.ramp.prev] + " <i>Tag " + di.ramp.n + " von " + di.ramp.days + ", volles Ziel ab " + dfmt(di.ramp.end) + "</i>", sg(ro));
+    if (E.n) h += r((di.train ? "Trainingstag" : "Ruhetag") + " heute" + (di.train && di.min ? " <i>≈ " + Math.round(di.min) + " min" + (di.plan ? ", eingeplant" : "") + "</i>" : ""), sg(di.kcal - tgt - ro));
+    if (E.n || di.ramp) h += r("Ziel heute", kc(di.kcal), 1);
     return h + "</span>" + (E.n ? "Verbrauch heute " + kc(use) + " kcal: Erhaltung, " + (di.train ? "plus Anteil fürs Training" : "an Ruhetagen etwas weniger") + ". " : "");
   }
   function bodyList() { return Object.keys(S.body).map(function (k) { return S.body[k]; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; }); }
@@ -1740,9 +1755,9 @@ button, select, input { touch-action: manipulation }
       '<div class="row" style="align-items:center"><button class="primary" data-act="mcsave">Speichern</button><button class="ghost" data-act="mcreset">Standard (2,2 / 1,8 / 1,8 g/kg, 25 % Fett)</button></div><p class="small muted" id="mcmsg"></p></div>';
   }
   function kcalToday(E) {
-    if (!E.n) return "";
-    var t = today(), di = dayKcal(t, E, workoutsOn(t).length > 0), mc = macros(di.kcal, di.type, E.pw);
-    return '<p class="small"><b>Heute (' + (di.train ? "Trainingstag" : "Ruhetag") + "):</b> " + kc(di.kcal) + " kcal · " + mc.p + " g Eiweiß · " + mc.f + " g Fett · " + mc.c + " g Kohlenhydrate. Das sind die Ziele unter „Ernährung“; Ø ist der Wochenschnitt.</p>";
+    var t = today(), di = dayKcal(t, E, workoutsOn(t).length > 0); if (!E.n && !di.ramp) return "";
+    var mc = macros(di.kcal, di.mtype, E.pw);
+    return '<p class="small"><b>Heute (' + (di.train ? "Trainingstag" : "Ruhetag") + (di.ramp ? ", Übergang Tag " + di.ramp.n + " von " + di.ramp.days : "") + "):</b> " + kc(di.kcal) + " kcal · " + mc.p + " g Eiweiß · " + mc.f + " g Fett · " + mc.c + " g Kohlenhydrate. Das sind die Ziele unter „Ernährung“; Ø ist der Wochenschnitt.</p>";
   }
   function kcalBlock(list) {
     var P = S.person, E = energy(list), ph = phaseAt(today()), cur = ph ? ph.type : null, title = "<h2>Kalorien und Makros</h2>";
@@ -1839,7 +1854,10 @@ button, select, input { touch-action: manipulation }
     list.forEach(function (x) { if (x.weight != null) lastW = x.weight; });
     if (!p) return '<h2>Keine Phase gewählt</h2><p class="small muted">Starte unten unter „Phasen“ einen Aufbau, einen Cut oder eine Haltephase. Dann bewertet der Tracker deinen Gewichtstrend und markiert die Phase in den Diagrammen.</p>';
     var h = "<h2>" + PH[p.type] + ' <span class="small muted" style="font-family:var(--body);font-weight:400">seit ' + dfmt(p.start, 1) + ", Woche " + weekOf(p, t) + "</span></h2>";
-    if (!tr) h += '<p class="small muted">Für einen Trend braucht es in dieser Phase zwei Gewichtsmessungen mit mindestens einer Woche Abstand.</p>';
+    var rp = rampOf(p, t);
+    if (rp) h += '<p class="small"><b>Übergang vom ' + PH[rp.prev] + "</b> (Reverse Diet), Tag " + rp.n + " von " + rp.days + ": Dein Kalorienziel wandert täglich ein Stück zum " + PH[p.type] + "-Ziel, voll ab " + dfmt(rp.end, 1) + "." + ib("ramp") + "</p>" +
+      itx("ramp", "Nach einem Cut direkt 700 kcal mehr zu essen fällt schwer. Deshalb steigt das Ziel gleichmäßig. Mit mehr Kohlenhydraten steigt das Gewicht in den ersten Tagen oft um 1–2 kg durch Wasser und Glykogen, das ist kein Fett. Trend und Korridor werden deshalb erst nach dem Übergang bewertet. Dass langsames Hochfahren weniger Fett ansetzt, ist nicht gut belegt; es ist vor allem angenehmer.");
+    else if (!tr) h += '<p class="small muted">Für einen Trend braucht es in dieser Phase zwei Gewichtsmessungen mit mindestens einer Woche Abstand.</p>';
     else {
       var v = verdict(p.type, tr.pct);
       h += "<p>Trend über " + Math.round(tr.span) + " Tage (" + tr.n + " Messungen): <b>" + sign(tr.perWeek) + " kg pro Woche</b> (" + sign(tr.pct) + ' %)</p><span class="hint ' + v[0] + '">' + v[1] + "</span>";
@@ -1858,7 +1876,7 @@ button, select, input { touch-action: manipulation }
       var span = nx ? dfmt(p.start, 1) + " – " + dfmt(dayBefore(nx.start), 1) : "seit " + dfmt(p.start, 1);
       var ws = list.filter(function (x) { return x.weight != null && x.date >= p.start && x.date < end; });
       var txt = !ws.length ? "–" : ws.length === 1 ? fmt(ws[0].weight) + " kg" : fmt(ws[0].weight) + " → " + fmt(ws[ws.length - 1].weight) + " kg (" + sign(ws[ws.length - 1].weight - ws[0].weight) + ")";
-      return "<tr><td>" + (p === curPh ? "<b>" + PH[p.type] + '</b> <span class="muted">(aktuell)</span>' : PH[p.type]) + (isN(p.goal) ? '<br><span class="small muted">Ziel ' + fmt(p.goal) + " kg</span>" : "") + "</td><td>" + span + "</td><td>" + txt + '</td><td class="r"><button class="danger" data-act="phdel" data-id="' + p.start + '">Löschen</button></td></tr>';
+      return "<tr><td>" + (p === curPh ? "<b>" + PH[p.type] + '</b> <span class="muted">(aktuell)</span>' : PH[p.type]) + (isN(p.goal) ? '<br><span class="small muted">Ziel ' + fmt(p.goal) + " kg</span>" : "") + (p.ramp ? '<br><span class="small muted">Übergang ' + p.ramp / 7 + " Wochen</span>" : "") + "</td><td>" + span + "</td><td>" + txt + '</td><td class="r"><button class="danger" data-act="phdel" data-id="' + p.start + '">Löschen</button></td></tr>';
     }).join("") + "</tbody></table></div>";
   }
 
@@ -2193,7 +2211,7 @@ button, select, input { touch-action: manipulation }
     if (S.calSel && (V === "d" || (V === "w" ? S.calSel >= wk0 && S.calSel <= wk6 : S.calSel.slice(0, 7) === S.calMonth))) {
       var sel = by[S.calSel] || [], dd = dateOf(S.calSel), kd = "";
       if (E) {
-        var di = dayKcal(S.calSel, E, sel.length > 0), mc = macros(di.kcal, di.type, E.pw);
+        var di = dayKcal(S.calSel, E, sel.length > 0), mc = macros(di.kcal, di.mtype, E.pw);
         var parts = [di.phase ? "" : "Erhaltung, keine Phase", E.n ? (di.plan ? "geplanter Trainingstag" : di.train ? "Trainingstag" : "Ruhetag") + (di.min ? " · ≈ " + di.min + " min" : "") : ""].filter(Boolean).join(", ");
         kd = '<div class="calw"><p><b>' + nf(di.kcal) + " kcal</b>" + (parts ? ' <span class="small muted">' + parts + "</span>" : "") +
           '</p><p class="small muted">' + mc.p + " g Eiweiß · " + mc.f + " g Fett · " + mc.c + " g Kohlenhydrate</p></div>";
@@ -2610,7 +2628,7 @@ button, select, input { touch-action: manipulation }
       el.innerHTML = '<div class="block" id="wcorr"></div><div class="block" id="phstat"></div><div class="block" id="bform"><h2>Gewicht, Körperfett und Umfänge eintragen</h2><div class="bgrid"><label class="full">Datum<input type="date" id="b-date" value="' + today() + '" max="' + today() + '"></label>' +
         BF.map(function (f) { return "<label>" + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
         '</div><div class="row" style="align-items:center"><button class="primary" data-act="bsave">Speichern</button><span class="small muted" id="bmsg">Leere Felder werden übersprungen.</span></div><div class="hbox" id="hbody"></div></div><div id="bout" style="display:flex;flex-direction:column;gap:16px"></div>' +
-        '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="">Bitte wählen</option><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div><div class="block" id="kcalbox"></div>';
+        '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="">Bitte wählen</option><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><label style="flex:1 1 130px">Übergang<select id="ph-ramp"><option value="0">Ohne</option><option value="14">2 Wochen</option><option value="21">3 Wochen</option><option value="28">4 Wochen</option></select></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div><div class="block" id="kcalbox"></div>';
     }
     var h = "";
     if (!list.length) h = '<p class="empty">Noch keine Messung. Trag oben Gewicht, Körperfett oder Umfänge ein, dann erscheint hier der Verlauf.</p>';
@@ -3343,6 +3361,7 @@ button, select, input { touch-action: manipulation }
             if (!DRE.test(p.start) || !Object.prototype.hasOwnProperty.call(PH, p.type)) throw 0;
             var cp = { start: p.start, type: p.type }; if (isN(p.goal) && p.goal > 20 && p.goal < 400) cp.goal = p.goal;
             if (DRE.test(p.anchor) && p.anchor > p.start) cp.anchor = p.anchor;
+            if ([14, 21, 28].indexOf(p.ramp) >= 0) cp.ramp = p.ramp;
             return cp;
           }).sort(function (x, y) { return x.start < y.start ? -1 : 1; }) };
       }
@@ -3616,7 +3635,7 @@ button, select, input { touch-action: manipulation }
     ["Ernährung", "<p>Hier trägst du ein, was du isst, und siehst, was heute noch offen ist.</p><ul><li><b>Die große Zahl</b> sind die Kalorien, die heute noch offen sind. Der Balken darunter zeigt Eiweiß, Fett und Kohlenhydrate. Der blasse orange Abschnitt sind die Kalorien, die dein noch fehlendes Eiweiß brauchen wird. Darunter stehen Defizit bzw. Überschuss und dein geschätzter Verbrauch; das i daneben zeigt Schritt für Schritt, wie dein Ziel von heute zustande kommt.</li><li><b>Essen eintragen:</b> ins Suchfeld tippen, Lebensmittel oder Mahlzeit antippen, Menge angeben, „Eintragen“. Ohne Suchbegriff siehst du Mahlzeiten, Favoriten, eigene Lebensmittel und die ganze Bibliothek zum Durchscrollen. Wischst du in der Trefferliste, geht die Tastatur weg; zum Weitertippen wieder ins Suchfeld tippen.</li><li><b>Barcode:</b> Das Barcode-Symbol neben dem Suchfeld öffnet die Kamera. Bekannte Produkte werden ohne Internet erkannt. Unbekannte fragt die App mit Internet einmal bei Open Food Facts ab und speichert sie, danach gehen auch sie offline.</li><li><b>Ohne Waage:</b> „Mittag schätzen“ trägt eine kleine, mittlere oder große Mahlzeit als Schätzung ein.</li><li><b>Uhrzeit:</b> Die Uhrzeit eines Eintrags lässt sich antippen und ändern. Wichtig ist sie vor allem bei Koffein.</li><li><b>Nur heute:</b> Eintragen kannst du nur für heute. Frühere Tage siehst du unter „Essen im Rückblick“.</li><li><b>Täglich:</b> Supplements, die du jeden Tag nimmst, legst du einmal unter Daten → Essen an (je Kapsel, Anzahl mit dem Auswahlrad, Beginn über das Datum hinter „seit“). Sie zählen automatisch bei den Vitaminen mit, ohne Kalorien. In der Zeile „Täglich“ tippst du eines an, wenn du es heute ausgelassen hast.</li><li><b>Koffein:</b> Sobald du etwas mit Koffein einträgst, erscheint oben eine Box: Summe, wie viel gerade im Körper ist, der Verlauf als Kurve, was zu deiner Schlafenszeit noch übrig ist (orange ab 30 mg) und bis wann ein Kaffee noch geht. Gerechnet wird mit etwa 45 Minuten Aufnahme und 5 Stunden Halbwertszeit; bei dir kann das abweichen. Die Schlafenszeit stellst du unter Daten → Persönlich ein.</li><li><b>Vitamine &amp; Mineralstoffe</b> (zum Aufklappen): heute oder im 7-Tage-Schnitt, gemessen an den Empfehlungen der DGE. Blau heißt unter dem Ziel, Grün im Rahmen, Gelb bis Rot nähert sich der sicheren Obergrenze oder liegt darüber. „Erfasst: x %“ sagt, für wie viel deiner Kalorien Werte vorliegen.</li><li><b>Essen im Rückblick</b> (ganz unten): Kalorien pro Tag gegen dein Ziel, dazu der Gewichtstrend. Tage ohne Eintrag sind grau. Tippe auf einen Tag oder blättere mit ‹ ›, um zu sehen, was du gegessen hast.</li></ul>"],
     ["Training", "<p>Oben der Kalender, darunter die Einheit zum Eintragen.</p><ul><li><b>Training starten:</b> im Kalender einen Tag antippen, Trainingstag wählen, „Training starten“. Ansicht Tag, Woche oder Monat wählst du oben rechts. Vergangene Einheiten öffnest du genauso und trägst nach.</li><li><b>Sätze eintragen:</b> Gewicht und Wiederholungen eintippen, gespeichert wird automatisch. Ein Satz zählt, sobald Wiederholungen drinstehen.</li><li><b>Gewichtsvorschlag:</b> Ab der zweiten Einheit schlägt die App das Gewicht vor. Die Regel: erst in allen Sätzen die obere Wiederholungsgrenze schaffen, dann geht das Gewicht um den „Schritt“ der Übung hoch.</li><li><b>Aufwärmsätze</b> stehen eingeklappt über jeder Übung.</li><li><b>+ Übung für heute</b> und <b>Ersetzen</b> ändern nur diese Einheit, mit Häkchen auch den Plan. Hast du dich vertan, nimmt „eingetragene Sätze mitnehmen“ die Sätze zur richtigen Übung mit (nur am selben Tag).</li><li><b>Training beenden:</b> unten unter der Einheit. Bis dahin rechnet die App beim Kalorienziel mit deinem vollen Plan-Tag, danach nur mit den Sätzen, die du wirklich gemacht hast. „Weiter trainieren“ macht es rückgängig.</li><li><b>Krafttest:</b> ein Satz mit etwa 85 % deines geschätzten Maximums bis eine Wiederholung vor Schluss. Für Schwerpunktübungen erinnert die App alle 4 Wochen.</li><li><b>Plan ändern:</b> der Link hinter den Trainingstagen führt zum Plan-Assistenten.</li></ul>"],
     ["Fortschritt", "<p>Zeigt, ob du stärker wirst. Aussagekräftig wird es nach etwa drei bis vier Wochen.</p><ul><li><b>Schwerpunkt:</b> deine wichtigsten Übungen mit geschätztem Maximum (1RM), Veränderung in der Phase, Rekord und nächstem Krafttest. Den Schwerpunkt setzt du unter Daten → Übungen.</li><li><b>Verlauf pro Übung</b> als 1RM, schwerstes Gewicht oder Volumen.</li><li><b>Kraft nach Körperbereichen:</b> Die Körperkarte färbt jede Muskelgruppe danach, wie sich dein geschätztes Maximum im Zeitraum verändert hat: orange = gleich, tiefrot = ab +20 %, graublau = schwächer, grau = keine Daten. Mit ▶ oder dem Regler läuft der Zeitraffer. Mit dem Zeitraum „Phase“ siehst du, ob du im Cut deine Kraft hältst. Im Diagramm darunter wählst du die Linien über die Knöpfe.</li><li><b>Sätze pro Muskelgruppe:</b> 10–20 Sätze pro Woche sind ein üblicher Bereich für Muskelaufbau.</li><li><b>Rekorde</b> und Krafttest-Ergebnisse stehen am Ende.</li></ul><p class=\"small muted\">Das 1RM ist eine Schätzung aus Gewicht und Wiederholungen (Epley-Formel), kein gemessener Wert.</p>"],
-    ["Körper", "<p>Gewicht, Körperfett, Umfänge und deine Phasen.</p><ul><li><b>Gewicht eintragen:</b> am besten täglich oder mehrmals pro Woche, morgens nach dem Aufstehen. Einzelne Werte schwanken um 1–2 kg, die App achtet auf den Verlauf. Auf dem iPhone holt „Aus Health holen“ Gewicht und Körperfett über einen Kurzbefehl.</li><li><b>Messung korrigieren:</b> in der Tabelle „Messungen“ das Datum antippen. Die Werte stehen dann oben im Formular: ändern oder ein Feld leeren, „Speichern“. „Löschen“ entfernt den ganzen Tag.</li><li><b>Gewichtsdiagramm:</b> deine Messungen mit dem Korridor deiner Phase. Liegst du im Korridor, passt das Tempo. Hast du Körperfettwerte, läuft das Körperfett als gestrichelte Linie mit (Schnitt der letzten 7 Tage, Skala rechts). Tippe auf einen Tag, dann stehen unter dem Diagramm Datum, Gewicht und Körperfett dieses Tages; noch einmal tippen blendet es wieder aus.</li><li><b>Körperfett ohne Waage:</b> Ein Maßband reicht. Taille auf Höhe des Bauchnabels und Hals messen, Frauen zusätzlich die Hüfte an der breitesten Stelle.</li><li><b>Phasen:</b> Cut, Aufbau oder Halten mit Beginn und Zielgewicht. Der Korridor zeigt, ob du im Plan liegst. Fällst du heraus, schlägt die App Aufholen oder einen Neustart vor.</li><li><b>Kalorien und Makros:</b> Der Grundumsatz kommt aus Gewicht, Größe, Alter und Geschlecht, mit Körperfett genauer über die fettfreie Masse. Dazu kommen dein Alltag und dein Training. Trägst du Gewicht und Essen ein, leitet die App nach zwei Wochen deinen echten Bedarf aus dem Gewichtsverlauf ab. Die Tabelle zeigt den Wochenschnitt (Ø), die Zeile „Heute“ darunter dein Ziel für heute wie unter Ernährung.</li></ul>"],
+    ["Körper", "<p>Gewicht, Körperfett, Umfänge und deine Phasen.</p><ul><li><b>Gewicht eintragen:</b> am besten täglich oder mehrmals pro Woche, morgens nach dem Aufstehen. Einzelne Werte schwanken um 1–2 kg, die App achtet auf den Verlauf. Auf dem iPhone holt „Aus Health holen“ Gewicht und Körperfett über einen Kurzbefehl.</li><li><b>Messung korrigieren:</b> in der Tabelle „Messungen“ das Datum antippen. Die Werte stehen dann oben im Formular: ändern oder ein Feld leeren, „Speichern“. „Löschen“ entfernt den ganzen Tag.</li><li><b>Gewichtsdiagramm:</b> deine Messungen mit dem Korridor deiner Phase. Liegst du im Korridor, passt das Tempo. Hast du Körperfettwerte, läuft das Körperfett als gestrichelte Linie mit (Schnitt der letzten 7 Tage, Skala rechts). Tippe auf einen Tag, dann stehen unter dem Diagramm Datum, Gewicht und Körperfett dieses Tages; noch einmal tippen blendet es wieder aus.</li><li><b>Körperfett ohne Waage:</b> Ein Maßband reicht. Taille auf Höhe des Bauchnabels und Hals messen, Frauen zusätzlich die Hüfte an der breitesten Stelle.</li><li><b>Phasen:</b> Cut, Aufbau oder Halten mit Beginn und Zielgewicht. Mit „Übergang“ (Reverse Diet) wandert dein Kalorienziel nach einem Cut über 2 bis 4 Wochen gleichmäßig zum neuen Ziel, statt zu springen; 3 Wochen sind vorausgewählt. Der Korridor zeigt, ob du im Plan liegst. Fällst du heraus, schlägt die App Aufholen oder einen Neustart vor.</li><li><b>Kalorien und Makros:</b> Der Grundumsatz kommt aus Gewicht, Größe, Alter und Geschlecht, mit Körperfett genauer über die fettfreie Masse. Dazu kommen dein Alltag und dein Training. Trägst du Gewicht und Essen ein, leitet die App nach zwei Wochen deinen echten Bedarf aus dem Gewichtsverlauf ab. Die Tabelle zeigt den Wochenschnitt (Ø), die Zeile „Heute“ darunter dein Ziel für heute wie unter Ernährung.</li></ul>"],
     ["Plan", "<p>Hier legst du fest, welche Übungen an welchem Trainingstag dran sind.</p><ul><li><b>Plan erstellen lassen:</b> Tage pro Woche, Dauer und Geräte wählen. Der Assistent zeigt eine Vorschau, mit ↻ tauschst du einzelne Übungen. Danach „Plan übernehmen“. Später heißt es „Plan neu erstellen“: Plan ersetzen oder Tage hinzufügen, dein Verlauf bleibt.</li><li><b>Übung hinzufügen:</b> ein Suchfeld je Tag. Namen eintippen und Treffer antippen, die Übung ist sofort im Plan. Ohne Suchbegriff stehen oben Vorschläge für Muskelgruppen mit zu wenig Sätzen, darunter alle Übungen nach Gruppen. Findet sich nichts, legst du sie als eigene Übung an.</li><li><b>Übungen ordnen:</b> ↑ ↓ ändert die Reihenfolge, „Verschieben“ bringt eine Übung zu einem anderen Tag, ✕ nimmt sie aus dem Plan (der Verlauf bleibt). „Einstellungen“ führt zu Sätzen, Wiederholungen und Schritt.</li><li><b>Tage:</b> umbenennen, duplizieren, löschen. Unter dem Namen stehen geschätzte Dauer und Sätze je Muskelgruppe.</li><li><b>Sätze pro Woche:</b> oben im Plan. ↓ heißt unter 10, ↑ über 20 Sätze.</li><li><b>Plan-Code:</b> ein Text, mit dem sich ein Trainingstag auf einmal einfügen lässt (einfügen, prüfen, übernehmen).</li></ul>"],
     ["Daten", "<p>Fünf Bereiche: Essen, Übungen, Persönlich, Sicherung, Hilfe.</p><ul><li><b>Essen:</b> Tägliche Einnahme, Mahlzeiten und die Lebensmittelliste. Über 550 Lebensmittel und viele Markenprodukte sind eingebaut. Mit ☆ markierst du Favoriten, sie stehen beim Eintragen oben. Lebensmittel antippen, um Werte von der Verpackung zu übernehmen; das wird dein eigener Eintrag. Mahlzeiten stellst du aus Lebensmitteln zusammen. Für Meal-Prep bei „Ergibt“ die Portionen eintragen, dann wird je eine Portion gezählt.</li><li><b>Übungen:</b> Sätze, Wiederholungsbereich und Schritt je Übung, Sterne, Schwerpunkt, Muskelgruppe. Doppelte Übungen zusammenführen. „Katalog anpassen“ blendet Übungen aus, die du nie machst.</li><li><b>Persönlich:</b> die Angaben für deine Kalorien (Geschlecht, Geburtsjahr, Größe, Körperbau, Alltag, Trainingstage, Dauer), Schlafenszeit, Makros, Darstellung und Profile für mehrere Personen. Ändert sich dein Alltag oder Training, passe es hier an.</li><li><b>Sicherung:</b> Backup speichern und einspielen, Export für Excel und der <b>Bericht für den Arzt</b>: Zeitraum und Inhalt wählen, „Bericht erstellen“, dann drucken, als PDF sichern oder als Datei teilen. Der Name im Bericht wird nicht gespeichert.</li><li><b>Darstellung:</b> Die Designs „Hölle“ und „Winter Arc“ wählst du über den Berg-Knopf oben neben „Trainingslog“. „Standard“ bringt die gewohnte Oberfläche zurück.</li></ul>"],
     ["Häufige Fragen", "<ul><li><b>Es werden keine Kalorien angezeigt.</b> Dann fehlt eine Angabe: Geschlecht, Geburtsjahr, Größe oder Alltag unter Daten → Persönlich, oder ein Gewicht unter Körper.</li><li><b>Mein Kalorienziel ändert sich von Tag zu Tag.</b> An Tagen mit eingetragenem oder eingeplantem Training bekommst du mehr, an Ruhetagen weniger. Der Wochenschnitt bleibt gleich. Nach „Training beenden“ zählen nur die gemachten Sätze.</li><li><b>Ich habe die falsche Übung eingetragen.</b> Im Training auf „Ersetzen“ tippen und „eingetragene Sätze mitnehmen“ anhaken. Das geht am selben Tag.</li><li><b>Ein Lebensmittel fehlt.</b> Barcode scannen oder unter Daten → Essen selbst anlegen. Die Werte stehen auf der Verpackung.</li><li><b>Ich habe gestern vergessen, Essen einzutragen.</b> Nachtragen geht nicht. Der Tag bleibt im Rückblick grau und zählt nicht in die Schnitte.</li><li><b>Das vorgeschlagene Gewicht ist zu leicht oder zu schwer.</b> Trag einfach ein, was du wirklich gemacht hast. Der nächste Vorschlag richtet sich danach.</li><li><b>Neues Handy.</b> Auf dem alten Gerät unter Daten → Sicherung ein Backup speichern, auf dem neuen einspielen. Einen automatischen Abgleich zwischen Geräten gibt es nicht.</li><li><b>Mehrere Personen.</b> Unter Daten → Persönlich legst du Profile an. Jedes Profil hat eigene Daten und ein eigenes Backup.</li></ul>"],
@@ -3698,7 +3717,7 @@ button, select, input { touch-action: manipulation }
       h = '<div class="suhead"><span class="small muted">Schritt ' + i + ' von 5</span><button class="linkbtn small" data-act="suskip">Alles überspringen</button></div><div class="sudots">' + [1, 2, 3, 4, 5].map(function (k) { return "<span" + (k <= i ? ' class="on"' : "") + "></span>"; }).join("") + "</div>" + h + '<p class="small fmiss" id="su-msg" hidden></p>';
       nav = '<button class="ghost" data-act="suprev">Zurück</button><button class="primary" data-act="sunext">' + (i === 5 ? "Fertig" : "Weiter") + "</button>";
     } else {
-      var E = energy(bodyList()), di = E ? dayKcal(today(), E, false) : null, mc = di ? macros(di.kcal, di.type, E.pw) : null;
+      var E = energy(bodyList()), di = E ? dayKcal(today(), E, false) : null, mc = di ? macros(di.kcal, di.mtype, E.pw) : null;
       h = '<h2 id="su-h">Alles eingerichtet</h2>' + (mc ? '<p>Deine Empfehlung für heute' + (E.n ? " (" + (di.train ? "Trainingstag" : "Ruhetag") + ")" : "") + ':</p><p class="sures"><b>' + di.kcal.toLocaleString("de-DE") + " kcal</b> · <b>" + Math.round(mc.p) + " g</b> Eiweiß</p><p class=\"small muted\">Das ist ein Startwert. Trägst du Gewicht und Essen ein, passt die App ihn nach zwei Wochen an deinen echten Verbrauch an.</p>"
         : '<p>Für eine Kalorienempfehlung fehlen noch Angaben (Geschlecht, Geburtsjahr, Größe, Gewicht oder Alltag). Du kannst sie jederzeit unter Daten → Persönlich und Körper nachtragen.</p>') +
         '<p class="small muted">Jetzt nimmt dich ein kurzer Rundgang an die Hand: sechs Stationen, an jeder richtest du gleich das Wichtigste ein (Plan, erstes Essen, Backup). Dauert etwa drei Minuten.</p>';
@@ -3957,16 +3976,16 @@ button, select, input { touch-action: manipulation }
     var from = ph ? ph.start : addDays(t, -56); /* in einer Phase: alle Messungen seit Phasenstart */
     var pts = all.filter(function (x) { return x.date >= from && x.date <= t; });
     if (!pts.length) { var nm0 = '<p class="small muted">Noch keine Gewichtsmessung' + (ph ? " in dieser Phase" : " in den letzten acht Wochen") + ". Trag dein Gewicht im Reiter „Körper“ ein.</p>"; return { html: nm0, short: nm0 }; }
-    var base = null, rates = null;
-    if (ph) {
+    var base = null, rates = null, rpw = rampOf(ph, t), cst = ph ? ph.anchor || (ph.ramp && S.phases.indexOf(ph) > 0 ? addDays(ph.start, ph.ramp - 1) : ph.start) : null;
+    if (ph && !rpw) {
       /* Startpunkt des Korridors: Phasenbeginn oder ein bewusster Neustart (anchor). */
-      var bp = phaseBasePoint(all, ph.anchor || ph.start); base = bp.weight;
+      var bp = phaseBasePoint(all, cst); base = bp.weight;
       var r = RULE[ph.type], sg = ph.type === "cut" ? -1 : 1;
       rates = ph.type === "maintain" ? [-r[1], r[1]] : [sg * r[0], sg * r[1]];
     }
     var x0 = Date.parse(ph ? ph.start : pts[0].date), x1 = Math.max(Date.parse(addDays(t, 10)), Date.parse(pts[pts.length - 1].date)); /* 1,5 Wochen Vorschau */
     if (x1 - x0 < 14 * 864e5) x1 = x0 + 14 * 864e5;
-    var cx0 = ph ? Date.parse(bp.date) : x0;
+    var cx0 = rates ? Date.parse(bp.date) : x0;
     var line = function (rate, ms) { return base * (1 + rate / 100 * (ms - cx0) / (7 * 864e5)); };
     var ys = pts.map(function (p) { return p.weight; });
     if (rates) rates.forEach(function (rt) { ys.push(line(rt, cx0), line(rt, x1)); });
@@ -4042,7 +4061,7 @@ button, select, input { touch-action: manipulation }
         '<p class="small muted">' + (ph.anchor ? "Korridor neu gestartet am " + dfmt(ph.anchor, 1) + " bei " : "Ausgangsgewicht ") + fmt(base) + " kg. Die Linien zeigen " + (ph.type === "cut" ? "0,5 % und 1 % Abnahme" : ph.type === "bulk" ? "0,25 % und 0,5 % Zunahme" : "±0,25 %") + " pro Woche" + (lp ? " (bei dir " + (ph.type === "maintain" ? "±" + fmt(Math.round(lp.weight * 0.25) / 100) : fmt(Math.round(lp.weight * RULE[ph.type][0]) / 100) + "–" + fmt(Math.round(lp.weight * RULE[ph.type][1]) / 100)) + " kg)" : "") + ". Einzelne Messungen schwanken um 1–2 kg, achte auf den Verlauf.</p>" +
         (goal != null ? (gIn ? "" : '<p class="small muted">Das Ziel liegt außerhalb des gezeigten Bereichs, der Pfeil an der Achse zeigt die Richtung.</p>') : ph.type !== "maintain" ? '<p class="small muted">Leg im Tab „Körper“ ein Zielgewicht fest, dann siehst du hier die Ziellinie und wann du es voraussichtlich erreichst.</p>' : "");
       short = '<p>Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + " kg</b> · Korridor " + fmt(Math.round(cmin * 10) / 10) + "–" + fmt(Math.round(cmax * 10) / 10) + " kg</p>" + '<span class="hint ' + cls + '">' + where.charAt(0).toUpperCase() + where.slice(1) + "</span>" + (goal != null ? '<p class="small">Ziel ' + fmt(goal) + " kg · noch " + fmt(Math.max(0, Math.round(Math.abs(lp.weight - goal) * 10) / 10)) + " kg</p>" : "");
-    } else info = '<p class="small">Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + ' kg</b>.</p><p class="small muted">Starte im Reiter „Körper“ einen Cut oder Aufbau, dann zeigt die Kurve deinen Zielkorridor.</p>';
+    } else info = '<p class="small">Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + ' kg</b>.</p><p class="small muted">' + (rpw ? "Übergang bis " + dfmt(rpw.end, 1) + ": Der Korridor startet danach, weil das Gewicht mit mehr Essen anfangs durch Wasser schwankt." : "Starte im Reiter „Körper“ einen Cut oder Aufbau, dann zeigt die Kurve deinen Zielkorridor.") + "</p>";
     if (!short) short = '<p>Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + " kg</b></p>";
     var sp = pts.slice(-14), smx = Math.max.apply(0, sp.map(function (q) { return q.weight; })), smn = Math.min.apply(0, sp.map(function (q) { return q.weight; }));
     if (sp.length > 1) short = '<div class="focusrow"><div>' + short + '</div><svg class="spark" viewBox="0 0 120 32" aria-hidden="true"><path d="' + sp.map(function (q, i) { return (i ? "L" : "M") + (i / (sp.length - 1) * 116 + 2).toFixed(1) + " " + (smx > smn ? 28 - (q.weight - smn) / (smx - smn) * 24 : 16).toFixed(1); }).join(" ") + '"/></svg></div>';
@@ -5160,7 +5179,7 @@ button, select, input { touch-action: manipulation }
     S.homeDay = t;
     /* Heute */
     if (E) {
-      var di = dayKcal(t, E, done.length > 0), mc = macros(di.kcal, di.type, E.pw);
+      var di = dayKcal(t, E, done.length > 0), mc = macros(di.kcal, di.mtype, E.pw);
 
       /* Defizit heute: Verbrauch des Tages minus Kalorienziel. Der Verbrauch wird wie das Ziel auf Trainings- und
          Ruhetage verteilt (Trainingstag rund 3,5 kcal pro kg mehr), im Wochenschnitt ergibt das die Erhaltungskalorien. */
@@ -5170,7 +5189,7 @@ button, select, input { touch-action: manipulation }
         itx("gap", kcalSteps(E, di, use) + "Geplantes Defizit: geschätzter Verbrauch " + (E.measured != null ? "(aus Gewichtsverlauf und Kalorienzufuhr)" : "(nach Formel)") + " minus Ziel von heute" + (E.n ? " (" + (di.train ? "Trainingstag" : "Ruhetag") + ")" : "") + ". Was du tatsächlich isst, zeigt der Balken oben.");
     }
     var head = '<div class="dhead"><span class="ddate">' + ic("cal") + "<span>" + WDAYS[dateOf(t).getDay()].slice(0, 2) + ". " + dfmt(t) + (E && E.n ? '<span class="muted"> · ' + (di.train ? "Trainingstag" : "Ruhetag") + "</span>" : "") + "</span></span>" +
-      (ph ? '<span class="phpill pp-' + ph.type + '">' + ic(ph.type) + PH[ph.type] + " · Woche " + weekOf(ph, t) + "</span>" : "") + "</div>";
+      (ph ? '<span class="phpill pp-' + ph.type + '">' + ic(ph.type) + PH[ph.type] + (rampOf(ph, t) ? " · Übergang " + Math.ceil(rampOf(ph, t).n / 7) + "/" + ph.ramp / 7 : " · Woche " + weekOf(ph, t)) + "</span>" : "") + "</div>";
     h += migCard("home") + m58Card();
     h += '<div class="block foodblk">' + foodBlock(t, E, E ? di : null, E ? mc : null, head, stats) + "</div>";
     h += '<details class="block nutdet"' + (S.nutOpen ? " open" : "") + '><summary><h2>Vitamine &amp; Mineralstoffe</h2></summary><div id="nutbox">' + (S.nutOpen ? nutBlock(E, di) : "") + "</div></details>";
@@ -5534,12 +5553,16 @@ button, select, input { touch-action: manipulation }
       var pt = $("ph-type").value, pd = $("ph-date").value || today(), act = phaseAt(pd);
       if (!pt) { $("phmsg").textContent = "Wähle zuerst aus, welche Phase beginnt."; return; }
       if (act && act.type === pt && act.start !== pd) { $("phmsg").textContent = "Am " + dfmt(pd, 1) + " läuft bereits die Phase „" + PH[pt] + "“."; return; }
-      var nph = { start: pd, type: pt }, np = S.phases.filter(function (p) { return p.start !== pd; }); np.push(nph);
+      var nph = { start: pd, type: pt }, np = S.phases.filter(function (p) { return p.start !== pd; }), rmp = +($("ph-ramp") ? $("ph-ramp").value : 0);
+      var before = null; np.forEach(function (p) { if (p.start < pd) before = p; });
+      if (rmp && before && before.type !== pt) nph.ramp = rmp;
+      np.push(nph);
       np.sort(function (x, y) { return x.start < y.start ? -1 : 1; });
       var later = np[np.indexOf(nph) + 1];
-      saveSettings(np); $("ph-type").value = "";
+      saveSettings(np); $("ph-type").value = ""; if ($("ph-ramp")) $("ph-ramp").value = "0";
       /* Eine spätere Phase bleibt bestehen und begrenzt die neue: deutlich sagen, damit keine alte Phase unbemerkt weiterläuft. */
       $("phmsg").textContent = later ? PH[pt] + " gilt vom " + dfmt(pd, 1) + " bis " + dfmt(dayBefore(later.start), 1) + ". Ab " + dfmt(later.start, 1) + " läuft weiter „" + PH[later.type] + "“. Stimmt das nicht, lösche diese Phase in der Liste." : PH[pt] + " gilt ab " + dfmt(pd, 1) + ".";
+      if (nph.ramp) $("phmsg").textContent += " Übergang " + nph.ramp / 7 + " Wochen: Das Kalorienziel wandert jeden Tag ein Stück, volles Ziel ab " + dfmt(addDays(pd, nph.ramp - 1), 1) + ".";
       renderAll(false);
     }
     else if (a === "phdel") { if (arm(b, "Sicher?")) { saveSettings(S.phases.filter(function (p) { return p.start !== id; })); renderAll(false); } }
@@ -5835,6 +5858,10 @@ button, select, input { touch-action: manipulation }
   document.addEventListener("change", function (ev) {
     if (!S.ready) return;
     var t = ev.target;
+    if (t.id === "ph-type" || t.id === "ph-date") { /* Vorauswahl: nach einem Cut 3 Wochen Übergang, sonst ohne */
+      var pa = phaseAt($("ph-date").value || today()), nt = $("ph-type").value;
+      if ($("ph-ramp")) $("ph-ramp").value = pa && pa.type === "cut" && nt && nt !== "cut" ? "21" : "0"; return;
+    }
     if (t.id === "tdate") { saveDraft(); S.date = t.value || today(); draft = null; renderTrain(); }
     else if (t.id === "exsel") { S.exSel = t.value; renderProgress(); }
     else if (t.dataset.nt) {
