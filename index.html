@@ -4880,7 +4880,7 @@ button, select, input { touch-action: manipulation }
       '<line class="cfnow" x1="' + X(now).toFixed(1) + '" x2="' + X(now).toFixed(1) + '" y1="' + T + '" y2="' + Y(0) + '"/>' +
       '<line class="cfbed" x1="' + X(bt.ms).toFixed(1) + '" x2="' + X(bt.ms).toFixed(1) + '" y1="' + T + '" y2="' + Y(0) + '"/>' +
       '<text x="0" y="' + (H - 2) + '">' + hh(a) + '</text><text x="' + X(bt.ms).toFixed(1) + '" y="' + (H - 2) + '" text-anchor="middle">' + bt.hm + "</text>" +
-      '<text x="2" y="' + (Y(CAF_BED) + 11).toFixed(1) + '">30 mg</text><text x="0" y="' + (T + 4) + '">' + Math.round(mx) + " mg</text>";
+      '<text x="' + (X(now) + 4).toFixed(1) + '" y="' + (Y(CAF_BED) - 3).toFixed(1) + '">30 mg</text><text x="0" y="' + (T + 4) + '">' + Math.round(mx) + " mg</text>";
     return '<svg class="cafch" viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" role="img" aria-label="Koffeinspiegel über den Tag">' + g + "</svg>";
   }
   function cafLine(ent) {
