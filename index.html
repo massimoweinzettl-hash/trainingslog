@@ -793,7 +793,7 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
-    { v: 112, tab: "home", text: "Koffein: kleines Diagramm mit deinem Koffeinspiegel über den Tag. Jedes Getränk hebt die Kurve an, danach baut sie langsam ab. Gestrichelt: 30 mg, Strich: jetzt, rechts deine Schlafenszeit." },
+    { v: 112, tab: "home", text: "Koffein: kleines Diagramm mit deinem Koffeinspiegel über den Tag. Jedes Getränk hebt die Kurve an – realistischer über etwa 45 Minuten statt sofort –, danach baut sie langsam ab. Gestrichelt: 30 mg, Strich: jetzt, rechts deine Schlafenszeit. Alle Koffeinzahlen rechnen jetzt mit dieser Aufnahme; direkt nach dem Trinken steht dabei, wie viel noch kommt." },
     { v: 111, tab: "home", text: "Vitamine: Bei Magnesium und Folsäure gilt die Obergrenze nur für Präparate. Dafür gibt es jetzt eine eigene kleine Zeile „davon Präparate … / 250 mg“ unter dem Balken – nur sie wird gelb oder orange. Der Balken selbst zeigt wie bei allen anderen, wie viel vom Ziel du erreicht hast." },
     { v: 111, tab: "train", text: "Schrägbank-Curls (Kurzhantel-Curls sitzend auf der Schrägbank) haben ein eigenes Bild: sitzend auf der schrägen Bank, Hanteln oben." },
     { v: 110, tab: "train", text: "Neu: „Training beenden“ unter deiner Einheit. Ab dann zählen sofort nur die Sätze, die du wirklich gemacht hast – hast du dein Pensum nicht geschafft, sinkt das Kalorienziel noch am selben Tag. Mit „Weiter trainieren“ machst du es rückgängig." },
@@ -4864,14 +4864,18 @@ button, select, input { touch-action: manipulation }
   /* v107 (Wunsch des Nutzers): Rest zur Schlafenszeit (person.bed, Standard 23:00). Grenze 30 mg: aus Gardiner et al. 2023 (Kaffee 107 mg ≥ 8,8 h, Booster 217 mg ≥ 13,2 h vor dem Schlafen)
      mit 5 h Halbwertszeit umgerechnet bleiben jeweils ≈ 30–35 mg. „Kaffee noch bis“: späteste Uhrzeit, zu der 90 mg den Rest beim Zubettgehen nicht über 30 mg heben. */
   var CAF_BED = 30, CAF_HL = 18e6;
+  /* v112 (Wunsch des Nutzers: „ich mag die Wahrheit“): Aufnahme nicht sofort, sondern über den Magen-Darm (Ein-Kompartiment-Modell, Bateman-Funktion).
+     Abbau ke = ln2 / 5 h, Aufnahme ka = 4,9 / h → Höchstwert nach ≈ 45 min bei ≈ 90 % der Menge. Vereinfachung: in Wirklichkeit 30 min (nüchtern) bis 2 h. */
+  var CAF_KE = Math.LN2 / 5, CAF_KA = 4.9;
+  function cafAmt(dose, dt) { if (dt <= 0) return 0; var h = dt / 36e5; return dose * CAF_KA / (CAF_KA - CAF_KE) * (Math.exp(-CAF_KE * h) - Math.exp(-CAF_KA * h)); }
   function bedTime() { var b = S.person && HMRE.test(S.person.bed || "") ? S.person.bed : "23:00", d = new Date(), m = /^(\d{2}):(\d{2})$/.exec(b); d.setHours(+m[1], +m[2], 0, 0); if (+m[1] < 12) d.setDate(d.getDate() + 1); return { ms: d.getTime(), hm: b }; }
   /* v112 (Wunsch des Nutzers): Koffeinspiegel über den Tag. Jede Einnahme hebt sofort an, Abbau mit CAF_HL. Von der ersten Einnahme (volle Stunde) bis 1 h nach der Schlafenszeit. */
   function cafChart(cs, now, bt) {
     var tOf = function (e) { var hm = /^(\d{2}):(\d{2})$/.exec(e.t || ""), dt = new Date(); if (!hm) return now; dt.setHours(+hm[1], +hm[2], 0, 0); return Math.min(now, dt.getTime()); };
     var ev = cs.map(function (e) { return [tOf(e), e.caf]; }).sort(function (a, b) { return a[0] - b[0]; });
     var t0 = new Date(ev[0][0]); t0.setMinutes(0, 0, 0); var a = t0.getTime(), z = Math.max(bt.ms + 36e5, now + 36e5), st = 6e5;
-    var lvl = function (t) { return ev.reduce(function (s, x) { return x[0] <= t ? s + x[1] * Math.pow(0.5, (t - x[0]) / CAF_HL) : s; }, 0); };
-    var pts = [], t; for (t = a; t <= z; t += st) { ev.forEach(function (x) { if (x[0] > t - st && x[0] <= t && x[0] > a) pts.push([x[0] - 1, lvl(x[0] - 1)], [x[0], lvl(x[0])]); }); pts.push([t, lvl(t)]); }
+    var lvl = function (t) { return ev.reduce(function (s, x) { return s + cafAmt(x[1], t - x[0]); }, 0); };
+    var pts = [], t; st = 3e5; for (t = a; t <= z; t += st) { ev.forEach(function (x) { }); pts.push([t, lvl(t)]); }
     var mx = Math.max(60, Math.max.apply(0, pts.map(function (p) { return p[1]; })) * 1.1), W = 350, H = 70, T = 6, B = 14, X = function (v) { return (v - a) / (z - a) * W; }, Y = function (v) { return T + (1 - v / mx) * (H - T - B); };
     var d = pts.map(function (p, i) { return (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1); }).join(" ");
     var hh = function (ms) { var x = new Date(ms); return String(x.getHours()).padStart(2, "0") + ":" + String(x.getMinutes()).padStart(2, "0"); };
@@ -4885,19 +4889,19 @@ button, select, input { touch-action: manipulation }
   }
   function cafLine(ent) {
     var cs = ent.filter(function (e) { return e.caf > 0; }); if (!cs.length) return "";
-    var now = Date.now(), tot = 0, left = 0, atBed = 0, big = false, bt = bedTime();
-    cs.forEach(function (e) { tot += e.caf; if (e.caf > 200) big = true; var t0 = now, hm = /^(\d{2}):(\d{2})$/.exec(e.t || ""); if (hm) { var dt = new Date(); dt.setHours(+hm[1], +hm[2], 0, 0); t0 = Math.min(now, dt.getTime()); } left += e.caf * Math.pow(0.5, Math.max(0, now - t0) / CAF_HL); atBed += e.caf * Math.pow(0.5, Math.max(0, bt.ms - t0) / CAF_HL); });
+    var now = Date.now(), tot = 0, left = 0, gut = 0, atBed = 0, big = false, bt = bedTime();
+    cs.forEach(function (e) { tot += e.caf; if (e.caf > 200) big = true; var t0 = now, hm = /^(\d{2}):(\d{2})$/.exec(e.t || ""); if (hm) { var dt = new Date(); dt.setHours(+hm[1], +hm[2], 0, 0); t0 = Math.min(now, dt.getTime()); } left += cafAmt(e.caf, now - t0); gut += e.caf * Math.exp(-CAF_KA * Math.max(0, now - t0) / 36e5); atBed += cafAmt(e.caf, bt.ms - t0); });
     var warn = tot > 400 || big, late = atBed > CAF_BED, room = CAF_BED - atBed, until = "";
     if (now < bt.ms) {
       if (room <= 0) until = "Heute besser kein Koffein mehr.";
-      else { var x = bt.ms - CAF_HL * Math.log(90 / room) / Math.LN2; if (x <= now) until = "Für einen Kaffee ist es heute zu spät."; else { var xd = new Date(Math.floor(x / 9e5) * 9e5); until = "Kaffee (90 mg) noch bis ≈ " + String(xd.getHours()).padStart(2, "0") + ":" + String(xd.getMinutes()).padStart(2, "0") + "."; } }
+      else { var lo = now, hi2 = bt.ms, x; if (cafAmt(90, bt.ms - now) > room) x = now; else { for (var it = 0; it < 40; it++) { var md = (lo + hi2) / 2; if (cafAmt(90, bt.ms - md) <= room) lo = md; else hi2 = md; } x = lo; } /* späteste Zeit, ab der 90 mg zur Schlafenszeit ≤ Rest (nach dem Höchstwert fällt die Kurve) */ if (x <= now) until = "Für einen Kaffee ist es heute zu spät."; else { var xd = new Date(Math.floor(x / 9e5) * 9e5); until = "Kaffee (90 mg) noch bis ≈ " + String(xd.getHours()).padStart(2, "0") + ":" + String(xd.getMinutes()).padStart(2, "0") + "."; } }
     }
     /* v108 (Wunsch des Nutzers): farbige Leiste für den Rest zur Schlafenszeit, gleiche fließende Skala wie bei den Vitaminen (x = Rest / 30 mg: bis 15 mg grün, ≈ 22 mg gelb, 30 mg orange, ab 45 mg rot). Volle Breite = 60 mg, Strich bei 30 mg. */
     var xh = atBed / CAF_BED, hue = nutHue(xh), cst = "--h:" + hue + ";--lb:" + Math.max(0, Math.round(12 - Math.abs(hue - 40) / 3)) + ";";
-    return '<div class="cafl' + (warn ? " warn" : "") + (late ? " late" : "") + '" style="' + cst + '"><p><b>Koffein ' + Math.round(tot) + " mg</b> · jetzt ≈ " + Math.round(left) + " mg im Körper" + (until ? "" : ib("caf")) + "</p>" +
+    return '<div class="cafl' + (warn ? " warn" : "") + (late ? " late" : "") + '" style="' + cst + '"><p><b>Koffein ' + Math.round(tot) + " mg</b> · jetzt ≈ " + Math.round(left) + " mg" + (gut >= 5 ? " (+" + Math.round(gut) + " kommen noch)" : " im Körper") + (until ? "" : ib("caf")) + "</p>" +
       '<div class="cafbar"><span>Schlafen ' + bt.hm + '</span><span class="nb" role="img" aria-label="Zur Schlafenszeit noch etwa ' + Math.round(atBed) + ' mg"><i class="sc" style="width:' + Math.min(100, Math.max(2, atBed / (2 * CAF_BED) * 100)).toFixed(1) + '%"></i><b></b></span><span class="cbed">≈ ' + Math.round(atBed) + " mg</span></div>" +
       cafChart(cs, now, bt) + (until ? '<p class="small muted">' + until + ib("caf") + "</p>" : "") + "</div>" +
-      itx("caf", "Bis 400 mg am Tag und 200 mg auf einmal gelten für Erwachsene als unbedenklich (EFSA)" + (warn ? " – heute liegst du darüber" : "") + ". Für den Schlaf zählt, was beim Zubettgehen noch im Körper ist: Laut einer Auswertung von 24 Studien (Gardiner u. a. 2023) sollte Kaffee mindestens etwa 9 Stunden, ein Booster etwa 13 Stunden vor dem Schlafen getrunken werden. Umgerechnet sind das jeweils noch rund 30 mg. Die Leiste zeigt, was zur Schlafenszeit noch im Körper ist: grün bis etwa 15 mg, dann gelb, orange ab 30 mg (Strich in der Mitte), rot ab 45 mg. Die App rechnet mit einer Halbwertszeit von 5 Stunden; je nach Mensch sind es 3–7 h, die Werte sind also Richtwerte. Deine Schlafenszeit stellst du unter Daten → Persönlich ein. Werte der Getränke sind Durchschnitte; für eigene Produkte trag den Koffeingehalt unter Daten → Essen ein.");
+      itx("caf", "Bis 400 mg am Tag und 200 mg auf einmal gelten für Erwachsene als unbedenklich (EFSA)" + (warn ? " – heute liegst du darüber" : "") + ". Für den Schlaf zählt, was beim Zubettgehen noch im Körper ist: Laut einer Auswertung von 24 Studien (Gardiner u. a. 2023) sollte Kaffee mindestens etwa 9 Stunden, ein Booster etwa 13 Stunden vor dem Schlafen getrunken werden. Umgerechnet sind das jeweils noch rund 30 mg. Die Leiste zeigt, was zur Schlafenszeit noch im Körper ist: grün bis etwa 15 mg, dann gelb, orange ab 30 mg (Strich in der Mitte), rot ab 45 mg. Die App rechnet so: Koffein kommt über etwa eine Dreiviertelstunde ins Blut (Höchstwert nach ≈ 45 min, in Wirklichkeit je nach Magen 30 min bis 2 h) und wird mit einer Halbwertszeit von 5 Stunden abgebaut (je nach Mensch 3–7 h). Die Werte sind also Richtwerte. Deine Schlafenszeit stellst du unter Daten → Persönlich ein. Werte der Getränke sind Durchschnitte; für eigene Produkte trag den Koffeingehalt unter Daten → Essen ein.");
   }
   function foodBlock(t, E, di, mc, head, stats) {
     var fd = foodDoc(), day = S.nutri["n_" + t], ent = day ? day.entries.slice() : [];
