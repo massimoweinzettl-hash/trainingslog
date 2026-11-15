@@ -465,6 +465,10 @@ button.danger { color: var(--bad) }
 .nutp { margin-bottom: 6px }
 .dlyline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px } .dchip { min-height: 32px; padding: 4px 10px; font-size: 13px; border-radius: 16px }
 .dchip[aria-pressed="true"] { background: var(--good-soft); border-color: var(--good); color: var(--ink) } .dchip[aria-pressed="false"] { color: var(--muted); text-decoration: line-through }
+#report { position: fixed; inset: 0; z-index: 30; overflow-y: auto; background: #fff; -webkit-overflow-scrolling: touch; overscroll-behavior: contain }
+#report .rtool { position: sticky; top: 0; z-index: 1; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; padding: calc(8px + env(safe-area-inset-top)) 12px 8px; background: var(--surface); border-bottom: 1px solid var(--line) }
+body.reporting { overflow: hidden }
+@media print { body.reporting > *:not(#report) { display: none !important } body.reporting { overflow: visible; background: #fff } #report { position: static; overflow: visible } #report .rtool { display: none } }
 .cafl { margin: 0 0 10px; padding: 8px 10px; font-size: 14px; border-radius: 10px; background: var(--sunken) } .cafl p { margin: 0 } .cafl p + p { margin-top: 2px } .cafl.warn b { color: var(--bad) } .cafl.late { background: var(--warn-soft) } .cafl.late .cbed { color: var(--warn); font-weight: 600 }
 .dlrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 14px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px }
 .dlrow > span { grid-column: 1 / 3; grid-row: 1 } .dlrow > button { grid-column: 3; grid-row: 1 } .dlrow > .dlamt { grid-row: 2 } .dlrow > .dlamt + .dlamt { grid-column: 2 / 4; justify-self: start }
@@ -705,7 +709,7 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 107;
+  var APP_VERSION = 108;
   var CHANGES = [
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
@@ -782,6 +786,7 @@ button, select, input { touch-action: manipulation }
     { v: 49, tab: "data", text: "Wenn der Speicher voll ist, warnt die App deutlich und bittet um ein Backup. Neue Versionen meldet sie mit einem Knopf „Neu laden“." },
     { v: 50, tab: "data", text: "Neu im Katalog: „Hohes Rudern Maschine“ mit eigenem Bild. Klimmzüge und Dips haben neue Bilder von der Seite, mit Zusatzgewicht am Gürtel." },
     { v: 51, tab: "data", text: "Größerer Speicher: Nach einem Backup ziehen deine Daten automatisch in den neuen Speicher (IndexedDB) um. Jeder Eintrag wird dabei geprüft, der alte Speicher bleibt 4 Wochen als Reserve. Antwortet der Speicher einmal nicht, zeigt die App einen Hinweis statt einer leeren Seite. Sonst ändert sich für dich nichts." },
+    { v: 108, tab: "data", text: "Neu unter Daten → Sicherung: „Bericht für den Arzt“. Zeitraum und Inhalt (Körper, Ernährung, Vitamine & Supplements, Training) wählen, dann als PDF drucken oder als Datei teilen – mit Diagrammen und Wochentabellen." },
     { v: 107, tab: "home", text: "Koffein und Schlaf: Die App rechnet jetzt mit deiner Schlafenszeit (Daten → Persönlich) statt fest mit 23 Uhr. Die Koffeinzeile zeigt, wie viel beim Zubettgehen noch im Körper ist (orange ab 30 mg) und bis wann ein Kaffee noch geht." },
     { v: 106, tab: "home", text: "Uhrzeit eines Essens ändern: Das Auswahlrad bleibt jetzt offen, bis du Stunden und Minuten eingestellt hast." },
     { v: 105, tab: "home", text: "Koffein steht jetzt ganz oben über den Kalorien, sobald du etwas mit Koffein einträgst. Kaffee schwarz, schwarzer und grüner Tee trägst du jetzt in ml ein (Vorschlag 200 ml). Die Suche beim Eintragen ist robuster: Antippen eines Treffers geht nicht mehr verloren, wenn die iPhone-Autokorrektur dazwischenfunkt." },
@@ -3380,6 +3385,149 @@ button, select, input { touch-action: manipulation }
     });
     return csv(rows);
   }
+  /* ---------- Bericht für den Arzt (seit v108, Wunsch des Nutzers) ----------
+     Druckfertige Seite mit wählbarem Zeitraum und Abschnitten. Immer hell (eigene Farben in REP_CSS, auch für die Datei zum Teilen).
+     Drucken/PDF über window.print() (Safari/Web-App); in der iPhone-App (Capacitor) nur „Als Datei teilen“. */
+  var REP_P = [["28", "4 Wochen"], ["91", "3 Monate"], ["182", "6 Monate"], ["365", "1 Jahr"], ["x", "Frei"]];
+  var REP_S = [["body", "Körper"], ["food", "Ernährung"], ["nut", "Vitamine & Supplements"], ["train", "Training"]];
+  var REP_CSS = ".rep{--i:#16181d;--m:#5b6270;--l:#d9dce3;--s:#f3f4f7;--a:#2747d6;--f:#7048e8;--o:#d9480f;--g:#2b8a3e;--w:#b35c00;color:var(--i);background:#fff;font:13px/1.45 -apple-system,'Inter',system-ui,sans-serif;max-width:760px;margin:0 auto;padding:22px 20px 40px}" +
+    ".rep h1{font-size:22px;margin:0 0 2px}.rep h2{font-size:16px;margin:22px 0 8px;padding-top:12px;border-top:2px solid var(--i);break-after:avoid}.rep h3{font-size:13px;margin:14px 0 6px;break-after:avoid}" +
+    ".rep .rmeta{color:var(--m);margin:0 0 4px}.rep p{margin:4px 0}.rep .rnote{color:var(--m);font-size:11.5px}.rep table{width:100%;border-collapse:collapse;margin:6px 0 4px;font-variant-numeric:tabular-nums}" +
+    ".rep th,.rep td{padding:3px 6px;border-bottom:1px solid var(--l);text-align:right;white-space:nowrap}.rep th:first-child,.rep td:first-child{text-align:left;white-space:normal}.rep th{font-size:11.5px;color:var(--m);font-weight:600;border-bottom:1.5px solid var(--i);text-transform:none;letter-spacing:0;white-space:normal;vertical-align:bottom;line-height:1.2}.rep th small{display:block;font-weight:400}.rep .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}" +
+    ".rep tr{break-inside:avoid}.rep .hi{color:var(--o);font-weight:700}.rep .lo{color:var(--a)}.rep .ok{color:var(--g)}.rep svg{display:block;width:100%;height:auto;margin:4px 0;break-inside:avoid}" +
+    ".rep svg text{font:12px -apple-system,'Inter',system-ui,sans-serif;fill:var(--m)}.rep .rleg{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--m);font-size:11.5px}.rep .rleg i{display:inline-block;width:16px;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:4px}" +
+    ".rep .rgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}.rep .rgrid div{background:var(--s);border-radius:8px;padding:6px 8px}.rep .rgrid b{display:block;font-size:16px}.rep .rgrid span{color:var(--m);font-size:11px}" +
+    "@media print{.rep .tw{overflow:visible}}@media (max-width:520px){.rep .rgrid{grid-template-columns:repeat(2,1fr)}.rep{padding:16px 12px 30px}.rep th,.rep td{padding:3px 4px}}@page{margin:14mm}";
+  function repRange() {
+    var t = today(), p = S.repP || "91";
+    if (p !== "x") return { from: addDays(t, -(+p) + 1), to: t };
+    var f = DRE.test(S.repFrom || "") ? S.repFrom : addDays(t, -90), to = DRE.test(S.repTo || "") ? S.repTo : t;
+    if (to > t) to = t; if (f > to) f = to; return { from: f, to: to };
+  }
+  function repBlock() {
+    var r = repRange(), sec = S.repSec || { body: 1, food: 1, nut: 1, train: 1 };
+    return '<div class="block" id="repblk"><h2>Bericht für den Arzt' + ib("rep") + "</h2>" + itx("rep", "Fasst deine Daten im gewählten Zeitraum übersichtlich zusammen: Diagramme und Wochentabellen. „Bericht erstellen“ öffnet die Seite; mit „Drucken / PDF“ speicherst du sie als PDF (im Druckdialog mit zwei Fingern auf die Vorschau aufziehen oder „Teilen“ wählen) oder schickst sie direkt weiter. In der iPhone-App aus Xcode gibt es nur „Als Datei teilen“; die Datei öffnest du z. B. in Safari und druckst sie dort als PDF.") +
+      '<div class="chips" role="group" aria-label="Zeitraum">' + REP_P.map(function (x) { return '<button data-act="repp" data-id="' + x[0] + '" aria-pressed="' + ((S.repP || "91") === x[0]) + '">' + x[1] + "</button>"; }).join("") + "</div>" +
+      ((S.repP || "91") === "x" ? '<div class="row"><label style="flex:1 1 140px">Von<input type="date" id="rep-from" value="' + r.from + '" max="' + today() + '"></label><label style="flex:1 1 140px">Bis<input type="date" id="rep-to" value="' + r.to + '" max="' + today() + '"></label></div>' : '<p class="small muted">' + dlong(r.from) + " bis " + dlong(r.to) + "</p>") +
+      '<div class="chips" role="group" aria-label="Inhalt">' + REP_S.map(function (x) { return '<button data-act="reps" data-id="' + x[0] + '" aria-pressed="' + !!sec[x[0]] + '">' + x[1] + "</button>"; }).join("") + "</div>" +
+      '<div class="row"><label style="flex:1 1 200px">Name im Bericht (optional, wird nicht gespeichert)<input id="rep-name" autocomplete="off" maxlength="60"></label></div>' +
+      '<div class="row"><button class="primary" data-act="repgo">Bericht erstellen</button></div></div>';
+  }
+  function repDays(from, to) { var o = [], d = from; while (d <= to && o.length < 3700) { o.push(d); d = addDays(d, 1); } return o; }
+  function repWeeks(days) { var w = [], cur = null; days.forEach(function (d) { var wd = (dateOf(d).getDay() + 6) % 7; if (!cur || wd === 0) { cur = { from: d, days: [] }; w.push(cur); } cur.days.push(d); }); return w; }
+  function rf(v, d) { return v == null || isNaN(v) ? "–" : fmt(Math.round(v * Math.pow(10, d || 0)) / Math.pow(10, d || 0)); }
+  function avg(a) { a = a.filter(function (x) { return x != null && !isNaN(x); }); return a.length ? a.reduce(function (s, x) { return s + x; }, 0) / a.length : null; }
+  /* Liniendiagramm: Reihen [{pts:[[Datum,Wert]], col, dash, ax:"l"|"r", dot}], Balken [{d, v, col}], Ziellinie [[Datum,Wert]]. */
+  function repChart(days, o) {
+    var W = 720, H = o.h || 220, L = 40, R = o.right ? 40 : 12, T = 10, B = 26, n = days.length, x = function (d) { return L + (days.indexOf(d) + 0.5) / n * (W - L - R); };
+    var ax = function (vals) { vals = vals.filter(function (v) { return v != null && !isNaN(v); }); if (!vals.length) return null; var lo = Math.min.apply(0, vals), hi = Math.max.apply(0, vals); if (hi - lo < (o.minSpan || 1)) { var mm = (hi + lo) / 2; lo = mm - (o.minSpan || 1) / 2; hi = mm + (o.minSpan || 1) / 2; } var pd = (hi - lo) * 0.1; lo -= pd; hi += pd; if (o.zero) lo = 0; return { lo: lo, hi: hi }; };
+    var la = ax([].concat.apply([], (o.series || []).filter(function (s) { return s.ax !== "r"; }).map(function (s) { return s.pts.map(function (p) { return p[1]; }); })).concat((o.bars || []).map(function (b) { return b.v; }), (o.goal || []).map(function (p) { return p[1]; })));
+    var ra = ax([].concat.apply([], (o.series || []).filter(function (s) { return s.ax === "r"; }).map(function (s) { return s.pts.map(function (p) { return p[1]; }); })));
+    var y = function (v, a) { return T + (a.hi - v) / (a.hi - a.lo) * (H - T - B); }, g = "";
+    var ticks = function (a, side) { if (!a) return; var raw = (a.hi - a.lo) / 4, mag = Math.pow(10, Math.floor(Math.log10(raw))), st = [1, 2, 2.5, 5, 10].filter(function (m) { return m * mag >= raw; })[0] * mag;
+      for (var v = Math.ceil(a.lo / st) * st; v <= a.hi + 1e-9; v += st) { var yy = y(v, a).toFixed(1); if (side === "l") g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy + '" stroke="#e6e8ee"/>'; g += '<text x="' + (side === "l" ? L - 4 : W - R + 4) + '" y="' + (+yy + 3) + '" text-anchor="' + (side === "l" ? "end" : "start") + '"' + (side === "r" ? ' style="fill:' + o.rcol + '"' : "") + ">" + fmt(Math.round(v * 10) / 10) + "</text>"; } };
+    if (la) ticks(la, "l"); if (ra) ticks(ra, "r");
+    var step = Math.max(1, Math.ceil(n / 8));
+    days.forEach(function (d, i) { var wd = dateOf(d).getDay(); if (n > 60 ? d.slice(8) === "01" : n > 14 ? wd === 1 && (Math.floor(i / 7) % Math.ceil(n / 56) === 0) : i % step === 0) g += '<text x="' + x(d).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + dfmt(d) + "</text>"; });
+    var bw = Math.max(1, (W - L - R) / n * 0.7);
+    if (la) (o.bars || []).forEach(function (b) { if (b.v > 0) g += '<rect x="' + (x(b.d) - bw / 2).toFixed(1) + '" y="' + y(b.v, la).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(0, y(la.lo < 0 ? 0 : la.lo, la) - y(b.v, la)).toFixed(1) + '" fill="' + b.col + '"/>'; });
+    if (la && o.goal && o.goal.length) g += '<path d="' + o.goal.map(function (p, i) { return (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1], la).toFixed(1); }).join(" ") + '" fill="none" stroke="#16181d" stroke-width="1.2" stroke-dasharray="4 3"/>';
+    (o.series || []).forEach(function (s) { var a = s.ax === "r" ? ra : la; if (!a || !s.pts.length) return;
+      if (s.pts.length > 1) g += '<path d="' + s.pts.map(function (p, i) { return (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1], a).toFixed(1); }).join(" ") + '" fill="none" stroke="' + s.col + '" stroke-width="2"' + (s.dash ? ' stroke-dasharray="5 4"' : "") + ' stroke-linejoin="round"/>';
+      if (s.dot !== false && s.pts.length <= 120) s.pts.forEach(function (p) { g += '<circle cx="' + x(p[0]).toFixed(1) + '" cy="' + y(p[1], a).toFixed(1) + '" r="2" fill="' + s.col + '"/>'; }); });
+    return '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(o.label || "Diagramm") + '">' + g + "</svg>";
+  }
+  function repHtml(opt) {
+    var from = opt.from, to = opt.to, days = repDays(from, to), weeks = repWeeks(days), P = S.person || {}, h = "";
+    var age = P.year ? new Date().getFullYear() - P.year : null, inR = function (d) { return d >= from && d <= to; };
+    h += "<h1>Trainingslog – Bericht" + (opt.name ? " für " + esc(opt.name) : "") + "</h1>" +
+      '<p class="rmeta">Zeitraum ' + dlong(from) + " bis " + dlong(to) + " (" + days.length + " Tage) · erstellt am " + dlong(today()) + "</p>" +
+      '<p class="rmeta">' + [P.sex ? (P.sex === "w" ? "weiblich" : "männlich") : "", age != null ? age + " Jahre" : "", P.height ? fmt(P.height) + " cm" : ""].filter(Boolean).join(" · ") + "</p>";
+    var phs = (S.phases || []).map(function (p, i, a) { return { type: p.type, start: p.start, end: a[i + 1] ? addDays(a[i + 1].start, -1) : null, goal: p.goal }; }).filter(function (p) { return p.start <= to && (!p.end || p.end >= from); });
+    if (phs.length) h += '<p class="rmeta">Phasen: ' + phs.map(function (p) { return PH[p.type] + " " + dlong(p.start > from ? p.start : from) + "–" + (p.end && p.end < to ? dlong(p.end) : dlong(to)) + (isN(p.goal) && p.type !== "maintain" ? " (Ziel " + fmt(p.goal) + " kg)" : ""); }).join(" · ") + "</p>";
+    var bl = bodyList(), bin = bl.filter(function (b) { return inR(b.date); });
+    /* Körper */
+    if (opt.sec.body) {
+      h += "<h2>Körper</h2>";
+      if (!bin.length) h += '<p class="rnote">Keine Messungen im Zeitraum.</p>';
+      else {
+        var wp = bin.filter(function (b) { return b.weight != null; }).map(function (b) { return [b.date, b.weight]; });
+        var fAll = bl.filter(function (b) { return b.fat != null; }), fp = fAll.filter(function (b) { return inR(b.date); }).map(function (b) { var lo = addDays(b.date, -6); return [b.date, avg(fAll.filter(function (y) { return y.date >= lo && y.date <= b.date; }).map(function (y) { return y.fat; }))]; });
+        var first = wp[0], last = wp[wp.length - 1];
+        h += '<div class="rgrid"><div><span>Gewicht Beginn</span><b>' + (first ? rf(first[1], 1) + " kg" : "–") + '</b></div><div><span>Gewicht Ende</span><b>' + (last ? rf(last[1], 1) + " kg" : "–") + '</b></div><div><span>Veränderung</span><b>' + (first && last ? (last[1] - first[1] > 0 ? "+" : "") + rf(last[1] - first[1], 1) + " kg" : "–") + '</b></div><div><span>Körperfett (7-T.-Schnitt)</span><b>' + (fp.length ? rf(fp[0][1], 1) + " → " + rf(fp[fp.length - 1][1], 1) + " %" : "–") + "</b></div></div>";
+        if (wp.length > 1 || fp.length > 1) h += repChart(days, { label: "Gewicht und Körperfett", right: fp.length > 1, rcol: "#7048e8", minSpan: 2, series: [{ pts: wp, col: "#2747d6" }].concat(fp.length > 1 ? [{ pts: fp, col: "#7048e8", dash: 1, ax: "r" }] : []) }) +
+          '<div class="rleg"><span><i style="border-color:#2747d6"></i>Gewicht (kg, links)</span>' + (fp.length > 1 ? '<span><i style="border-color:#7048e8;border-top-style:dashed"></i>Körperfett (%, rechts, 7-Tage-Schnitt)</span>' : "") + "</div>";
+        var cols = BM.filter(function (f) { return bin.some(function (b) { return bodyVal(b, f[0]) != null; }); });
+        h += "<h3>Wochenwerte (Mittel der Messungen)</h3><div class=tw><table><thead><tr><th>Woche ab</th><th>Mess.</th>" + cols.map(function (f) { return "<th>" + esc(f[0] === "fat" ? "KFA" : f[0] === "ffm" ? "Fettfrei" : f[1]) + "<small>" + f[2] + "</small></th>"; }).join("") + "</tr></thead><tbody>" +
+          weeks.map(function (w) { var bs = bin.filter(function (b) { return w.days.indexOf(b.date) >= 0; }); if (!bs.length) return ""; return "<tr><td>" + dlong(w.from) + "</td><td>" + bs.length + "</td>" + cols.map(function (f) { return "<td>" + rf(avg(bs.map(function (b) { return bodyVal(b, f[0]); })), 1) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table></div>";
+      }
+    }
+    /* Ernährung */
+    var E = energy(bl), nd = function (d) { var x = S.nutri["n_" + d]; return x && x.entries.length ? x : null; };
+    if (opt.sec.food) {
+      h += "<h2>Ernährung</h2>";
+      var logged = days.filter(nd);
+      if (!logged.length) h += '<p class="rnote">Keine Essenseinträge im Zeitraum.</p>';
+      else {
+        var tot = function (d, k) { return nd(d).entries.reduce(function (s, e) { return s + (e[k] || 0); }, 0); }, goalOf = function (d) { return E ? dayKcal(d, E, workoutsOn(d).length > 0).kcal : null; };
+        var ka = avg(logged.map(function (d) { return tot(d, "kcal"); })), ga = avg(logged.map(goalOf)), pa = avg(logged.map(function (d) { return tot(d, "p"); }));
+        h += '<div class="rgrid"><div><span>Tage mit Einträgen</span><b>' + logged.length + " / " + days.length + '</b></div><div><span>Kalorien Ø/Tag</span><b>' + rf(ka) + '</b></div><div><span>Ziel Ø/Tag</span><b>' + (ga != null ? rf(ga) : "–") + '</b></div><div><span>Eiweiß Ø/Tag</span><b>' + rf(pa) + " g</b></div></div>";
+        h += repChart(days, { label: "Kalorien pro Tag", zero: true, bars: logged.map(function (d) { var k = tot(d, "kcal"), g = goalOf(d); return { d: d, v: k, col: g && k > g * 1.1 ? "#d9480f" : "#2b8a3e" }; }), goal: E ? days.map(function (d) { return [d, goalOf(d)]; }) : null }) +
+          '<div class="rleg"><span><i style="border-color:#2b8a3e;border-top-width:6px"></i>Kalorien (Tage mit Einträgen)</span><span><i style="border-color:#d9480f;border-top-width:6px"></i>mehr als 10 % über dem Ziel</span>' + (E ? '<span><i style="border-color:#16181d;border-top-style:dashed"></i>Ziel</span>' : "") + "</div>";
+        h += "<h3>Wochenwerte (Ø pro Tag mit Einträgen)</h3><div class=tw><table><thead><tr><th>Woche ab</th><th>Tage</th><th>kcal</th><th>Ziel</th><th>Eiweiß (g)</th><th>Fett (g)</th><th>KH (g)</th></tr></thead><tbody>" +
+          weeks.map(function (w) { var ds = w.days.filter(nd); if (!ds.length) return ""; var k = avg(ds.map(function (d) { return tot(d, "kcal"); })), g = E ? avg(ds.map(goalOf)) : null;
+            return "<tr><td>" + dlong(w.from) + "</td><td>" + ds.length + "</td><td" + (g && k > g * 1.1 ? ' class="hi"' : "") + ">" + rf(k) + "</td><td>" + (g != null ? rf(g) : "–") + "</td><td>" + rf(avg(ds.map(function (d) { return tot(d, "p"); }))) + "</td><td>" + rf(avg(ds.map(function (d) { return tot(d, "f"); }))) + "</td><td>" + rf(avg(ds.map(function (d) { return tot(d, "c"); }))) + "</td></tr>"; }).join("") + "</tbody></table></div>" +
+          (E ? '<p class="rnote">Das Ziel ist eine Schätzung der App (Grundumsatz, Alltag, Training, Phase) nach heutigem Stand.</p>' : "");
+      }
+    }
+    /* Vitamine & Supplements */
+    if (opt.sec.nut) {
+      h += "<h2>Vitamine, Mineralstoffe & Supplements</h2>";
+      var ndays = days.filter(function (d) { var x = nd(d); return x && x.entries.some(function (e) { return Array.isArray(e.n); }); }), r = nutSum(ndays), dv = Math.max(1, r.days), cov = r.tk ? Math.round(r.ck / r.tk * 100) : 0, kd = r.tk / dv;
+      if (!r.n) h += '<p class="rnote">Keine Nährstoffdaten im Zeitraum (erfasst erst seit Version 99 der App, 15.11.2026).</p>';
+      else {
+        h += '<p class="rnote">Ø pro Tag über ' + r.days + " Tage mit Nährstoffwerten (" + (ndays.length ? dlong(ndays[0]) + "–" + dlong(ndays[ndays.length - 1]) : "") + "). Mit Nährstoffwerten erfasst: " + cov + " % der Kalorien – Werte aus Lebensmitteln sind daher eher zu niedrig. Supplements zählen voll. Empfehlung: DGE/ÖGE-Referenzwerte, Obergrenze: EFSA.</p>" +
+          "<div class=tw><table><thead><tr><th>Nährstoff</th><th>Ø/Tag</th><th>davon Präparate</th><th>Empfehlung</th><th>%</th></tr></thead><tbody>" +
+          NUTK.map(function (n, i) { var v = r.n[i]; if (v == null) return ""; v = v / dv; var sp = r.s && r.s[i] != null ? r.s[i] / dv : 0, ref = nutRef(i, kd), ul = NUTUL[n[0]], uls = NUTULS[n[0]], pc = ref ? v / ref * 100 : null;
+            var over = ul && v > ul || uls && sp > uls, cls = n[6] === "max" ? (ref && v > ref ? "hi" : "ok") : over ? "hi" : n[6] === "min" && pc != null && pc < 70 ? "lo" : "";
+            return "<tr><td>" + esc(n[1]) + (over ? " (über Obergrenze " + fmt(ul || uls) + " " + n[2] + ")" : "") + '</td><td class="' + cls + '">' + rf(nutRound(v), v < 10 ? 1 : 0) + " " + n[2] + "</td><td>" + (sp ? rf(nutRound(sp), sp < 10 ? 1 : 0) : "–") + "</td><td>" + (n[6] === "info" ? "–" : (n[6] === "max" ? "max. " : "") + rf(nutRound(ref), ref < 10 ? 1 : 0)) + "</td><td>" + (pc != null && n[6] !== "info" ? Math.round(pc) + " %" : "–") + "</td></tr>"; }).join("") + "</tbody></table></div>";
+      }
+      var fd = foodDoc(), dl = (fd.daily || []).filter(function (x) { return x.from <= to && (!x.to || x.to >= from); });
+      h += "<h3>Supplements (tägliche Einnahme)</h3>" + (dl.length ? "<div class=tw><table><thead><tr><th>Präparat</th><th>Menge/Tag</th><th>von</th><th>bis</th></tr></thead><tbody>" + dl.map(function (x) { var it = foodItem(fd, x.item); return "<tr><td>" + esc(it ? it.name : "?") + "</td><td>" + fmt(x.amt) + (it && it.per !== "st" ? " " + it.per : "") + "</td><td>" + dlong(x.from) + "</td><td>" + (x.to ? dlong(x.to) : "laufend") + "</td></tr>"; }).join("") + "</tbody></table></div>" : '<p class="rnote">Keine im Zeitraum.</p>');
+      var cd = days.filter(nd).map(function (d) { return nd(d).entries.reduce(function (s, e) { return s + (e.caf || 0); }, 0); }).filter(function (c) { return c > 0; });
+      if (cd.length) h += "<h3>Koffein</h3><p>Ø " + rf(avg(cd)) + " mg an " + cd.length + " Tagen mit Koffein, höchster Tag " + rf(Math.max.apply(0, cd)) + " mg" + (Math.max.apply(0, cd) > 400 ? ' <span class="hi">(über 400 mg, EFSA)</span>' : "") + ".</p>";
+    }
+    /* Training */
+    if (opt.sec.train) {
+      h += "<h2>Training</h2>";
+      var ws = sortedWorkouts().filter(function (o) { return inR(o.w.date); });
+      if (!ws.length) h += '<p class="rnote">Keine Trainingseinheiten im Zeitraum.</p>';
+      else {
+        var names = {}; (S.plan && S.plan.lib || []).forEach(function (e) { names[e.id] = e.name; }); (S.plan && S.plan.days || []).forEach(function (d) { d.exercises.forEach(function (e) { names[e.id] = e.name; }); });
+        var sets = function (o) { return (o.w.entries || []).reduce(function (s, e) { return s + workSets(e).length; }, 0); };
+        h += '<div class="rgrid"><div><span>Einheiten</span><b>' + ws.length + '</b></div><div><span>pro Woche Ø</span><b>' + rf(ws.length / (days.length / 7), 1) + '</b></div><div><span>Arbeitssätze</span><b>' + ws.reduce(function (s, o) { return s + sets(o); }, 0) + '</b></div><div><span>Sätze/Einheit Ø</span><b>' + rf(avg(ws.map(sets))) + "</b></div></div>";
+        h += "<h3>Einheiten pro Woche</h3><div class=tw><table><thead><tr><th>Woche ab</th><th>Einheiten</th><th>Sätze</th><th>Trainingstage</th></tr></thead><tbody>" + weeks.map(function (w) { var o = ws.filter(function (x) { return w.days.indexOf(x.w.date) >= 0; }); return "<tr><td>" + dlong(w.from) + "</td><td>" + o.length + "</td><td>" + o.reduce(function (s, x) { return s + sets(x); }, 0) + "</td><td>" + esc(o.map(function (x) { return x.w.dayName || ""; }).filter(Boolean).join(", ")) + "</td></tr>"; }).join("") + "</tbody></table></div>";
+        var ex = {}; ws.forEach(function (o) { (o.w.entries || []).forEach(function (e) { var b = 0; workSets(e).forEach(function (s) { if (s.w > 0 && s.r > 0) b = Math.max(b, s.r === 1 ? s.w : s.w * (1 + s.r / 30)); }); var k = e.exId || e.name; ex[k] = ex[k] || { name: names[e.exId] || e.name, n: 0, a: null, z: null }; ex[k].n++; if (b) { if (ex[k].a == null) ex[k].a = b; ex[k].z = b; } }); });
+        var el = Object.keys(ex).map(function (k) { return ex[k]; }).sort(function (a, b) { return b.n - a.n || a.name.localeCompare(b.name, "de"); });
+        h += "<h3>Übungen (geschätztes Maximalgewicht 1RM, erste und letzte Einheit)</h3><div class=tw><table><thead><tr><th>Übung</th><th>Einh.</th><th>1RM Beginn</th><th>1RM Ende</th><th>Veränderung</th></tr></thead><tbody>" +
+          el.map(function (e) { var d = e.a && e.z && e.n > 1 ? (e.z / e.a - 1) * 100 : null; return "<tr><td>" + esc(e.name) + "</td><td>" + e.n + "</td><td>" + (e.a ? rf(e.a, 1) + " kg" : "–") + "</td><td>" + (e.z && e.n > 1 ? rf(e.z, 1) + " kg" : "–") + '</td><td class="' + (d == null ? "" : d >= 0 ? "ok" : "lo") + '">' + (d == null ? "–" : (d > 0 ? "+" : "") + Math.round(d) + " %") + "</td></tr>"; }).join("") + "</tbody></table></div>" +
+          '<p class="rnote">1RM geschätzt nach Epley: Gewicht × (1 + Wiederholungen / 30), bestes Ergebnis der Arbeitssätze je Einheit.</p>';
+      }
+    }
+    h += '<p class="rnote" style="margin-top:20px">Alle Werte hat die Person selbst in der App „Trainingslog“ erfasst. Kalorienziel, 1RM und Nährstoffe sind Schätzungen (Nährwerte: Bundeslebensmittelschlüssel 4.0, Max Rubner-Institut; Referenzwerte: DGE/ÖGE; Obergrenzen: EFSA). Körperfett von der Körperfettwaage (bioelektrische Impedanz) bzw. aus Maßband-Messungen.</p>';
+    return '<div class="rep">' + h + "</div>";
+  }
+  function repOpen() {
+    var r = repRange(), sec = S.repSec || { body: 1, food: 1, nut: 1, train: 1 }, nm = ($("rep-name") && $("rep-name").value || "").trim().slice(0, 60);
+    if (!REP_S.some(function (x) { return sec[x[0]]; })) { alert0("Bitte mindestens einen Bereich wählen."); return; }
+    var html = repHtml({ from: r.from, to: r.to, sec: sec, name: nm }), ov = $("report");
+    if (!ov) { ov = document.createElement("div"); ov.id = "report"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", "Bericht"); document.body.appendChild(ov); }
+    var app = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    ov.innerHTML = "<style>" + REP_CSS + "</style>" + '<div class="rtool"><button data-act="repclose">Schließen</button>' + (app ? "" : '<button class="primary" data-act="repprint">Drucken / PDF</button>') + '<button data-act="repshare">Als Datei teilen</button></div>' + html;
+    ov.hidden = false; ov.scrollTop = 0; document.body.classList.add("reporting");
+    S.repDoc = { html: html, name: "trainingslog-bericht-" + r.from + "-bis-" + r.to + ".html" };
+  }
+  function alert0(msg) { var m = $("repblk") && $("repblk").querySelector(".repmsg"); if (!m && $("repblk")) { m = document.createElement("p"); m.className = "small repmsg fmiss"; $("repblk").appendChild(m); } if (m) m.textContent = msg; }
   /* Reiter „Daten“: Stammdaten (Essen, Übungen, persönliche Angaben) und Sicherung, umschaltbar. */
   var DSEC = [["food", "Essen"], ["ex", "Übungen"], ["me", "Persönlich"], ["save", "Sicherung"], ["help", "Hilfe"]];
   /* ---------- Handbuch (seit v58) ----------
@@ -3391,7 +3539,7 @@ button, select, input { touch-action: manipulation }
     ["Fortschritt", "<ul><li><b>Schwerpunkt:</b> geschätztes Maximum (1RM), Veränderung in der Phase, Rekord und nächster Krafttest.</li><li><b>Verlauf pro Übung</b> als 1RM, schwerstes Gewicht oder Volumen.</li><li><b>Kraft nach Körperbereichen:</b> Körperkarte (orange = gleich, tiefrot = ab +20 %, graublau = schwächer; mit ▶ oder Regler im Zeitraffer) und Prozent für Ober- und Unterkörper, wie sehr dein geschätztes Maximum im Zeitraum gestiegen ist. Varianten einer Muskelgruppe zählen gemeinsam. Mit dem Zeitraum „Phase“ siehst du, ob du im Cut deine Kraft hältst. Im Diagramm wählst du, welche Bereiche als Linie erscheinen.</li><li><b>Sätze pro Muskelgruppe:</b> 10–20 Sätze pro Woche sind ein üblicher Bereich für Muskelaufbau.</li><li><b>Rekorde</b> und Krafttest-Ergebnisse.</li></ul>"],
     ["Körper", "<ul><li><b>Gewichtsdiagramm:</b> Gewicht mit Zielkorridor; hast du Körperfettwerte, läuft das Körperfett als gestrichelte Linie mit (7-Tage-Schnitt, Skala rechts).</li><li><b>Messwerte:</b> Gewicht, Körperfett und Umfänge. Ohne Körperfettwaage reicht ein Maßband: Taille auf Höhe des Bauchnabels und Hals, bei Frauen zusätzlich die Hüfte an der breitesten Stelle.</li><li><b>Phasen:</b> Cut, Aufbau oder Halten mit Zeitraum und Zielgewicht. Der Korridor zeigt, ob du im Plan liegst, und schlägt Aufholen oder Neustart vor.</li><li><b>Kalorien und Makros:</b> Der Grundumsatz kommt aus Gewicht, Größe, Alter und Geschlecht, mit Körperfett genauer über die fettfreie Masse. Trägst du dein Essen ein, lernt die App nach zwei Wochen deinen echten Bedarf aus dem Gewichtsverlauf.</li></ul>"],
     ["Plan", "<ul><li><b>Plan erstellen bzw. neu erstellen:</b> auch über „Plan ändern“ im Reiter Training, z. B. wenn du statt 2 jetzt 4× pro Woche trainierst (die Tage aus deinen Angaben sind vorausgewählt). Tage pro Woche, Dauer und Geräte wählen. Der Assistent zeigt eine Vorschau, mit ↻ tauschst du einzelne Übungen. Danach Plan ersetzen oder Tage hinzufügen; dein Verlauf bleibt.</li><li><b>Sätze pro Woche:</b> oben im Plan, ↓ heißt unter 10, ↑ über 20.</li><li><b>Tage:</b> umbenennen, duplizieren, löschen. Unter dem Tag stehen geschätzte Dauer und Sätze.</li><li><b>Übungen:</b> Reihenfolge mit ↑ ↓, „Verschieben“ zu einem anderen Tag, „Einstellungen“ für Sätze, Wiederholungen und Schritt. In „Übung hinzufügen“ stehen oben Vorschläge für Muskelgruppen mit zu wenig Sätzen.</li><li><b>Plan-Code:</b> wenn Claude deinen Plan anpasst, hier einfügen, prüfen, übernehmen.</li></ul>"],
-    ["Daten", "<ul><li><b>Darstellung:</b> Designs „Hölle“ und „Winter Arc“ über den Berg-Knopf oben neben „Trainingslog“ oder unter „Persönlich“. „Standard“ bringt jederzeit die gewohnte Oberfläche zurück; die Daten bleiben gleich.</li><li><b>Essen:</b> Mit dem Barcode-Symbol neben dem Suchfeld scannst du Produkte mit der Kamera, ohne Internet. Kennt die App einen Barcode nicht, fragt sie mit Internet einmal bei Open Food Facts nach und speichert das Produkt sofort – danach wird es auch offline erkannt. Alles, was du je gescannt hast, steht in der Suche oben unter „Gescannt“. Ohne Internet oder ohne Treffer legst du es selbst an oder ordnest den Barcode einem vorhandenen Lebensmittel zu. Über 550 Lebensmittel und Gerichte sind eingebaut, die Suche findet sie. Mit ☆ markierst du Favoriten, sie stehen beim Eintragen oben. Mahlzeiten aus Lebensmitteln zusammenstellen; für Meal-Prep bei „Ergibt“ die Anzahl Portionen eintragen, dann wird je eine Portion eingetragen. Lebensmittel antippen und Werte von der Verpackung übernehmen; Änderungen an eingebauten Lebensmitteln werden zu deinem eigenen Eintrag.</li><li><b>Übungen:</b> Einstellungen, Bewertung, Schwerpunkt, Muskelgruppe, Zusammenführen doppelter Übungen. „Katalog anpassen“ blendet Übungen aus, die du nie machst.</li><li><b>Persönlich:</b> Angaben für die Kalorien, Trainingstage der Woche, Makros, Profile für mehrere Personen.</li><li><b>Sicherung:</b> Backup speichern und einspielen, Export für Excel.</li></ul>"],
+    ["Daten", "<ul><li><b>Darstellung:</b> Designs „Hölle“ und „Winter Arc“ über den Berg-Knopf oben neben „Trainingslog“ oder unter „Persönlich“. „Standard“ bringt jederzeit die gewohnte Oberfläche zurück; die Daten bleiben gleich.</li><li><b>Essen:</b> Mit dem Barcode-Symbol neben dem Suchfeld scannst du Produkte mit der Kamera, ohne Internet. Kennt die App einen Barcode nicht, fragt sie mit Internet einmal bei Open Food Facts nach und speichert das Produkt sofort – danach wird es auch offline erkannt. Alles, was du je gescannt hast, steht in der Suche oben unter „Gescannt“. Ohne Internet oder ohne Treffer legst du es selbst an oder ordnest den Barcode einem vorhandenen Lebensmittel zu. Über 550 Lebensmittel und Gerichte sind eingebaut, die Suche findet sie. Mit ☆ markierst du Favoriten, sie stehen beim Eintragen oben. Mahlzeiten aus Lebensmitteln zusammenstellen; für Meal-Prep bei „Ergibt“ die Anzahl Portionen eintragen, dann wird je eine Portion eingetragen. Lebensmittel antippen und Werte von der Verpackung übernehmen; Änderungen an eingebauten Lebensmitteln werden zu deinem eigenen Eintrag.</li><li><b>Übungen:</b> Einstellungen, Bewertung, Schwerpunkt, Muskelgruppe, Zusammenführen doppelter Übungen. „Katalog anpassen“ blendet Übungen aus, die du nie machst.</li><li><b>Persönlich:</b> Angaben für die Kalorien, Trainingstage der Woche, Makros, Profile für mehrere Personen.</li><li><b>Sicherung:</b> Backup speichern und einspielen, Export für Excel. <b>Bericht für den Arzt:</b> Zeitraum und Inhalt wählen, „Bericht erstellen“; mit „Drucken / PDF“ als PDF sichern oder weiterschicken, mit „Als Datei teilen“ als Datei (z. B. per Mail). Der Name wird nicht gespeichert.</li></ul>"],
     ["Gut zu wissen", "<ul><li><b>Wischen:</b> Nach links oder rechts wischen wechselt den Reiter. In seitlich scrollenden Diagrammen und Tabellen scrollt weiter der Inhalt.</li><li>Markenprodukte stammen von <b>Open Food Facts</b> (openfoodfacts.org, freie Datenbank, Lizenz ODbL 1.0), Stand 13.11.2026. Die Werte pflegen Nutzer dort selbst – bei Auffälligem kurz mit der Packung vergleichen. Vitamine und Mineralstoffe der Grundlebensmittel stammen aus dem <b>Bundeslebensmittelschlüssel 4.0</b> (Max Rubner-Institut 2025, Karlsruhe, DOI 10.25826/Data20251217-134202-0, Lizenz CC BY 4.0); die Empfehlungen sind die DGE/ÖGE-Referenzwerte. Barcode ins Suchfeld eintippen findet das Produkt, auch ohne Internet.</li><li>Alle Daten liegen nur auf diesem Gerät. Ohne Backup sind sie weg, wenn die App oder die Website-Daten gelöscht werden.</li><li>Neue Versionen kündigt die App mit „Neu laden“ an. Was neu ist, zeigt ein gelber Punkt am Reiter.</li><li>Hinter jedem blauen <b>i</b> steht eine kurze Erklärung.</li></ul>"]
   ];
   function helpHtml() {
@@ -3547,7 +3695,7 @@ button, select, input { touch-action: manipulation }
       "<p>Letztes Backup: <b>" + (ld ? pad(ld.getDate()) + "." + pad(ld.getMonth() + 1) + "." + ld.getFullYear() : "noch keins") + "</b></p>" +
       '<div class="row"><button class="primary" data-act="backup">Backup speichern</button><button data-act="pick">Backup einspielen</button><input type="file" id="impfile" accept=".json,.txt,application/json,text/plain" hidden></div>' +
       '<p class="small muted" id="datamsg">' + esc(old || "Beim Einspielen werden die Einträge aus der Datei ergänzt. Gibt es einen Tag schon, gilt die Version aus der Datei.") + "</p></div>" +
-      '<div class="block"><h2>Export für Excel' + ib("csv") + "</h2>" + itx("csv", "CSV-Dateien mit einer Zeile pro Satz bzw. pro Messung, die Excel direkt öffnet.") + '<div class="row"><button data-act="csvsets">Sätze exportieren</button><button data-act="csvbody">Körperwerte exportieren</button></div></div>' +
+      '<div class="block"><h2>Export für Excel' + ib("csv") + "</h2>" + itx("csv", "CSV-Dateien mit einer Zeile pro Satz bzw. pro Messung, die Excel direkt öffnet.") + '<div class="row"><button data-act="csvsets">Sätze exportieren</button><button data-act="csvbody">Körperwerte exportieren</button></div></div>' + repBlock() +
       profileBlock() + '<div class="row" style="align-items:center;justify-content:space-between"><span class="small muted" id="datacount">' + Object.keys(S.workouts).length + " Einheiten und " + Object.keys(S.body).length + " Messungen gespeichert · Version " + APP_VERSION + "<br>" + esc(storeLine()) + '</span><button class="ghost" data-act="news">Was ist neu?</button></div>';
     }
     el.innerHTML = h;
@@ -4878,7 +5026,7 @@ button, select, input { touch-action: manipulation }
      nicht bei offenen Dialogen, Einrichtung oder Rundgang. */
   var TABS = ["home", "train", "prog", "body", "plan", "data"], SW = null;
   var swBlocked = function (el) {
-    if (document.querySelector(".overlay:not([hidden])") || document.body.classList.contains("touring") || ($("setup") && !$("setup").hidden)) return true;
+    if (document.querySelector(".overlay:not([hidden])") || document.body.classList.contains("reporting") || document.body.classList.contains("touring") || ($("setup") && !$("setup").hidden)) return true;
     for (var n = el; n && n !== document.body; n = n.parentElement) {
       if (/^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName) || n.classList.contains("tabs") || n.classList.contains("cbres") || n.id === "lookpop") return true;
       if (n.scrollWidth > n.clientWidth + 2) { var ox = getComputedStyle(n).overflowX; if (ox === "auto" || ox === "scroll") return true; }
@@ -5157,6 +5305,12 @@ button, select, input { touch-action: manipulation }
       });
     }
     else if (a === "pick") $("impfile").click();
+    else if (a === "repp") { S.repP = id; var yr2 = window.scrollY; renderData(); window.scrollTo(0, yr2); }
+    else if (a === "reps") { S.repSec = Object.assign({ body: 1, food: 1, nut: 1, train: 1 }, S.repSec); S.repSec[id] = S.repSec[id] ? 0 : 1; b.setAttribute("aria-pressed", String(!!S.repSec[id])); }
+    else if (a === "repgo") repOpen();
+    else if (a === "repclose") { $("report").hidden = true; document.body.classList.remove("reporting"); }
+    else if (a === "repprint") window.print();
+    else if (a === "repshare" && S.repDoc) deliver(S.repDoc.name, '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Trainingslog – Bericht</title><style>body{margin:0;background:#fff}' + REP_CSS + "</style></head><body>" + S.repDoc.html + "</body></html>", "text/html");
     else if (a === "csvsets") deliver("trainingslog-saetze-" + today() + ".csv", setsCsv(), "text/csv");
     else if (a === "csvbody") deliver("trainingslog-koerper-" + today() + ".csv", bodyCsv(), "text/csv");
     else if (a === "corrreset" || a === "corrundo") {
@@ -5495,6 +5649,7 @@ button, select, input { touch-action: manipulation }
       if (dq.from < today()) { dq.to = addDays(today(), -1); fdq.daily.push({ id: rid("dl"), item: dq.item, amt: vq, from: today() }); } else dq.amt = vq; /* frühere Tage behalten die alte Menge */
       foodSave(fdq); renderData(); renderHome();
     }
+    else if (t.id === "rep-from" || t.id === "rep-to") { if (DRE.test(t.value)) S[t.id === "rep-from" ? "repFrom" : "repTo"] = t.value; }
     else if (t.id === "pe-bed") { if (S.person) { var pb2 = Object.assign({}, S.person, { bed: t.value !== "23:00" ? t.value : null }); saveSettings(null, pb2); renderHome(); if ($("pemsg")) $("pemsg").textContent = "Schlafenszeit gespeichert."; } }
     else if (t.dataset.dlf) {
       /* v104: Beginn ändern (auch rückwirkend). Ab dem neuen Datum gilt dieser Eintrag; ältere Einträge desselben Präparats werden davor beendet bzw. entfallen, damit nichts doppelt zählt. */
