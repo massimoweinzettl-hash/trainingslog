@@ -482,7 +482,7 @@ button.danger { color: var(--bad) }
 #report .rtool { position: sticky; top: 0; z-index: 1; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; padding: calc(8px + env(safe-area-inset-top)) 12px 8px; background: var(--surface); border-bottom: 1px solid var(--line) }
 body.reporting { overflow: hidden }
 @media print { body.reporting > *:not(#report) { display: none !important } body.reporting { overflow: visible; background: #fff } #report { position: static; overflow: visible } #report .rtool { display: none } }
-.cafl { margin: 0 0 10px; padding: 8px 10px; font-size: 14px; border-radius: 10px; background: var(--sunken) } .cafl p { margin: 0 } .cafl p + p { margin-top: 2px } .cafl.warn b { color: var(--bad) } .tend { margin: 12px 0 4px; display: flex; flex-direction: column; gap: 6px } .tend .primary { align-self: stretch } .tend p { margin: 0 } .tend.done { padding: 10px 12px; border-radius: 10px; background: var(--good-soft) } .tend.done .linkbtn { align-self: flex-start }
+.cafl { margin: 0 0 10px; padding: 8px 10px; font-size: 14px; border-radius: 10px; background: var(--sunken) } .cafl p { margin: 0 } .cafl p + p { margin-top: 2px } .cafl.warn b { color: var(--bad) } #tendbox { display: contents } .tend { margin: 12px 0 4px; display: flex; flex-direction: column; gap: 6px } .tend .primary { align-self: stretch } .tend p { margin: 0 } .tend.done { padding: 10px 12px; border-radius: 10px; background: var(--good-soft) } .tend.done .linkbtn { align-self: flex-start }
 .cafch { display: block; width: 100%; height: 70px; margin: 6px 0 2px; overflow: visible } .cafch .cfl { fill: none; stroke: var(--accent); stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linejoin: round }
 .cafch .cfa { fill: var(--accent); opacity: .14 } .cafch .cf30 { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke } .cafch .cfnow { stroke: var(--ink); stroke-width: 1.2; vector-effect: non-scaling-stroke } .cafch .cfbed { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 1 3; vector-effect: non-scaling-stroke }
 .cafch text { font-size: 10px; fill: var(--muted); paint-order: stroke; stroke: var(--sunken); stroke-width: 3px; stroke-linejoin: round }
@@ -729,8 +729,12 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 120;
+  var APP_VERSION = 121;
   var CHANGES = [
+    { v: 121, tab: "train", text: "„Training beenden“ erscheint jetzt gleich nach dem ersten eingetragenen Satz. Einheiten, deren Trainingstag nicht mehr im Plan steht, lassen sich wieder öffnen und ändern; „Plan ersetzen“ behält gleichnamige Tage." },
+    { v: 121, tab: "body", text: "Die Zeile „Heute“ unter Kalorien und Makros ist immer aktuell. Nach einem Übergang wird der Trend erst ab dessen Ende bewertet." },
+    { v: 121, tab: "home", text: "Der 7-Tage-Schnitt der Vitamine zählt die Präparate von heute erst mit dem ersten Essenseintrag (vorher stand er morgens zu hoch)." },
+    { v: 121, tab: "data", text: "Trainingstage unter „Persönlich“ rechnen den Verbrauch sofort neu. Handbuch und mehrere Hinweise berichtigt." },
     { v: 2, tab: "train", text: "Unter jeder Übung steht nach dem letzten Satz ein Vorschlag fürs nächste Mal." },
     { v: 2, tab: "body", text: "Kalorienempfehlung für Cut und Aufbau. Die Angaben dazu trägst du ganz unten ein." },
     { v: 2, tab: "data", text: "Profile für mehrere Personen auf diesem Gerät." },
@@ -890,7 +894,7 @@ button, select, input { touch-action: manipulation }
   ];
   CHANGES.sort(function (a, b) { return a.v - b.v; }); /* v104: Reihenfolge im Code egal – „Was ist neu?“ zeigt immer die neueste Version oben */
   var TABNAME = { home: "Ernährung", train: "Training", prog: "Fortschritt", body: "Körper", plan: "Plan", data: "Daten" };
-  var fresh = [], hiddenAt = 0, hiddenDay = "";
+  var fresh = [], hiddenAt = 0;
   var hWait = 0, hMsg = "", hMan = false;
   var keyFor = function (kind, id) { id = id || PROF.active; return id === "main" ? (kind === "data" ? "trainingslog" : "trainingslog-backup") : "trainingslog-" + kind + "-" + id; };
   var profName = function () { var n = ""; PROF.list.forEach(function (p) { if (p.id === PROF.active) n = p.name; }); return n; };
@@ -923,7 +927,7 @@ button, select, input { touch-action: manipulation }
       else if (d.id === "food") fo = d.data;
       else if (d.data.kind === "nutri") nu[d.id] = d.data;
     });
-    S.workouts = w; S.body = b; S.food = fo; S.nutri = nu;
+    S.workouts = w; S.body = b; S.food = fo; S.nutri = nu; GHOST = null;
     if (S.food && S.food.v !== 5) foodMigrate(); if (S.food) { suppFix(); cupFix(); } S.phases = ph; S.person = pe; S.sched = sc; S.macro = mo; S.hide = hc;
     if (!planTimer) { S.plan = plan; if (S.plan) { favMigrate(); syncLib(); m58Check(); } }
   }
@@ -1560,7 +1564,20 @@ button, select, input { touch-action: manipulation }
     return same ? fmt(sets[0].w || 0) + " kg × " + sets.map(function (s) { return s.r; }).join(" · ")
                 : sets.map(function (s) { return fmt(s.w || 0) + "×" + s.r; }).join(" · ");
   }
-  function day() { var d = S.plan && S.plan.days; if (!d || !d.length) return null; return d.filter(function (x) { return x.id === S.dayId; })[0] || d[0]; }
+  /* v121: Einheit eines Trainingstags, der nicht mehr im Plan steht (gelöscht oder Plan ersetzt): Der Tag wird aus der gespeicherten
+     Einheit nachgebildet (ghost), damit sie sich weiter öffnen und ändern lässt, statt leer unter einem anderen Tag zu erscheinen.
+     GHOST merkt ihn je Datum und Tag, damit er auch bleibt, wenn zwischendurch alle Sätze gelöscht werden. */
+  var GHOST = null;
+  function ghostDay() {
+    if (!S.dayId) return null;
+    var k = S.date + "|" + S.dayId; if (GHOST && GHOST.k === k) return GHOST.d;
+    var w = S.workouts["w_" + S.date + "_" + S.dayId]; if (!w || !(w.entries || []).length) return null;
+    var m = exById(), ids = {}, ex = [];
+    (w.exs || []).map(function (x) { return { exId: x.id, name: x.name }; }).concat(w.entries).forEach(function (e) { if (ids[e.exId]) return; ids[e.exId] = 1; ex.push(m[e.exId] ? clone(m[e.exId]) : defaultsFor(e.exId, e.name)); });
+    GHOST = { k: k, d: { id: S.dayId, name: w.dayName || "Training", exercises: ex, ghost: true } };
+    return GHOST.d;
+  }
+  function day() { var d = S.plan && S.plan.days; if (!d || !d.length) return null; return d.filter(function (x) { return x.id === S.dayId; })[0] || ghostDay() || d[0]; }
   /* Eingeplantes Training eines Datums (Kalender): der Trainingstag aus dem Plan oder null. */
   function schedDay(ds) {
     var id = S.sched && S.sched[ds], hit = null;
@@ -1589,6 +1606,8 @@ button, select, input { touch-action: manipulation }
     var n = Math.round((Date.parse(date) - Date.parse(p.start)) / 864e5) + 1;
     return n >= 1 && n < p.ramp ? { n: n, days: p.ramp, end: addDays(p.start, p.ramp - 1), prev: prev.type } : null;
   }
+  /* v121: Trend erst ab dem Ende eines Übergangs bewerten (davor Wasser und Glykogen). */
+  function trendFrom(p) { return p ? (p.ramp && rampOf(p, p.start) ? addDays(p.start, p.ramp - 1) : p.start) : undefined; }
   function weekOf(p, date) { return Math.floor((Date.parse(date) - Date.parse(p.start)) / 864e5 / 7) + 1; }
   function phaseMarks(pts) {
     if (pts.length < 2) return [];
@@ -1786,7 +1805,7 @@ button, select, input { touch-action: manipulation }
         : "geschätzt nach der Mifflin-St-Jeor-Formel aus " + fmt(E.w) + " kg, Größe, Alter, Alltag und Training") +
       ". Cut: " + kc(E.range.cut[0]) + "–" + kc(E.range.cut[1]) + " kcal für 0,5–1 % Abnahme pro Woche. Aufbau: " + kc(E.range.bulk[0]) + "–" + kc(E.range.bulk[1]) + " kcal für 0,25–0,5 % Zunahme. Die Tabelle nutzt jeweils das mildere Ende." +
       (E.clip ? " Die Untergrenze im Cut ist auf deinen Grundumsatz angehoben." : "") + "<br><br>Eiweiß und Fett stellst du im Reiter „Daten“ unter „Persönlich“ ein. Kohlenhydrate füllen den Rest der Kalorien auf. " +
-      (E.n ? "Tage mit eingetragenem oder im Kalender eingeplantem Training bekommen rund " + Math.round(E.d / 10) * 10 + " kcal mehr als Ruhetage, je nach Länge der Einheit mehr oder weniger (eine doppelt so lange Einheit wie dein Plan-Schnitt bekommt den doppelten Zuschlag). Im Wochenschnitt bleibt es beim Zielwert. Die Makros oben gelten für den Schnitt, die für einzelne Tage zeigt der Kalender im Reiter „Training“. " : "Wähle unten deine Trainingstage, dann unterscheidet der Tracker zwischen Trainings- und Ruhetagen. ") +
+      (E.n ? "Tage mit eingetragenem oder im Kalender eingeplantem Training bekommen rund " + Math.round(E.d / 10) * 10 + " kcal mehr als Ruhetage, je nach Länge der Einheit mehr oder weniger (eine doppelt so lange Einheit wie dein Plan-Schnitt bekommt den doppelten Zuschlag). Im Wochenschnitt bleibt es beim Zielwert. Die Makros oben gelten für den Schnitt, die für einzelne Tage zeigt der Kalender im Reiter „Training“. " : "Wähle unter „Daten“ → „Persönlich“ deine Trainingstage, dann unterscheidet der Tracker zwischen Trainings- und Ruhetagen. ") +
       "Alles sind Schätzwerte: Liegt dein Trend zwei Wochen außerhalb des Zielbereichs, passe um 100–200 kcal an.") + buildHint(E);
   }
   /* Körperbau ist nur eine Selbsteinschätzung: hat sich das Gewicht seitdem um mehr als 5 % geändert, kurz nachfragen. */
@@ -1798,7 +1817,7 @@ button, select, input { touch-action: manipulation }
   }
   function personForm() {
     var P = S.person || {}, opt = function (v, l, cur) { return '<option value="' + v + '"' + (String(cur) === String(v) ? " selected" : "") + ">" + l + "</option>"; };
-    return '<div class="block"><h2>Angaben für die Kalorienempfehlung' + ib("pe") + "</h2>" + itx("pe", "Daraus berechnet der Tracker Grundumsatz, Erhaltungskalorien und Makros. Trägst du dein Essen ein (an mindestens 70 % der Tage), leitet er nach zwei Wochen deinen Erhaltungsbedarf aus Gewichtsverlauf und Essenseinträgen ab; sonst aus der festen Kalorienangabe. Die Trainingstage bestimmen, an welchen Tagen es mehr Kalorien gibt.") + '<div class="row">' +
+    return '<div class="block"><h2>Angaben für die Kalorienempfehlung' + ib("pe") + "</h2>" + itx("pe", "Daraus berechnet der Tracker Grundumsatz, Erhaltungskalorien und Makros. Trägst du dein Essen ein (an mindestens 70 % der Tage), leitet er nach zwei Wochen deinen Erhaltungsbedarf aus Gewichtsverlauf und Essenseinträgen ab; sonst aus der festen Kalorienangabe. Die Zahl deiner Trainingstage geht in den Verbrauch ein. Mehr Kalorien gibt es an Tagen mit eingetragenem oder eingeplantem Training.") + '<div class="row">' +
       '<label style="flex:1 1 130px">Geschlecht<select id="pe-sex">' + opt("", "Bitte wählen", P.sex || "") + opt("m", "Männlich", P.sex) + opt("w", "Weiblich", P.sex) + "</select></label>" +
       '<label style="flex:1 1 110px">Geburtsjahr<input id="pe-year" inputmode="numeric" autocomplete="off" value="' + esc(P.year || "") + '"></label>' +
       '<label style="flex:1 1 110px">Größe (cm)<input id="pe-height" inputmode="decimal" autocomplete="off" value="' + esc(P.height ? fmt(P.height) : "") + '"></label>' +
@@ -1841,7 +1860,7 @@ button, select, input { touch-action: manipulation }
       var r = RULE[ph.type], eta = function (ratePct) { return addDays(lw.date, Math.ceil(left / (w * ratePct / 100) * 7)); };
       var fast = eta(r[1]), slow = eta(r[0]);
       h += '<p class="small">Ziel voraussichtlich zwischen <b>' + dfmt(fast, 1) + "</b> und <b>" + dfmt(slow, 1) + "</b>.";
-      var tr = trendOf(list, ph.start);
+      var tr = trendOf(list, trendFrom(ph));
       if (tr && (cut ? tr.perWeek < -0.05 : tr.perWeek > 0.05)) h += " Bei deinem aktuellen Tempo (" + sign(Math.round(tr.perWeek * 100) / 100) + " kg pro Woche) etwa am <b>" + dfmt(addDays(lw.date, Math.ceil(left / Math.abs(tr.perWeek) * 7)), 1) + "</b>.";
       else if (tr) h += " Dein aktueller Trend geht nicht in Richtung Ziel.";
       h += "</p>";
@@ -1855,14 +1874,14 @@ button, select, input { touch-action: manipulation }
       '<button data-act="goalsave">' + (isN(ph.goal) ? "Ziel ändern" : "Ziel speichern") + "</button>" + (isN(ph.goal) ? '<button class="ghost" data-act="goaldel">Entfernen</button>' : "") + '</div><p class="small muted" id="goalmsg"></p>';
   }
   function phaseStatus(list) {
-    var t = today(), p = phaseAt(t), tr = trendOf(list, p && p.start), lastW = null;
+    var t = today(), p = phaseAt(t), tr = trendOf(list, trendFrom(p)), lastW = null;
     list.forEach(function (x) { if (x.weight != null) lastW = x.weight; });
     if (!p) return '<h2>Keine Phase gewählt</h2><p class="small muted">Starte unten unter „Phasen“ einen Aufbau, einen Cut oder eine Haltephase. Dann bewertet der Tracker deinen Gewichtstrend und markiert die Phase in den Diagrammen.</p>';
     var h = "<h2>" + PH[p.type] + ' <span class="small muted" style="font-family:var(--body);font-weight:400">seit ' + dfmt(p.start, 1) + ", Woche " + weekOf(p, t) + "</span></h2>";
     var rp = rampOf(p, t);
     if (rp) h += '<p class="small"><b>Übergang vom ' + PH[rp.prev] + "</b> (Reverse Diet), Tag " + rp.n + " von " + rp.days + ": Dein Kalorienziel wandert täglich ein Stück zum " + PH[p.type] + "-Ziel, voll ab " + dfmt(rp.end, 1) + "." + ib("ramp") + "</p>" +
       itx("ramp", "Nach einem Cut direkt 700 kcal mehr zu essen fällt schwer. Deshalb steigt das Ziel gleichmäßig. Mit mehr Kohlenhydraten steigt das Gewicht in den ersten Tagen oft um 1–2 kg durch Wasser und Glykogen, das ist kein Fett. Trend und Korridor werden deshalb erst nach dem Übergang bewertet. Dass langsames Hochfahren weniger Fett ansetzt, ist nicht gut belegt; es ist vor allem angenehmer.");
-    else if (!tr) h += '<p class="small muted">Für einen Trend braucht es in dieser Phase zwei Gewichtsmessungen mit mindestens einer Woche Abstand.</p>';
+    else if (!tr) h += '<p class="small muted">Für einen Trend braucht es ' + (trendFrom(p) > p.start ? "nach dem Übergang (ab " + dfmt(trendFrom(p), 1) + ")" : "in dieser Phase") + ' zwei Gewichtsmessungen mit mindestens einer Woche Abstand.</p>';
     else {
       var v = verdict(p.type, tr.pct);
       h += "<p>Trend über " + Math.round(tr.span) + " Tage (" + tr.n + " Messungen): <b>" + sign(tr.perWeek) + " kg pro Woche</b> (" + sign(tr.pct) + ' %)</p><span class="hint ' + v[0] + '">' + v[1] + "</span>";
@@ -1939,6 +1958,13 @@ button, select, input { touch-action: manipulation }
     var stored = S.workouts[wid()], byEx = {};
     (stored && stored.entries || []).forEach(function (e) { byEx[e.exId] = e; });
     draft = { rows: {}, extra: [], test: {}, exs: stored && stored.exs ? clone(stored.exs) : null };
+    /* v121: Einträge von Übungen, die nicht (mehr) zum Trainingstag gehören (Plan geändert), wurden bisher nur mitgespeichert,
+       aber nicht gezeigt. Jetzt hängen sie hinten an der Liste – nur als Anzeige (draft.auto), gespeichert wird kein exs. */
+    if (!draft.exs && stored) {
+      var inDay = {}; d.exercises.forEach(function (e) { inDay[e.id] = 1; });
+      var more = (stored.entries || []).filter(function (e) { return !inDay[e.exId]; });
+      if (more.length) { draft.exs = d.exercises.map(function (e) { return { id: e.id, name: e.name }; }).concat(more.map(function (e) { return { id: e.exId, name: e.name }; })); draft.auto = true; }
+    }
     S.tpick = null;
     sessList().forEach(function (ex) {
       if (byEx[ex.id] && byEx[ex.id].test) draft.test[ex.id] = true;
@@ -1962,8 +1988,9 @@ button, select, input { touch-action: manipulation }
     Object.keys(draft.rows).forEach(function (k) { if (!inL[k] && m[k]) toEntry(m[k]); });
     entries = entries.concat(draft.extra);
     var id = wid();
-    if (!entries.length && !draft.exs) { if (S.workouts[id]) put(id, null); }
-    else { var wd = { kind: "workout", date: S.date, dayId: d.id, dayName: d.name, entries: entries, updated: new Date().toISOString() }; if (draft.exs) wd.exs = clone(draft.exs); if (S.workouts[id] && S.workouts[id].done) wd.done = S.workouts[id].done; if (!put(id, wd)) dirty = true; }
+    if (!entries.length && (!draft.exs || draft.auto)) { if (S.workouts[id]) put(id, null); }
+    else { var wd = { kind: "workout", date: S.date, dayId: d.id, dayName: d.name, entries: entries, updated: new Date().toISOString() }; if (draft.exs && !draft.auto) wd.exs = clone(draft.exs); if (S.workouts[id] && S.workouts[id].done) wd.done = S.workouts[id].done; if (!put(id, wd)) dirty = true; }
+    var tb = $("tendbox"); if (tb) tb.innerHTML = endBlock();
     renderProgress();
   }
   /* Auswahl für „+ Übung für heute“ und „Ersetzen“: eigene Übungen und Katalog, Suche über #tpq. */
@@ -2001,7 +2028,7 @@ button, select, input { touch-action: manipulation }
       '<label>Übung suchen<input id="tpq" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. Latzug"></label><div id="tpres" class="tpres">' + tpResults("") + "</div>";
     if (P.mode === "add") h += '<label>Einfügen<select id="tpafter"><option value="">am Anfang</option>' + L.map(function (e) { return '<option value="' + e.id + '"' + (e.id === last ? " selected" : "") + ">nach " + esc(e.name) + "</option>"; }).join("") + "</select></label>";
     if (P.mode === "rep" && (draft.rows[P.id] || []).some(function (r) { return num(r.r) > 0; })) h += '<label class="chk"><input type="checkbox" id="tpmove" checked> eingetragene Sätze mitnehmen</label>';
-    return h + '<label class="chk"><input type="checkbox" id="tpplan"> auch in den Plan übernehmen</label><div class="row"><button class="ghost" data-act="tpcancel">Abbrechen</button></div></div>';
+    return h + (day() && day().ghost ? "" : '<label class="chk"><input type="checkbox" id="tpplan"> auch in den Plan übernehmen</label>') + '<div class="row"><button class="ghost" data-act="tpcancel">Abbrechen</button></div></div>';
   }
   /* Übernimmt die Auswahl: nur für heute (draft.exs) und auf Wunsch an derselben Stelle in den Trainingstag. */
   function tpApply(key) {
@@ -2032,7 +2059,7 @@ button, select, input { touch-action: manipulation }
     }
     if (isNew && !toPlan) setExercise(ex);
     var same = list.length === d.exercises.length && list.every(function (x, j) { return x.id === d.exercises[j].id; });
-    draft.exs = same ? null : list;
+    draft.exs = same ? null : list; draft.auto = false;
     if (P.mode === "rep" && mv) moveSets(P.id, ex);
     if (!draft.rows[ex.id]) draft.rows[ex.id] = initRows(ex, null);
     S.tpick = null; dirty = true; saveDraft();
@@ -2059,14 +2086,18 @@ button, select, input { touch-action: manipulation }
     if (!w.done) return '<div class="tend"><button class="primary" data-act="tend">Training beenden</button><p class="small muted">Dann zählen fürs Kalorienziel nur die Sätze, die du gemacht hast.</p></div>';
     var mins = dayMin((w.entries || []).filter(function (e) { return e.sets && e.sets.length; }).map(function (e) { return { sets: e.sets.length }; }));
     var E = energy(bodyList()), bonus = "";
-    if (E && E.n) { var di = dayKcal(today(), E, true), sp = E.split(di.type); bonus = " · Zuschlag +" + Math.round(di.kcal - sp.rest).toLocaleString("de-DE") + " kcal"; }
-    return '<div class="tend done"><p><b>Training beendet um ' + w.done + "</b> · " + n + " Sätze · ≈ " + mins + " min" + bonus + '</p><button class="linkbtn small" data-act="tresume">Weiter trainieren</button></div>';
+    if (E && E.n) { var di = dayKcal(today(), E, true), sp = E.split(di.type); var zb = Math.round(di.kcal - (di.ramp ? di.ramp.off || 0 : 0) - sp.rest); bonus = " · Zuschlag " + (zb < 0 ? "−" : "+") + Math.abs(zb).toLocaleString("de-DE") + " kcal"; } /* v121: ohne den Abzug des Übergangs */
+    return '<div class="tend done"><p><b>Training beendet um ' + w.done + "</b> · " + n + (n === 1 ? " Satz" : " Sätze") + " · ≈ " + mins + " min" + bonus + '</p><button class="linkbtn small" data-act="tresume">Weiter trainieren</button></div>';
+  }
+  /* v121: derselbe Einstieg unter Training und Plan (vorher verwiesen die beiden Reiter aufeinander). */
+  function noPlanHtml() {
+    return '<div class="block"><h2>Noch kein Trainingsplan</h2><p class="muted">Leg zuerst fest, welche Übungen zu welchem Trainingstag gehören. Die Vorlage enthält vier Tage (Oberkörper A/B, Unterkörper A/B) mit gängigen Übungen. Du kannst danach alles im Reiter „Plan“ ändern.</p><div class="row"><button class="primary" data-act="wizstart">Plan erstellen lassen</button><button data-act="tpl">Oberkörper/Unterkörper-Vorlage übernehmen</button><button data-act="blank">Leeren Plan anlegen</button></div></div>';
   }
   function renderTrain() {
     var el = $("tab-train");
     if (!S.ready) return;
     if (!S.plan || !S.plan.days || !S.plan.days.length) {
-      el.innerHTML = trainViewChips() + calHtml() + '<div class="block"><h2>Noch kein Trainingsplan</h2><p class="muted">Leg zuerst fest, welche Übungen zu welchem Trainingstag gehören. Die Vorlage enthält vier Tage (Oberkörper A/B, Unterkörper A/B) mit gängigen Übungen. Du kannst danach alles im Tab „Plan“ ändern.</p><div class="row"><button class="primary" data-act="wizstart">Plan erstellen lassen</button><button data-act="tpl">Oberkörper/Unterkörper-Vorlage übernehmen</button><button data-act="blank">Leeren Plan anlegen</button></div></div>';
+      el.innerHTML = trainViewChips() + calHtml() + noPlanHtml();
       return;
     }
     if (!S.dayId || !day() || day().id !== S.dayId) S.dayId = nextDayId();
@@ -2074,12 +2105,12 @@ button, select, input { touch-action: manipulation }
     var d = day(), h = trainViewChips() + calHtml();
     if (S.lateDay && S.date !== today()) h += '<div class="block late"><p class="small">Es ist nach Mitternacht. Dein Training vom ' + dfmt(S.date, 1) + ' läuft weiter, neue Sätze zählen zu diesem Tag.</p><div class="row"><button class="ghost" data-act="totoday">Auf heute wechseln</button></div></div>';
     h += '<div class="block" id="tsess"><div class="row"><label style="flex:0 1 170px">Datum<input type="date" id="tdate" value="' + S.date + '" max="' + today() + '"></label></div>' + phaseLine() + (schedDay(S.date) ? '<p class="small muted">Für diesen Tag eingeplant: <b>' + esc(schedDay(S.date).name) + "</b></p>" : "") + '<div class="chips" role="group" aria-label="Trainingstag">' +
-      S.plan.days.map(function (x) { return '<button data-act="day" data-id="' + x.id + '" aria-pressed="' + (x.id === d.id) + '">' + esc(x.name) + "</button>"; }).join("") + '<button class="linkbtn small" data-act="planedit">Plan ändern</button></div>' +
+      S.plan.days.map(function (x) { return '<button data-act="day" data-id="' + x.id + '" aria-pressed="' + (x.id === d.id) + '">' + esc(x.name) + "</button>"; }).join("") + '<button class="linkbtn small" data-act="planedit">Plan ändern</button></div>' + (d.ghost ? '<p class="small muted">„' + esc(d.name) + '“ steht nicht mehr im Plan. Die Einheit kannst du weiter ändern.</p>' : "") +
       (S.workouts[wid()] && (S.workouts[wid()].entries || []).length ? '<p class="small muted">Für diesen Tag ist schon ein Eintrag gespeichert. Änderungen überschreiben ihn.</p><div class="row"><label style="flex:0 1 170px">Eintrag verschieben auf<input type="date" id="mvdate" value="' + S.date + '" max="' + today() + '"></label><button data-act="move">Verschieben</button><span class="small muted" id="mvmsg"></span></div>' : "") + "</div>";
     var SL = sessList(), inPlan = {}, wasOf = {};
     d.exercises.forEach(function (e) { inPlan[e.id] = 1; });
     (draft.exs || []).forEach(function (x) { if (x.was) wasOf[x.id] = x.was; });
-    if (!SL.length) h += '<p class="empty">Dieser Tag hat noch keine Übungen. Füge sie im Tab „Plan“ hinzu oder unten nur für heute.</p>';
+    if (!SL.length) h += '<p class="empty">Dieser Tag hat noch keine Übungen. Füge sie im Reiter „Plan“ hinzu oder unten nur für heute.</p>';
     SL.forEach(function (ex, xi) {
       var last = lastBefore(ex.id, S.date), adv = advise(ex, S.date), rows = draft.rows[ex.id] || [], isTest = !!(draft.test && draft.test[ex.id]);
       var fh = "";
@@ -2102,7 +2133,7 @@ button, select, input { touch-action: manipulation }
         if (isTest) fh += testBox(tw2);
         fh += warmHtml(warmups(ex, tw2 || work2, xi === 0), ex.id);
       }
-      h += '<div class="block' + (ex.focus ? " focusblk" : "") + '"><div class="exhead"><span class="extitle">' + exIcon(ex, 30) + "<h3>" + esc(ex.name) + "</h3>" + (ex.focus ? '<span class="fbadge">Schwerpunkt</span>' : "") + (inPlan[ex.id] ? "" : '<span class="tbadge">' + (wasOf[ex.id] ? "heute statt " + esc(wasOf[ex.id]) : "nur heute") + "</span>") + '</span><span class="small muted">' + ex.sets + " × " + ex.repMin + "–" + ex.repMax + " Wdh.</span></div>" + fh +
+      h += '<div class="block' + (ex.focus ? " focusblk" : "") + '"><div class="exhead"><span class="extitle">' + exIcon(ex, 30) + "<h3>" + esc(ex.name) + "</h3>" + (ex.focus ? '<span class="fbadge">Schwerpunkt</span>' : "") + (inPlan[ex.id] ? "" : '<span class="tbadge">' + (wasOf[ex.id] ? "heute statt " + esc(wasOf[ex.id]) : draft.auto ? "nicht in diesem Tag" : "nur heute") + "</span>") + '</span><span class="small muted">' + ex.sets + " × " + ex.repMin + "–" + ex.repMax + " Wdh.</span></div>" + fh +
         '<p class="small muted">' + (last ? "Zuletzt (" + dfmt(last.date) + (last.test ? ", Krafttest" : "") + "): " + setsText(last.sets) : "Noch kein früherer Eintrag. Ab dem zweiten Mal schlägt der Tracker hier ein Gewicht vor.") + "</p>" +
         (adv ? '<span class="hint ' + adv.kind + '">' + (isTest ? "Nach dem Test: " : "Vorschlag heute: ") + adv.text + "</span>" : "") +
         '<div class="sets"><span class="hd">Satz</span><span class="hd">Gewicht (kg)</span><span class="hd">Wdh.</span>' +
@@ -2117,7 +2148,7 @@ button, select, input { touch-action: manipulation }
         "</div>" + (S.tpick && S.tpick.mode === "rep" && S.tpick.id === ex.id ? tpickHtml() : "") + '<p class="small" id="nx-' + ex.id + '"' + (nextText(ex) ? "" : " hidden") + "><b>" + esc(nextText(ex)) + '</b></p><p class="prnote" id="pr-' + ex.id + '"' + (prText(ex) ? "" : " hidden") + "><span>" + esc(prText(ex)) + "</span></p></div>";
     });
     h += S.tpick && S.tpick.mode === "add" ? tpickHtml() : '<button class="ghost tadd" data-act="tadd">+ Übung für heute</button>';
-    h += endBlock();
+    h += '<div id="tendbox">' + endBlock() + "</div>"; /* v121: eigener Behälter, saveDraft füllt ihn nach dem ersten Satz */
     h += tip("save", "Wann zählt ein Satz?", "Ein Satz zählt, sobald Wiederholungen eingetragen sind. Gespeichert wird automatisch.");
     el.innerHTML = h;
   }
@@ -2190,7 +2221,7 @@ button, select, input { touch-action: manipulation }
     /* Seit v86 schlanker Kopf (Wunsch des Nutzers): eine Zeile mit Monat, Anzahl und Pfeilen. „Heute/Als Nächstes“ entfällt,
        weil das nächste Training unter dem Kalender ohnehin ausgewählt ist. Hinweise nur, wenn etwas fehlt. */
     var NT = nextTraining(), top = "";
-    if (!S.plan || !S.plan.days.length) top = '<p class="small muted">Leg im Reiter „Plan“ zuerst einen Plan an.</p>';
+    if (!S.plan || !S.plan.days.length) top = '<p class="small muted">Leg zuerst einen Trainingsplan an.</p>';
     else if (!NT) top = '<p class="small muted">Kein nächstes Training bekannt. Plane unten eins oder wähle unter „Daten“ → „Persönlich“ deine üblichen Trainingstage.</p>';
     var KW = function (ds) { var d = dateOf(ds), th = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 3 - (d.getDay() + 6) % 7), y1 = new Date(th.getFullYear(), 0, 4); return 1 + Math.round(((th - y1) / 864e5 - 3 + (y1.getDay() + 6) % 7) / 7); };
     var ttl = V === "m" ? MONTHS[m - 1] + " " + y : V === "w" ? (wk0.slice(5, 7) === wk6.slice(5, 7) ? wk0.slice(8, 10) + "." : dfmt(wk0)) + "–" + dfmt(wk6) : WDAYS[dateOf(S.calRef).getDay()].slice(0, 2) + ". " + dlong(S.calRef);
@@ -2384,7 +2415,7 @@ button, select, input { touch-action: manipulation }
     dates.forEach(function (d) {
       var nd = S.nutri["n_" + d], dl = dailyOn(d, fd); if ((!nd || !nd.entries.length) && !dl.length) return; if (nd && nd.entries.length) days++;
       if (nd) nd.entries.forEach(function (e) { tk += e.kcal || 0; if (Array.isArray(e.n)) { n = nutAdd(nutPad(n), nutPad(e.n)); ck += e.nk != null ? e.nk : e.kcal || 0; } });
-      if (!(nd && nd.entries.length) && d !== t) return; /* v102: Tage ohne Einträge zählen nicht – sonst teilt der 7-Tage-Schnitt Präparate von 7 Tagen durch weniger Tage */
+      if (!(nd && nd.entries.length) && (d !== t || dates.length > 1)) return; /* v121: heute ohne Eintrag zählt nur in der Ansicht „Heute“ · v102: Tage ohne Einträge zählen nicht – sonst teilt der 7-Tage-Schnitt Präparate von 7 Tagen durch weniger Tage */
       dl.forEach(function (x) { var v = nutOf(foodItem(fd, x.item), x.amt); if (v) { n = nutAdd(nutPad(n), v); sp = nutAdd(nutPad(sp), v); } });
     });
     return { n: n, s: sp, ck: ck, tk: tk, days: days };
@@ -3011,7 +3042,7 @@ button, select, input { touch-action: manipulation }
       return '<div class="exrow">' + head + '<div class="planex"><label class="name">Name<input id="lx-' + e.id + '-name" data-lid="' + e.id + '" data-lf="name" value="' + esc(e.name) + '"></label>' +
         f("sets", "Sätze", "numeric") + f("repMin", "Wdh. von", "numeric") + f("repMax", "Wdh. bis", "numeric") + f("step", "Schritt kg", "decimal") + "<span></span></div>" +
         '<div class="lab">Bewertung<div class="starpick" role="group" aria-label="Bewertung">' + [1, 2, 3].map(function (n) { return '<button data-act="exfav" data-id="' + e.id + '" data-n="' + n + '" aria-pressed="' + (e.fav === n) + '"><span class="st">' + "★★★".slice(0, n) + "</span>" + FAVL[n] + "</button>"; }).join("") + "</div></div>" +
-        '<div class="lab"><span>Schwerpunkt' + ib("fx-" + e.id) + "</span>" + itx("fx-" + e.id, "Für Übungen, in denen du vor allem stärker werden willst: Hinweis auf die Position im Training, Krafttest einmal im Monat, eigene Auswertung auf der Startseite.") + '<button class="fswitch" data-act="exfocus" data-id="' + e.id + '" aria-pressed="' + !!e.focus + '">' + (e.focus ? "Schwerpunktübung: an" : "Als Schwerpunktübung markieren") + "</button></div>" +
+        '<div class="lab"><span>Schwerpunkt' + ib("fx-" + e.id) + "</span>" + itx("fx-" + e.id, "Für Übungen, in denen du vor allem stärker werden willst: Hinweis auf die Position im Training, Krafttest einmal im Monat, eigene Auswertung oben unter „Fortschritt“.") + '<button class="fswitch" data-act="exfocus" data-id="' + e.id + '" aria-pressed="' + !!e.focus + '">' + (e.focus ? "Schwerpunktübung: an" : "Als Schwerpunktübung markieren") + "</button></div>" +
         '<label>Muskelgruppe (bestimmt das Symbol)<select id="lx-' + e.id + '-grp" data-lid="' + e.id + '" data-lf="grp"><option value="">Automatisch (' + (groupOf({ name: e.name }) || "nicht erkannt") + ")</option>" +
         CGROUPS.map(function (g) { return "<option" + (e.grp === g ? " selected" : "") + ">" + g + "</option>"; }).join("") + "</select></label>" +
         dayChips(e.id, true) +
@@ -3259,7 +3290,9 @@ button, select, input { touch-action: manipulation }
       if (!hit) hit = defaultsFor(rid("e"), name);
       cache[k] = hit; return clone(hit);
     };
-    var days = S.wiz.prev.map(function (d) { return { id: rid("d"), name: d.name, exercises: d.items.map(function (it) { return exFor(it.n); }) }; });
+    /* v121: Beim Ersetzen behält ein gleichnamiger Tag seine Kennung, damit frühere Einheiten und die Kalenderplanung bei ihm bleiben. */
+    var oldId = {}; if (mode === "rep") S.plan.days.forEach(function (d) { var k = norm(d.name); if (!oldId[k]) oldId[k] = d.id; });
+    var days = S.wiz.prev.map(function (d) { var k = norm(d.name), id = oldId[k] || rid("d"); delete oldId[k]; return { id: id, name: d.name, exercises: d.items.map(function (it) { return exFor(it.n); }) }; });
     S.plan.days = mode === "rep" ? days : S.plan.days.concat(days);
     S.wiz = null; planClosed = {}; planChanged(true);
   }
@@ -3284,7 +3317,7 @@ button, select, input { touch-action: manipulation }
   }
   function renderPlan() {
     var el = $("tab-plan"); if (!S.ready) return;
-    if (!S.plan) { el.innerHTML = '<p class="empty">Noch kein Plan. Leg ihn im Tab „Training“ an.</p>'; return; }
+    if (!S.plan) { el.innerHTML = noPlanHtml(); return; }
     var h = "";
     h += tip("prog", "Wie steigert der Tracker?", "Schaffst du in allen Sätzen die obere Wdh.-Grenze, schlägt der Tracker beim nächsten Mal das Gewicht plus „Schritt“ vor. Namen, Bewertung, Muskelgruppe und weitere Einstellungen findest du über „Einstellungen“ bei jeder Übung (Reiter „Daten“ → „Übungen“).");
     var tdn = ((S.person || {}).tdays || []).length;
@@ -3320,7 +3353,7 @@ button, select, input { touch-action: manipulation }
       h += pickerHtml(d, di) + "</div>";
     });
     h += '<button data-act="addd" style="align-self:flex-start">+ Trainingstag</button>';
-    h += '<div class="block"><h2>Plan-Code einfügen' + ib("code") + "</h2>" + itx("code", "Wenn Claude deinen Plan für dich anpasst, bekommst du einen Code. Füge ihn hier ein, prüfe die Vorschau und übernimm die Änderung.") +
+    h += '<div class="block"><h2>Plan-Code einfügen' + ib("code") + "</h2>" + itx("code", "Ein Plan-Code beschreibt einen Trainingstag als Text. Füge ihn hier ein, prüfe die Vorschau und übernimm die Änderung.") +
       '<textarea id="plancode" rows="4" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Plan-Code" placeholder="Code hier einfügen">' + esc(S.planCode || "") + "</textarea>";
     if (planPatch && planPatch.list) h += "<p><b>Tag „" + esc(planPatch.tag) + "“</b>" + (planPatch.dayId ? "" : " (neuer Trainingstag)") + '</p><ol class="pvlist">' +
       planPatch.list.map(function (x) { return "<li>" + esc(x.ex.name) + ' <span class="muted">' + esc(x.how) + "</span></li>"; }).join("") + "</ol>" +
@@ -3333,7 +3366,7 @@ button, select, input { touch-action: manipulation }
     clearTimeout(planTimer);
     var go = function () { planTimer = null; syncLib(); put("plan", clone(S.plan)); };
     if (now) go(); else planTimer = setTimeout(go, 900);
-    draft = null; if (planPatch && planPatch.list) planPatch = null;
+    draft = null; GHOST = null; if (planPatch && planPatch.list) planPatch = null;
   }
 
   /* ---------- Daten: Backup, Import, Export ---------- */
@@ -3640,10 +3673,10 @@ button, select, input { touch-action: manipulation }
     ["Ernährung", "<p>Hier trägst du ein, was du isst, und siehst, was heute noch offen ist.</p><ul><li><b>Die große Zahl</b> sind die Kalorien, die heute noch offen sind. Der Balken darunter zeigt Eiweiß, Fett und Kohlenhydrate. Der blasse orange Abschnitt sind die Kalorien, die dein noch fehlendes Eiweiß brauchen wird. Darunter stehen Defizit bzw. Überschuss und dein geschätzter Verbrauch; das i daneben zeigt Schritt für Schritt, wie dein Ziel von heute zustande kommt.</li><li><b>Essen eintragen:</b> ins Suchfeld tippen, Lebensmittel oder Mahlzeit antippen, Menge angeben, „Eintragen“. Ohne Suchbegriff siehst du Mahlzeiten, Favoriten, eigene Lebensmittel und die ganze Bibliothek zum Durchscrollen. Wischst du in der Trefferliste, geht die Tastatur weg; zum Weitertippen wieder ins Suchfeld tippen.</li><li><b>Barcode:</b> Das Barcode-Symbol neben dem Suchfeld öffnet die Kamera. Bekannte Produkte werden ohne Internet erkannt. Unbekannte fragt die App mit Internet einmal bei Open Food Facts ab und speichert sie, danach gehen auch sie offline.</li><li><b>Ohne Waage:</b> „Mittag schätzen“ trägt eine kleine, mittlere oder große Mahlzeit als Schätzung ein.</li><li><b>Uhrzeit:</b> Die Uhrzeit eines Eintrags lässt sich antippen und ändern. Wichtig ist sie vor allem bei Koffein.</li><li><b>Nur heute:</b> Eintragen kannst du nur für heute. Frühere Tage siehst du unter „Essen im Rückblick“.</li><li><b>Täglich:</b> Supplements, die du jeden Tag nimmst, legst du einmal unter Daten → Essen an (je Kapsel, Anzahl mit dem Auswahlrad, Beginn über das Datum hinter „seit“). Sie zählen automatisch bei den Vitaminen mit, ohne Kalorien. In der Zeile „Täglich“ tippst du eines an, wenn du es heute ausgelassen hast.</li><li><b>Koffein:</b> Sobald du etwas mit Koffein einträgst, erscheint oben eine Box: Summe, wie viel gerade im Körper ist, der Verlauf als Kurve, was zu deiner Schlafenszeit noch übrig ist (orange ab 30 mg) und bis wann ein Kaffee noch geht. Gerechnet wird mit etwa 45 Minuten Aufnahme und 5 Stunden Halbwertszeit; bei dir kann das abweichen. Die Schlafenszeit stellst du unter Daten → Persönlich ein.</li><li><b>Vitamine &amp; Mineralstoffe</b> (zum Aufklappen): heute oder im 7-Tage-Schnitt, gemessen an den Empfehlungen der DGE. Blau heißt unter dem Ziel, Grün im Rahmen, Gelb bis Rot nähert sich der sicheren Obergrenze oder liegt darüber. „Erfasst: x %“ sagt, für wie viel deiner Kalorien Werte vorliegen.</li><li><b>Essen im Rückblick</b> (ganz unten): Kalorien pro Tag gegen dein Ziel, dazu der Gewichtstrend. Tage ohne Eintrag sind grau. Tippe auf einen Tag oder blättere mit ‹ ›, um zu sehen, was du gegessen hast.</li></ul>"],
     ["Training", "<p>Oben der Kalender, darunter die Einheit zum Eintragen.</p><ul><li><b>Training starten:</b> im Kalender einen Tag antippen, Trainingstag wählen, „Training starten“. Ansicht Tag, Woche oder Monat wählst du oben rechts. Vergangene Einheiten öffnest du genauso und trägst nach.</li><li><b>Sätze eintragen:</b> Gewicht und Wiederholungen eintippen, gespeichert wird automatisch. Ein Satz zählt, sobald Wiederholungen drinstehen.</li><li><b>Gewichtsvorschlag:</b> Ab der zweiten Einheit schlägt die App das Gewicht vor. Die Regel: erst in allen Sätzen die obere Wiederholungsgrenze schaffen, dann geht das Gewicht um den „Schritt“ der Übung hoch.</li><li><b>Aufwärmsätze</b> stehen eingeklappt über jeder Übung.</li><li><b>+ Übung für heute</b> und <b>Ersetzen</b> ändern nur diese Einheit, mit Häkchen auch den Plan. Hast du dich vertan, nimmt „eingetragene Sätze mitnehmen“ die Sätze zur richtigen Übung mit (nur am selben Tag).</li><li><b>Training beenden:</b> unten unter der Einheit. Bis dahin rechnet die App beim Kalorienziel mit deinem vollen Plan-Tag, danach nur mit den Sätzen, die du wirklich gemacht hast. „Weiter trainieren“ macht es rückgängig.</li><li><b>Krafttest:</b> ein Satz mit etwa 85 % deines geschätzten Maximums bis eine Wiederholung vor Schluss. Für Schwerpunktübungen erinnert die App alle 4 Wochen.</li><li><b>Plan ändern:</b> der Link hinter den Trainingstagen führt zum Plan-Assistenten.</li></ul>"],
     ["Fortschritt", "<p>Zeigt, ob du stärker wirst. Aussagekräftig wird es nach etwa drei bis vier Wochen.</p><ul><li><b>Schwerpunkt:</b> deine wichtigsten Übungen mit geschätztem Maximum (1RM), Veränderung in der Phase, Rekord und nächstem Krafttest. Den Schwerpunkt setzt du unter Daten → Übungen.</li><li><b>Verlauf pro Übung</b> als 1RM, schwerstes Gewicht oder Volumen.</li><li><b>Kraft nach Körperbereichen:</b> Die Körperkarte färbt jede Muskelgruppe danach, wie sich dein geschätztes Maximum im Zeitraum verändert hat: orange = gleich, tiefrot = ab +20 %, graublau = schwächer, grau = keine Daten. Mit ▶ oder dem Regler läuft der Zeitraffer. Mit dem Zeitraum „Phase“ siehst du, ob du im Cut deine Kraft hältst. Im Diagramm darunter wählst du die Linien über die Knöpfe.</li><li><b>Sätze pro Muskelgruppe:</b> 10–20 Sätze pro Woche sind ein üblicher Bereich für Muskelaufbau.</li><li><b>Rekorde</b> und Krafttest-Ergebnisse stehen am Ende.</li></ul><p class=\"small muted\">Das 1RM ist eine Schätzung aus Gewicht und Wiederholungen (Epley-Formel), kein gemessener Wert.</p>"],
-    ["Körper", "<p>Gewicht, Körperfett, Umfänge und deine Phasen.</p><ul><li><b>Gewicht eintragen:</b> am besten täglich oder mehrmals pro Woche, morgens nach dem Aufstehen. Einzelne Werte schwanken um 1–2 kg, die App achtet auf den Verlauf. Auf dem iPhone holt „Aus Health holen“ Gewicht und Körperfett über einen Kurzbefehl.</li><li><b>Messung korrigieren:</b> in der Tabelle „Messungen“ das Datum antippen. Die Werte stehen dann oben im Formular: ändern oder ein Feld leeren, „Speichern“. „Löschen“ entfernt den ganzen Tag.</li><li><b>Gewichtsdiagramm:</b> deine Messungen mit dem Korridor deiner Phase. Liegst du im Korridor, passt das Tempo. Hast du Körperfettwerte, läuft das Körperfett als gestrichelte Linie mit (Schnitt der letzten 7 Tage, Skala rechts). Tippe auf einen Tag, dann stehen unter dem Diagramm Datum, Gewicht und Körperfett dieses Tages; noch einmal tippen blendet es wieder aus.</li><li><b>Körperfett ohne Waage:</b> Ein Maßband reicht. Taille auf Höhe des Bauchnabels und Hals messen, Frauen zusätzlich die Hüfte an der breitesten Stelle.</li><li><b>Phasen:</b> Cut, Aufbau oder Halten mit Beginn und Zielgewicht. Mit „Übergang“ (Reverse Diet) wandert dein Kalorienziel nach einem Cut über 2 bis 4 Wochen gleichmäßig zum neuen Ziel, statt zu springen; 3 Wochen sind vorausgewählt. Der Korridor zeigt, ob du im Plan liegst. Fällst du heraus, schlägt die App Aufholen oder einen Neustart vor.</li><li><b>Kalorien und Makros:</b> Der Grundumsatz kommt aus Gewicht, Größe, Alter und Geschlecht, mit Körperfett genauer über die fettfreie Masse. Dazu kommen dein Alltag und dein Training. Trägst du Gewicht und Essen ein, leitet die App nach zwei Wochen deinen echten Bedarf aus dem Gewichtsverlauf ab. Die Tabelle zeigt den Wochenschnitt (Ø), die Zeile „Heute“ darunter dein Ziel für heute wie unter Ernährung.</li></ul>"],
+    ["Körper", "<p>Gewicht, Körperfett, Umfänge und deine Phasen.</p><ul><li><b>Gewicht eintragen:</b> am besten täglich oder mehrmals pro Woche, morgens nach dem Aufstehen. Einzelne Werte schwanken um 1–2 kg, die App achtet auf den Verlauf. Auf dem iPhone holt „Aus Apple Health holen“ Gewicht und Körperfett über einen Kurzbefehl.</li><li><b>Messung korrigieren:</b> in der Tabelle „Messungen“ das Datum antippen. Die Werte stehen dann oben im Formular: ändern oder ein Feld leeren, „Speichern“. „Löschen“ entfernt den ganzen Tag.</li><li><b>Gewichtsdiagramm:</b> deine Messungen mit dem Korridor deiner Phase. Liegst du im Korridor, passt das Tempo. Hast du Körperfettwerte, läuft das Körperfett als gestrichelte Linie mit (Schnitt der letzten 7 Tage, Skala rechts). Tippe auf einen Tag, dann stehen unter dem Diagramm Datum, Gewicht und Körperfett dieses Tages; noch einmal tippen blendet es wieder aus.</li><li><b>Körperfett ohne Waage:</b> Ein Maßband reicht. Taille auf Höhe des Bauchnabels und Hals messen, Frauen zusätzlich die Hüfte an der breitesten Stelle.</li><li><b>Phasen:</b> Cut, Aufbau oder Halten mit Beginn und Zielgewicht. Mit „Übergang“ (Reverse Diet) wandert dein Kalorienziel nach einem Cut über 2 bis 4 Wochen gleichmäßig zum neuen Ziel, statt zu springen; 3 Wochen sind vorausgewählt. Der Korridor zeigt, ob du im Plan liegst. Fällst du heraus, schlägt die App Aufholen oder einen Neustart vor.</li><li><b>Kalorien und Makros:</b> Der Grundumsatz kommt aus Gewicht, Größe, Alter und Geschlecht, mit Körperfett genauer über die fettfreie Masse. Dazu kommen dein Alltag und dein Training. Trägst du Gewicht und Essen ein, leitet die App nach zwei Wochen deinen echten Bedarf aus dem Gewichtsverlauf ab. Die Tabelle zeigt den Wochenschnitt (Ø), die Zeile „Heute“ darunter dein Ziel für heute wie unter Ernährung.</li></ul>"],
     ["Plan", "<p>Hier legst du fest, welche Übungen an welchem Trainingstag dran sind.</p><ul><li><b>Plan erstellen lassen:</b> Tage pro Woche, Dauer und Geräte wählen. Der Assistent zeigt eine Vorschau, mit ↻ tauschst du einzelne Übungen. Danach „Plan übernehmen“. Später heißt es „Plan neu erstellen“: Plan ersetzen oder Tage hinzufügen, dein Verlauf bleibt.</li><li><b>Übung hinzufügen:</b> ein Suchfeld je Tag. Namen eintippen und Treffer antippen, die Übung ist sofort im Plan. Ohne Suchbegriff stehen oben Vorschläge für Muskelgruppen mit zu wenig Sätzen, darunter alle Übungen nach Gruppen. Findet sich nichts, legst du sie als eigene Übung an.</li><li><b>Übungen ordnen:</b> ↑ ↓ ändert die Reihenfolge, „Verschieben“ bringt eine Übung zu einem anderen Tag, ✕ nimmt sie aus dem Plan (der Verlauf bleibt). „Einstellungen“ führt zu Sätzen, Wiederholungen und Schritt.</li><li><b>Tage:</b> umbenennen, duplizieren, löschen. Unter dem Namen stehen geschätzte Dauer und Sätze je Muskelgruppe.</li><li><b>Sätze pro Woche:</b> oben im Plan. ↓ heißt unter 10, ↑ über 20 Sätze.</li><li><b>Plan-Code:</b> ein Text, mit dem sich ein Trainingstag auf einmal einfügen lässt (einfügen, prüfen, übernehmen).</li></ul>"],
-    ["Daten", "<p>Fünf Bereiche: Essen, Übungen, Persönlich, Sicherung, Hilfe.</p><ul><li><b>Essen:</b> Tägliche Einnahme, Mahlzeiten und die Lebensmittelliste. Über 550 Lebensmittel und viele Markenprodukte sind eingebaut. Mit ☆ markierst du Favoriten, sie stehen beim Eintragen oben. Lebensmittel antippen, um Werte von der Verpackung zu übernehmen; das wird dein eigener Eintrag. Mahlzeiten stellst du aus Lebensmitteln zusammen. Für Meal-Prep bei „Ergibt“ die Portionen eintragen, dann wird je eine Portion gezählt.</li><li><b>Übungen:</b> Sätze, Wiederholungsbereich und Schritt je Übung, Sterne, Schwerpunkt, Muskelgruppe. Doppelte Übungen zusammenführen. „Katalog anpassen“ blendet Übungen aus, die du nie machst.</li><li><b>Persönlich:</b> die Angaben für deine Kalorien (Geschlecht, Geburtsjahr, Größe, Körperbau, Alltag, Trainingstage, Dauer), Schlafenszeit, Makros, Darstellung und Profile für mehrere Personen. Ändert sich dein Alltag oder Training, passe es hier an.</li><li><b>Sicherung:</b> Backup speichern und einspielen, Export für Excel und der <b>Bericht für den Arzt</b>: Zeitraum und Inhalt wählen, „Bericht erstellen“, dann drucken, als PDF sichern oder als Datei teilen. Der Name im Bericht wird nicht gespeichert.</li><li><b>Darstellung:</b> Die Designs „Hölle“ und „Winter Arc“ wählst du über den Berg-Knopf oben neben „Trainingslog“. „Standard“ bringt die gewohnte Oberfläche zurück.</li></ul>"],
-    ["Häufige Fragen", "<ul><li><b>Es werden keine Kalorien angezeigt.</b> Dann fehlt eine Angabe: Geschlecht, Geburtsjahr, Größe oder Alltag unter Daten → Persönlich, oder ein Gewicht unter Körper.</li><li><b>Mein Kalorienziel ändert sich von Tag zu Tag.</b> An Tagen mit eingetragenem oder eingeplantem Training bekommst du mehr, an Ruhetagen weniger. Der Wochenschnitt bleibt gleich. Nach „Training beenden“ zählen nur die gemachten Sätze.</li><li><b>Ich habe die falsche Übung eingetragen.</b> Im Training auf „Ersetzen“ tippen und „eingetragene Sätze mitnehmen“ anhaken. Das geht am selben Tag.</li><li><b>Ein Lebensmittel fehlt.</b> Barcode scannen oder unter Daten → Essen selbst anlegen. Die Werte stehen auf der Verpackung.</li><li><b>Ich habe gestern vergessen, Essen einzutragen.</b> Nachtragen geht nicht. Der Tag bleibt im Rückblick grau und zählt nicht in die Schnitte.</li><li><b>Das vorgeschlagene Gewicht ist zu leicht oder zu schwer.</b> Trag einfach ein, was du wirklich gemacht hast. Der nächste Vorschlag richtet sich danach.</li><li><b>Neues Handy.</b> Auf dem alten Gerät unter Daten → Sicherung ein Backup speichern, auf dem neuen einspielen. Einen automatischen Abgleich zwischen Geräten gibt es nicht.</li><li><b>Mehrere Personen.</b> Unter Daten → Persönlich legst du Profile an. Jedes Profil hat eigene Daten und ein eigenes Backup.</li></ul>"],
+    ["Daten", "<p>Fünf Bereiche: Essen, Übungen, Persönlich, Sicherung, Hilfe.</p><ul><li><b>Essen:</b> Tägliche Einnahme, Mahlzeiten und die Lebensmittelliste. Über 550 Lebensmittel und viele Markenprodukte sind eingebaut. Mit ☆ markierst du Favoriten, sie stehen beim Eintragen oben. Lebensmittel antippen, um Werte von der Verpackung zu übernehmen; das wird dein eigener Eintrag. Mahlzeiten stellst du aus Lebensmitteln zusammen. Für Meal-Prep bei „Ergibt“ die Portionen eintragen, dann wird je eine Portion gezählt.</li><li><b>Übungen:</b> Sätze, Wiederholungsbereich und Schritt je Übung, Sterne, Schwerpunkt, Muskelgruppe. Doppelte Übungen zusammenführen. „Katalog anpassen“ blendet Übungen aus, die du nie machst.</li><li><b>Persönlich:</b> die Angaben für deine Kalorien (Geschlecht, Geburtsjahr, Größe, Körperbau, Alltag, Trainingstage, Dauer), Schlafenszeit, Makros und Darstellung. Ändert sich dein Alltag oder Training, passe es hier an.</li><li><b>Sicherung:</b> Backup speichern und einspielen, Export für Excel und der <b>Bericht für den Arzt</b>: Zeitraum und Inhalt wählen, „Bericht erstellen“, dann drucken, als PDF sichern oder als Datei teilen. Der Name im Bericht wird nicht gespeichert. Hier legst du auch <b>Profile</b> für mehrere Personen an.</li><li><b>Darstellung:</b> Die Designs „Hölle“ und „Winter Arc“ wählst du über den Berg-Knopf oben neben „Trainingslog“. „Standard“ bringt die gewohnte Oberfläche zurück.</li></ul>"],
+    ["Häufige Fragen", "<ul><li><b>Es werden keine Kalorien angezeigt.</b> Dann fehlt eine Angabe: Geschlecht, Geburtsjahr, Größe oder Alltag unter Daten → Persönlich, oder ein Gewicht unter Körper.</li><li><b>Mein Kalorienziel ändert sich von Tag zu Tag.</b> An Tagen mit eingetragenem oder eingeplantem Training bekommst du mehr, an Ruhetagen weniger. Der Wochenschnitt bleibt gleich. Nach „Training beenden“ zählen nur die gemachten Sätze.</li><li><b>Ich habe die falsche Übung eingetragen.</b> Im Training auf „Ersetzen“ tippen und „eingetragene Sätze mitnehmen“ anhaken. Das geht am selben Tag.</li><li><b>Ein Lebensmittel fehlt.</b> Barcode scannen oder unter Daten → Essen selbst anlegen. Die Werte stehen auf der Verpackung.</li><li><b>Ich habe gestern vergessen, Essen einzutragen.</b> Nachtragen geht nicht. Der Tag bleibt im Rückblick grau und zählt nicht in die Schnitte.</li><li><b>Das vorgeschlagene Gewicht ist zu leicht oder zu schwer.</b> Trag einfach ein, was du wirklich gemacht hast. Der nächste Vorschlag richtet sich danach.</li><li><b>Neues Handy.</b> Auf dem alten Gerät unter Daten → Sicherung ein Backup speichern, auf dem neuen einspielen. Einen automatischen Abgleich zwischen Geräten gibt es nicht.</li><li><b>Mehrere Personen.</b> Unter Daten → Sicherung legst du Profile an. Jedes Profil hat eigene Daten und ein eigenes Backup.</li></ul>"],
     ["Gut zu wissen", "<ul><li><b>Deine Daten liegen nur auf diesem Gerät.</b> Niemand sonst sieht sie. Ohne Backup sind sie weg, wenn die App oder die Website-Daten gelöscht werden. Die App erinnert dich nach 14 Tagen an ein Backup.</li><li><b>Ohne Internet</b> geht alles außer der Abfrage unbekannter Barcodes und Updates.</li><li><b>Updates:</b> Gibt es eine neue Version, fragt die App „Jetzt aktualisieren“ oder „Später“. Was neu ist, zeigt ein gelber Punkt am Reiter und „Was ist neu?“ unter Daten → Sicherung.</li><li><b>Wischen:</b> Nach links oder rechts wischen wechselt den Reiter. In seitlich scrollenden Diagrammen und Tabellen scrollt der Inhalt.</li><li><b>Blaues i:</b> Dahinter steht eine kurze Erklärung, oft auch wie gerechnet wird.</li><li><b>Schätzungen:</b> Kalorienbedarf, 1RM, Körperfett aus dem Maßband und Koffeinspiegel sind Schätzungen aus üblichen Formeln. Sie ersetzen keine ärztliche Beratung.</li><li><b>Quellen:</b> Markenprodukte stammen von <b>Open Food Facts</b> (openfoodfacts.org, Lizenz ODbL 1.0), Stand 13.11.2026. Die Werte pflegen Nutzer dort selbst, bei Auffälligem kurz mit der Packung vergleichen. Vitamine und Mineralstoffe der Grundlebensmittel stammen aus dem <b>Bundeslebensmittelschlüssel 4.0</b> (Max Rubner-Institut 2025, Karlsruhe, DOI 10.25826/Data20251217-134202-0, Lizenz CC BY 4.0); die Empfehlungen sind die DGE/ÖGE-Referenzwerte.</li></ul>"]
   ];
   /* Erste Schritte als Liste zum Abhaken (v115): gleiche Prüfungen wie im Rundgang, Antippen öffnet die Station. */
@@ -3822,7 +3855,7 @@ button, select, input { touch-action: manipulation }
     var sec = DSEC.some(function (x) { return x[0] === S.dataSec; }) ? S.dataSec : "food";
     var h = '<div class="chips dsec" role="group" aria-label="Bereich">' + DSEC.map(function (x) { return '<button data-act="dsec" data-id="' + x[0] + '" aria-pressed="' + (x[0] === sec) + '">' + x[1] + "</button>"; }).join("") + "</div>";
     if (sec === "food") h += '<div class="block fmanage"><h2>Mahlzeiten und Lebensmittel</h2>' + foodManage(foodDoc()) + "</div>";
-    else if (sec === "ex") h += S.plan ? exViewHtml() : '<p class="empty">Noch kein Plan. Leg ihn im Reiter „Training“ an.</p>';
+    else if (sec === "ex") h += S.plan ? exViewHtml() : '<p class="empty">Noch kein Plan. Leg ihn im Reiter „Plan“ an.</p>';
     else if (sec === "me") { var E = energy(bodyList()); h += personForm() + '<div class="block">' + macroForm(E) + "</div>" +
       '<div class="block"><h3>Darstellung</h3><div class="chips lookchips" role="group" aria-label="Design">' + lookChips() + '</div></div>'; }
     else if (sec === "help") h += helpHtml();
@@ -3846,7 +3879,7 @@ button, select, input { touch-action: manipulation }
     var app = navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
     var lb = lastBackup(), days = lb ? Math.floor((Date.now() - Date.parse(lb)) / 864e5) : 0, nW = Object.keys(S.workouts).length;
     if (ios && !app) notice("Zum Installieren: in Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“. Trag deine Daten erst in der installierten App ein, sie speichert getrennt von Safari.");
-    else if (lb ? days > 14 : nW >= 3) notice(lb ? "Dein letztes Backup ist " + days + " Tage alt. Sichere deine Daten im Tab „Daten“." : "Du hast noch kein Backup. Sichere deine Daten im Tab „Daten“, sie liegen nur auf diesem Gerät.");
+    else if (lb ? days > 14 : nW >= 3) notice(lb ? "Dein letztes Backup ist " + days + " Tage alt. Sichere deine Daten unter Daten → Sicherung." : "Du hast noch kein Backup. Sichere deine Daten unter Daten → Sicherung, sie liegen nur auf diesem Gerät.");
     else notice("");
   }
 
@@ -3980,7 +4013,7 @@ button, select, input { touch-action: manipulation }
     var t = today(), ph = phaseAt(t), all = list.filter(function (x) { return x.weight != null; });
     var from = ph ? ph.start : addDays(t, -56); /* in einer Phase: alle Messungen seit Phasenstart */
     var pts = all.filter(function (x) { return x.date >= from && x.date <= t; });
-    if (!pts.length) { var nm0 = '<p class="small muted">Noch keine Gewichtsmessung' + (ph ? " in dieser Phase" : " in den letzten acht Wochen") + ". Trag dein Gewicht im Reiter „Körper“ ein.</p>"; return { html: nm0, short: nm0 }; }
+    if (!pts.length) { var nm0 = '<p class="small muted">Noch keine Gewichtsmessung' + (ph ? " in dieser Phase" : " in den letzten acht Wochen") + ". Trag unten dein Gewicht ein.</p>"; return { html: nm0, short: nm0 }; }
     var base = null, rates = null, rpw = rampOf(ph, t), cst = ph ? ph.anchor || (ph.ramp && S.phases.indexOf(ph) > 0 ? addDays(ph.start, ph.ramp - 1) : ph.start) : null;
     if (ph && !rpw) {
       /* Startpunkt des Korridors: Phasenbeginn oder ein bewusster Neustart (anchor). */
@@ -4064,9 +4097,9 @@ button, select, input { touch-action: manipulation }
       info = '<p class="small">Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + " kg</b>. Korridor an diesem Tag: " + fmt(Math.round(cmin * 10) / 10) + "–" + fmt(Math.round(cmax * 10) / 10) + ' kg.</p><span class="hint ' + cls + '">' + where.charAt(0).toUpperCase() + where.slice(1) + "</span>" +
         catchUp(list, ph, lp, cmin, cmax) +
         tip("corr", "Was zeigt der Korridor?", (ph.anchor ? "Korridor neu gestartet am " + dfmt(ph.anchor, 1) + " bei " : "Ausgangsgewicht ") + fmt(base) + " kg. Die Linien zeigen " + (ph.type === "cut" ? "0,5 % und 1 % Abnahme" : ph.type === "bulk" ? "0,25 % und 0,5 % Zunahme" : "±0,25 %") + " pro Woche" + (lp ? " (bei dir " + (ph.type === "maintain" ? "±" + fmt(Math.round(lp.weight * 0.25) / 100) : fmt(Math.round(lp.weight * RULE[ph.type][0]) / 100) + "–" + fmt(Math.round(lp.weight * RULE[ph.type][1]) / 100)) + " kg)" : "") + ". Einzelne Messungen schwanken um 1–2 kg, achte auf den Verlauf.") +
-        (goal != null ? (gIn ? "" : '<p class="small muted">Das Ziel liegt außerhalb des gezeigten Bereichs, der Pfeil an der Achse zeigt die Richtung.</p>') : ph.type !== "maintain" ? '<p class="small muted">Leg im Tab „Körper“ ein Zielgewicht fest, dann siehst du hier die Ziellinie und wann du es voraussichtlich erreichst.</p>' : "");
+        (goal != null ? (gIn ? "" : '<p class="small muted">Das Ziel liegt außerhalb des gezeigten Bereichs, der Pfeil an der Achse zeigt die Richtung.</p>') : ph.type !== "maintain" ? '<p class="small muted">Leg unten ein Zielgewicht fest, dann siehst du hier die Ziellinie und wann du es voraussichtlich erreichst.</p>' : "");
       short = '<p>Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + " kg</b> · Korridor " + fmt(Math.round(cmin * 10) / 10) + "–" + fmt(Math.round(cmax * 10) / 10) + " kg</p>" + '<span class="hint ' + cls + '">' + where.charAt(0).toUpperCase() + where.slice(1) + "</span>" + (goal != null ? '<p class="small">Ziel ' + fmt(goal) + " kg · noch " + fmt(Math.max(0, Math.round(Math.abs(lp.weight - goal) * 10) / 10)) + " kg</p>" : "");
-    } else info = '<p class="small">Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + ' kg</b>.</p><p class="small muted">' + (rpw ? "Übergang bis " + dfmt(rpw.end, 1) + ": Der Korridor startet danach, weil das Gewicht mit mehr Essen anfangs durch Wasser schwankt." : "Starte im Reiter „Körper“ einen Cut oder Aufbau, dann zeigt die Kurve deinen Zielkorridor.") + "</p>";
+    } else info = '<p class="small">Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + ' kg</b>.</p><p class="small muted">' + (rpw ? "Übergang bis " + dfmt(rpw.end, 1) + ": Der Korridor startet danach, weil das Gewicht mit mehr Essen anfangs durch Wasser schwankt." : "Starte unten unter „Phasen“ einen Cut oder Aufbau, dann zeigt die Kurve deinen Zielkorridor.") + "</p>";
     if (!short) short = '<p>Letzte Messung ' + dfmt(lp.date) + ": <b>" + fmt(lp.weight) + " kg</b></p>";
     var sp = pts.slice(-14), smx = Math.max.apply(0, sp.map(function (q) { return q.weight; })), smn = Math.min.apply(0, sp.map(function (q) { return q.weight; }));
     if (sp.length > 1) short = '<div class="focusrow"><div>' + short + '</div><svg class="spark" viewBox="0 0 120 32" aria-hidden="true"><path d="' + sp.map(function (q, i) { return (i ? "L" : "M") + (i / (sp.length - 1) * 116 + 2).toFixed(1) + " " + (smx > smn ? 28 - (q.weight - smn) / (smx - smn) * 24 : 16).toFixed(1); }).join(" ") + '"/></svg></div>';
@@ -5066,7 +5099,7 @@ button, select, input { touch-action: manipulation }
     }
     if (kc) top += '<div class="drow"><div class="dline"><span class="dlab">' + ic("flame", "dk") + (rest >= 0 ? 'Noch <b class="dbig">' + nf(rest) + "</b> kcal" : '<b class="dbig fover">' + nf(-rest) + "</b> kcal drüber") + '</span><span class="dside">' + nf(sum.kcal) + " / " + nf(kc) + "</span></div>" +
       '<div class="dtrack sgs' + (rest < 0 ? " over" : "") + '" role="img" aria-label="' + nf(sum.kcal) + " von " + nf(kc) + ' kcal gegessen">' + segs + "</div></div>";
-    else top += '<div class="drow"><div class="dline"><span class="dlab">' + ic("flame", "dk") + 'Gegessen <b class="dbig">' + nf(sum.kcal) + '</b> kcal</span></div><p class="small muted">Für dein Kalorienziel trag im Reiter „Körper“ dein Gewicht und die Angaben für die Kalorienempfehlung ein.</p></div>';
+    else top += '<div class="drow"><div class="dline"><span class="dlab">' + ic("flame", "dk") + 'Gegessen <b class="dbig">' + nf(sum.kcal) + '</b> kcal</span></div><p class="small muted">Für dein Kalorienziel trag unter „Körper“ dein Gewicht und unter „Daten“ → „Persönlich“ deine Angaben ein.</p></div>';
     var mcol = function (k, lab, v, goal, warnOver) { return '<div class="mcol"><span class="mlab"><span class="mdt ' + k + '"></span>' + lab + '</span><span class="mval' + (goal && warnOver && v > goal * 1.05 ? " fover" : "") + '"><b>' + nf(v) + "</b>" + (goal ? " / " + nf(goal) : "") + " g</span></div>"; };
     /* Legende: „offen“ steht direkt neben Protein (seit v73), wie im Balken. */
     top += '<div class="mgrid' + (gseg ? " m4" : "") + '">' + mcol("p", "Protein", sum.p, pg, false) +
@@ -5105,7 +5138,7 @@ button, select, input { touch-action: manipulation }
           '<label>Koffein mg<input data-fi="caf" data-id="' + x.id + '" value="' + (isN(x.caf) ? fmt(x.caf) : CAF[x.id] != null ? fmt(CAF[x.id]) : "") + '" inputmode="decimal" placeholder="–"></label>' +
           '<details class="fnut fsp2"><summary class="small">Vitamine, Mineralstoffe, Omega-3 ' + (nutBase(x) ? "(" + nutBase(x).filter(function (v) { return v != null; }).length + " Werte)" : "(leer)") + '</summary><div class="fnutg">' +
           NUTK.map(function (k, i) { var bv = nutBase(x); return '<label>' + k[1] + " " + k[2] + '<input data-fn="' + i + '" data-id="' + x.id + '" value="' + (bv && bv[i] != null ? fmt(bv[i]) : "") + '" inputmode="decimal" placeholder="–"></label>'; }).join("") +
-          '</div><p class="small muted">Je ' + (x.per === "st" ? "Stück/Portion" : FPER[x.per] === "ml" ? "100 ml" : "100 g") + ", wie auf der Packung. Leer = unbekannt.</p></details>" +
+          '</div><p class="small muted">Je ' + (x.per === "st" ? "Stück/Portion" : x.per === "ml" ? "100 ml" : "100 g") + ", wie auf der Packung. Leer = unbekannt.</p></details>" +
           '<label class="fsp2">Barcode<input data-fi="code" data-id="' + x.id + '" value="' + esc(x.code || (/^p_\d+$/.test(x.id) ? x.id.slice(2) : "")) + '" inputmode="numeric" placeholder="optional" autocomplete="off"></label>' +
           '<label class="fcatsel">Gruppe<select data-fi="cat" data-id="' + x.id + '">' + FCATS.map(function (c) { return "<option" + (c === (x.cat || "Eigene") ? " selected" : "") + ">" + c + "</option>"; }).join("") + "</select></label>" +
           (x.lib ? "" : '<button class="ghost xs" data-act="fidel" data-id="' + x.id + '">' + (LIBMAP[x.id] ? "Auf Bibliothek zurücksetzen" : "Löschen") + "</button>") + "</div>" : "") + "</div>";
@@ -5216,7 +5249,7 @@ button, select, input { touch-action: manipulation }
     var prevTab = S.tab; saveDraft(); S.tab = t; if ($("lookpop")) $("lookpop").hidden = true;
     ["home", "train", "prog", "body", "plan", "data"].forEach(function (k) { $("tab-" + k).hidden = k !== t; });
     document.querySelectorAll(".tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === t)); });
-    if (t === "home") renderHome(); else if (t === "train") { draft = null; renderTrain(); } else if (t === "prog") renderProgress(); else if (t === "plan") renderPlan(); else if (t === "data") renderData();
+    if (t === "home") renderHome(); else if (t === "train") { draft = null; renderTrain(); } else if (t === "prog") renderProgress(); else if (t === "body") renderBody(true); else if (t === "plan") renderPlan(); else if (t === "data") renderData(); /* v121: body fehlte, „Heute“ blieb stehen */
     topNotice();
     try { localStorage.setItem("trainingslog-tab", t); } catch (e) {}
     if (prevTab !== t) window.scrollTo(0, 0);
@@ -5344,7 +5377,7 @@ button, select, input { touch-action: manipulation }
     else if (a === "dskip") {
       var dsd = S.nutri["n_" + today()] ? clone(S.nutri["n_" + today()]) : { kind: "nutri", date: today(), entries: [] }, skl = dsd.skip || [];
       dsd.skip = skl.indexOf(id) < 0 ? skl.concat([id]) : skl.filter(function (x) { return x !== id; }); if (!dsd.skip.length) delete dsd.skip;
-      put("n_" + today(), dsd); renderHome();
+      put("n_" + today(), dsd.entries.length || dsd.skip ? dsd : null); renderHome(); /* v121: kein leerer Tag zurücklassen */
     }
     else if (a === "dldel") {
       var fdd = clone(foodDoc()), dx = (fdd.daily || []).filter(function (x) { return x.id === id; })[0]; if (!dx) return;
@@ -5392,7 +5425,7 @@ button, select, input { touch-action: manipulation }
       var dl = [], dd0 = day();
       (draft.exs || []).forEach(function (x) { if (x.id !== id) dl.push(x); else if (x.wasId) dl.push({ id: x.wasId, name: x.was }); });
       var same0 = dl.length === dd0.exercises.length && dl.every(function (x, j) { return x.id === dd0.exercises[j].id; });
-      draft.exs = same0 ? null : dl; delete draft.rows[id]; dirty = true; saveDraft(); draft = null; renderTrain();
+      draft.exs = same0 ? null : dl; draft.auto = false; delete draft.rows[id]; dirty = true; saveDraft(); draft = null; renderTrain();
     }
     else if (a === "addset") { var rows = draft.rows[id] || (draft.rows[id] = []), l = rows[rows.length - 1]; rows.push({ w: l ? l.w : "", r: "" }); renderTrain(); var el = $("r-" + id + "-" + (rows.length - 1)); if (el) el.focus(); }
     else if (a === "metric") { S.metric = id; renderProgress(); }
@@ -5465,7 +5498,7 @@ button, select, input { touch-action: manipulation }
       /* Sind die übrigen Angaben schon gespeichert, gelten die Trainingstage sofort, ohne „Speichern“. */
       if (S.person) {
         var tds = []; $("pe-days").querySelectorAll('[aria-pressed="true"]').forEach(function (x) { tds.push(+x.dataset.id); });
-        var pcopy = clone(S.person); pcopy.tdays = tds; saveSettings(null, pcopy);
+        var pcopy = clone(S.person); pcopy.tdays = tds; if (pcopy.job && actOf(pcopy.job, tds, pcopy.tmin)) pcopy.act = actOf(pcopy.job, tds, pcopy.tmin); /* v121 */ saveSettings(null, pcopy);
         $("pemsg").textContent = "Trainingstage gespeichert."; renderBody(true);
       }
     }
@@ -5476,7 +5509,7 @@ button, select, input { touch-action: manipulation }
         if (nm.fat == null || nm.fat < 15 || nm.fat > 45) { $("mcmsg").textContent = "Fett bitte zwischen 15 und 45 % der Kalorien angeben."; return; }
       }
       S.macro = nm; saveSettings(); renderBody(true); renderHome(); renderData();
-      $("mcmsg").textContent = nm ? "Gespeichert. Ringdiagramm, Tabelle und Kalender rechnen jetzt damit." : "Auf Standard zurückgesetzt.";
+      $("mcmsg").textContent = nm ? "Gespeichert. Ernährung, Tabelle und Kalender rechnen jetzt damit." : "Auf Standard zurückgesetzt.";
     }
     else if (a === "pesave") {
       var sx = $("pe-sex").value, yr = num($("pe-year").value), hg = num($("pe-height").value), jb = $("pe-job").value || null, tm = +$("pe-tmin").value || 60, bdt = $("pe-bed").value, it = num($("pe-intake").value), age = new Date().getFullYear() - yr;
@@ -5550,7 +5583,7 @@ button, select, input { touch-action: manipulation }
       }
       var nps = clone(S.phases); nps.forEach(function (q) { if (q.start === cph.start) { if (gv == null) delete q.goal; else q.goal = Math.round(gv * 10) / 10; } });
       saveSettings(nps); renderBody(true); renderHome();
-      $("goalmsg").textContent = gv == null ? "Ziel entfernt." : "Ziel gespeichert. Du siehst es auch im Reiter „Ernährung“.";
+      $("goalmsg").textContent = gv == null ? "Ziel entfernt." : "Ziel gespeichert.";
     }
     else if (a === "phstart") {
       var pt = $("ph-type").value, pd = $("ph-date").value || today(), act = phaseAt(pd);
@@ -5668,7 +5701,7 @@ button, select, input { touch-action: manipulation }
       if (ef == null && ec == null) { ef = er * 0.4 / 9; ec = er * 0.6 / 4; } else if (ef == null) ef = er / 9; else if (ec == null) ec = er / 4;
       nutriAdd(today(), { name: $("ne-name").value.trim().slice(0, 60) || "Schätzung", p: ep, kcal: ek, f: Math.max(0, ef), c: Math.max(0, ec), est: true }); S.nForm = null; renderHome();
     }
-    else if (a === "ndel") { if (!S.nutri["n_" + today()]) { renderHome(); return; } var nd = clone(S.nutri["n_" + today()]); nd.entries = nd.entries.filter(function (e) { return e.id !== id; }); put("n_" + today(), nd.entries.length ? nd : null); renderHome(); }
+    else if (a === "ndel") { if (!S.nutri["n_" + today()]) { renderHome(); return; } var nd = clone(S.nutri["n_" + today()]); nd.entries = nd.entries.filter(function (e) { return e.id !== id; }); put("n_" + today(), nd.entries.length || (nd.skip && nd.skip.length) ? nd : null); renderHome(); } /* v121: skip behalten */
     else if (/^f(madd|mdel|pdel|iadd|idel)$/.test(a)) {
       var fd = clone(foodDoc()), mm = fd.meals.filter(function (m) { return m.id === id; })[0];
       if (a === "fmadd") fd.meals.push({ id: rid("fm"), name: fd.meals.length ? "Mahlzeit " + (fd.meals.length + 1) : "Frühstück", parts: [] });
@@ -5929,16 +5962,25 @@ button, select, input { touch-action: manipulation }
     if (ev.target && ev.target.classList && ev.target.classList.contains("nutdet")) { S.nutOpen = ev.target.open; if (S.nutOpen && $("nutbox") && !$("nutbox").innerHTML) $("nutbox").innerHTML = nutBlock(); return; }
     if (ev.target && ev.target.classList && ev.target.classList.contains("eatdet")) { S.eatOpen = ev.target.open; if (S.eatOpen && $("eatbox") && !$("eatbox").innerHTML) $("eatbox").innerHTML = eatBlock(); return; } var t = ev.target; if (t && t.classList && t.classList.contains("warm") && t.dataset.wu) WOPEN[t.dataset.wu] = t.open; if (t && t.classList && t.classList.contains("flib")) { S.fLibOpen = S.fLibOpen || {}; S.fLibOpen[t.dataset.g] = t.open; } }, true);
   window.addEventListener("pagehide", function () { saveDraft(); if (planTimer) planChanged(true); });
+  /* Tageswechsel (v121 zusammengefasst): beim Zurückkehren in die App und, falls sie über Mitternacht sichtbar offen bleibt
+     (z. B. am PC), alle 30 s. Lief gerade ein Training (in den letzten 3 Stunden geändert), bleibt es offen; sonst springt alles
+     aufs heutige Datum. Ohne Plan gibt es kein laufendes Training (day() ist dann null). Mitten in einer Eingabe wird gewartet. */
+  var curDay = today();
+  function dayCheck(force) {
+    var t = today(); if (t === curDay || !S.ready) return;
+    var ae = document.activeElement;
+    if (!force && (dirty || saveTimer || planTimer || (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)))) return;
+    var prev = curDay; curDay = t;
+    var w0 = day() ? S.workouts[wid()] : null, busy = S.date === prev && w0 && (w0.entries || []).length && Date.now() - Date.parse(w0.updated || 0) < 3 * 36e5;
+    if (busy) { S.lateDay = true; renderHome(); renderTrain(); renderBody(false); }
+    else { S.date = today(); S.dayId = null; draft = null; dirty = false; renderAll(true); }
+  }
+  setInterval(function () { if (!document.hidden) dayCheck(false); }, 30000);
   document.addEventListener("visibilitychange", function () {
-    if (document.hidden) { hiddenAt = Date.now(); hiddenDay = today(); saveDraft(); if (planTimer) planChanged(true); return; }
+    if (document.hidden) { hiddenAt = Date.now(); saveDraft(); if (planTimer) planChanged(true); return; }
     if (MODE === "idb" && !wRun && Object.keys(pend).length) flush(); /* offene Änderungen nachholen */
     /* Zurück in der App: nach einem Tageswechsel aufs heutige Datum springen, nach über 3 Stunden Pause neu fragen. */
-    if (hiddenDay && hiddenDay !== today()) {
-      /* Lief gerade ein Training (in den letzten 3 Stunden geändert), bleibt es offen; sonst aufs heutige Datum springen. */
-      var w0 = S.workouts[wid()], busy = S.date === hiddenDay && w0 && (w0.entries || []).length && Date.now() - Date.parse(w0.updated || 0) < 3 * 36e5;
-      if (busy) { S.lateDay = true; renderHome(); renderTrain(); }
-      else { S.date = today(); S.dayId = null; draft = null; dirty = false; renderAll(true); }
-    }
+    dayCheck(true);
     if (hiddenAt && Date.now() - hiddenAt > 3 * 36e5 && PROF.list.length > 1 && $("who").hidden) askWho();
     /* Zurück aus dem Kurzbefehl: auf „Einfügen“ hinweisen (Zwischenablage lesen geht nur nach einem Tippen). */
     checkUpdate(true);
