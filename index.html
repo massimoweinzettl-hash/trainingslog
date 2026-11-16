@@ -483,8 +483,8 @@ button.danger { color: var(--bad) }
 body.reporting { overflow: hidden }
 @media print { body.reporting > *:not(#report) { display: none !important } body.reporting { overflow: visible; background: #fff } #report { position: static; overflow: visible } #report .rtool { display: none } }
 .cafl { margin: 0 0 10px; padding: 8px 10px; font-size: 14px; border-radius: 10px; background: var(--sunken) } .cafl p { margin: 0 } .cafl p + p { margin-top: 2px } .cafl.warn b { color: var(--bad) } #tendbox { display: contents } .tend { margin: 12px 0 4px; display: flex; flex-direction: column; gap: 6px } .tend .primary { align-self: stretch } .tend p { margin: 0 } .tend.done { padding: 10px 12px; border-radius: 10px; background: var(--good-soft) } .tend.done .linkbtn { align-self: flex-start }
-.cafch { display: block; width: 100%; height: 70px; margin: 6px 0 2px; overflow: visible } .cafch .cfl { fill: none; stroke: var(--accent); stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linejoin: round }
-.cafch .cfa { fill: var(--accent); opacity: .14 } .cafch .cf30 { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke } .cafch .cfnow { stroke: var(--ink); stroke-width: 1.2; vector-effect: non-scaling-stroke } .cafch .cfbed { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 1 3; vector-effect: non-scaling-stroke }
+.cafch { display: block; width: 100%; height: 84px; margin: 6px 0 2px; overflow: visible } .cafch .cfl { fill: none; stroke: var(--accent); stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linejoin: round }
+.cafch .cfa { fill: var(--accent); opacity: .14 } .cafch .cf30 { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke } .cafch .cfnow { stroke: var(--pr); stroke-width: 2.2; vector-effect: non-scaling-stroke } .cafch .cfdot { fill: var(--pr); stroke: var(--surface); stroke-width: 1.5; vector-effect: non-scaling-stroke } .cafch .cfnt { fill: var(--pr); font-weight: 700 } .cafch .cfbt { font-weight: 600 } .cafch .cftick { stroke: var(--muted); stroke-width: 1; vector-effect: non-scaling-stroke } .cafch .cfbed { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 1 3; vector-effect: non-scaling-stroke }
 .cafch text { font-size: 10px; fill: var(--muted); paint-order: stroke; stroke: var(--sunken); stroke-width: 3px; stroke-linejoin: round }
 .cafbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; margin: 6px 0 2px; font-size: 13px; color: var(--muted) }
 .cafbar .nb { position: relative; height: 8px; border-radius: 4px; background: var(--surface); overflow: hidden } .cafbar .nb i { display: block; height: 100%; border-radius: 4px; background: hsl(var(--h) var(--nut-s) calc(var(--nut-l) + var(--lb, 0) * var(--nut-lk) * 1%)) }
@@ -729,8 +729,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 125;
+  var APP_VERSION = 126;
   var CHANGES = [
+    { v: 126, tab: "home", text: "Koffeinkurve: feinere Zeitachse (Strich je Stunde, Beschriftung alle 2 Stunden) und ein deutlicher Jetzt-Strich mit Uhrzeit und Punkt auf der Kurve. Statt „zu spät“ steht morgens jetzt verständlich, dass noch ein Kaffee zur Schlafenszeit zu viel wäre." },
     { v: 125, tab: "train", text: "„+ Übung für heute“ und „Ersetzen“ zeigen ohne Suchbegriff alle deine Übungen und den ganzen Katalog nach Muskelgruppen (zum Aufklappen). Übungen, die schon in der Einheit sind, stehen ausgegraut dabei." },
     { v: 124, tab: "prog", text: "Neue Reihenfolge: Kraft nach Körperbereichen ganz oben, darunter der Verlauf je Übung, danach Schwerpunkt und Kennzahlen." },
     { v: 124, tab: "data", text: "Essen: Tägliche Einnahme, Mahlzeiten und Lebensmittel als getrennte Blöcke. Favoriten zugeklappt, eigene und gescannte Produkte in ihrer Gruppe statt als lange Liste. Ein Backup in einem leeren Profil übernimmt dessen Namen." },
@@ -5111,15 +5112,23 @@ button, select, input { touch-action: manipulation }
     var t0 = new Date(ev[0][0]); t0.setMinutes(0, 0, 0); var a = t0.getTime(), z = Math.max(bt.ms + 36e5, now + 36e5), st = 6e5;
     var lvl = function (t) { return ev.reduce(function (s, x) { return s + cafAmt(x[1], t - x[0]); }, 0); };
     var pts = [], t; st = 3e5; for (t = a; t <= z; t += st) { ev.forEach(function (x) { }); pts.push([t, lvl(t)]); }
-    var mx = Math.max(60, Math.max.apply(0, pts.map(function (p) { return p[1]; })) * 1.1), W = 350, H = 70, T = 6, B = 14, X = function (v) { return (v - a) / (z - a) * W; }, Y = function (v) { return T + (1 - v / mx) * (H - T - B); };
+    var mx = Math.max(60, Math.max.apply(0, pts.map(function (p) { return p[1]; })) * 1.1), W = 350, H = 84, T = 14, B = 14, X = function (v) { return (v - a) / (z - a) * W; }, Y = function (v) { return T + (1 - v / mx) * (H - T - B); };
     var d = pts.map(function (p, i) { return (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1); }).join(" ");
     var hh = function (ms) { var x = new Date(ms); return String(x.getHours()).padStart(2, "0") + ":" + String(x.getMinutes()).padStart(2, "0"); };
     var g = '<path class="cfa" d="' + d + " L" + W + " " + Y(0) + " L0 " + Y(0) + 'Z"/><path class="cfl" d="' + d + '"/>' +
       '<line class="cf30" x1="0" x2="' + W + '" y1="' + Y(CAF_BED).toFixed(1) + '" y2="' + Y(CAF_BED).toFixed(1) + '"/>' +
-      '<line class="cfnow" x1="' + X(now).toFixed(1) + '" x2="' + X(now).toFixed(1) + '" y1="' + T + '" y2="' + Y(0) + '"/>' +
+      /* v126 (Wunsch des Nutzers): Zeitachse feiner – Strich je Stunde, Beschriftung je 1/2/3 Stunden je nach Spanne;
+         „jetzt“ auffälliger: kräftiger Strich, Punkt auf der Kurve, Beschriftung oben. */
+      (function () { var o = "", k = (z - a) / 36e5 > 18 ? 3 : (z - a) / 36e5 > 8 ? 2 : 1, xb = X(bt.ms), xn = X(now);
+        for (var u = a, i = 0; u <= z; u += 36e5, i++) { var xu = X(u); o += '<line class="cftick" x1="' + xu.toFixed(1) + '" x2="' + xu.toFixed(1) + '" y1="' + Y(0) + '" y2="' + (Y(0) + 3) + '"/>';
+          if (i % k === 0 && Math.abs(xu - xb) > 22 && xu < W - 10) o += '<text x="' + xu.toFixed(1) + '" y="' + (H - 2) + '" text-anchor="' + (i ? "middle" : "start") + '">' + String(new Date(u).getHours()).padStart(2, "0") + "</text>"; }
+        return o; })() +
       '<line class="cfbed" x1="' + X(bt.ms).toFixed(1) + '" x2="' + X(bt.ms).toFixed(1) + '" y1="' + T + '" y2="' + Y(0) + '"/>' +
-      '<text x="0" y="' + (H - 2) + '">' + hh(a) + '</text><text x="' + X(bt.ms).toFixed(1) + '" y="' + (H - 2) + '" text-anchor="middle">' + bt.hm + "</text>" +
-      '<text x="' + (X(now) + 4).toFixed(1) + '" y="' + (Y(CAF_BED) - 3).toFixed(1) + '">30 mg</text><text x="0" y="' + (T + 4) + '">' + Math.round(mx) + " mg</text>";
+      '<text class="cfbt" x="' + X(bt.ms).toFixed(1) + '" y="' + (H - 2) + '" text-anchor="middle">' + bt.hm + "</text>" +
+      '<line class="cfnow" x1="' + X(now).toFixed(1) + '" x2="' + X(now).toFixed(1) + '" y1="' + (T - 2) + '" y2="' + Y(0) + '"/>' +
+      '<circle class="cfdot" cx="' + X(now).toFixed(1) + '" cy="' + Y(lvl(now)).toFixed(1) + '" r="3.2"/>' +
+      '<text class="cfnt" x="' + X(now).toFixed(1) + '" y="' + (T - 4) + '" text-anchor="' + (X(now) < 30 ? "start" : X(now) > W - 30 ? "end" : "middle") + '">jetzt ' + hh(now) + "</text>" +
+      '<text x="' + (X(now) + 4).toFixed(1) + '" y="' + (Y(CAF_BED) - 3).toFixed(1) + '">30 mg</text><text x="' + (W - 2) + '" y="' + (T + 8) + '" text-anchor="end">' + Math.round(mx) + " mg</text>";
     return '<svg class="cafch" viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" role="img" aria-label="Koffeinspiegel über den Tag">' + g + "</svg>";
   }
   function cafLine(ent) {
@@ -5129,7 +5138,7 @@ button, select, input { touch-action: manipulation }
     var warn = tot > 400 || big, late = atBed > CAF_BED, room = CAF_BED - atBed, until = "";
     if (now < bt.ms) {
       if (room <= 0) until = "Heute besser kein Koffein mehr.";
-      else { var lo = now, hi2 = bt.ms, x; if (cafAmt(90, bt.ms - now) > room) x = now; else { for (var it = 0; it < 40; it++) { var md = (lo + hi2) / 2; if (cafAmt(90, bt.ms - md) <= room) lo = md; else hi2 = md; } x = lo; } /* späteste Zeit, ab der 90 mg zur Schlafenszeit ≤ Rest (nach dem Höchstwert fällt die Kurve) */ if (x <= now) until = "Für einen Kaffee ist es heute zu spät."; else { var xd = new Date(Math.floor(x / 9e5) * 9e5); until = "Kaffee (90 mg) noch bis ≈ " + String(xd.getHours()).padStart(2, "0") + ":" + String(xd.getMinutes()).padStart(2, "0") + "."; } }
+      else { var lo = now, hi2 = bt.ms, x; if (cafAmt(90, bt.ms - now) > room) x = now; else { for (var it = 0; it < 40; it++) { var md = (lo + hi2) / 2; if (cafAmt(90, bt.ms - md) <= room) lo = md; else hi2 = md; } x = lo; } /* späteste Zeit, ab der 90 mg zur Schlafenszeit ≤ Rest (nach dem Höchstwert fällt die Kurve) */ if (x <= now) until = "Noch ein Kaffee (90 mg) wäre zur Schlafenszeit zu viel."; /* v126: vorher „zu spät“ – klang morgens unsinnig */ else { var xd = new Date(Math.floor(x / 9e5) * 9e5); until = "Kaffee (90 mg) noch bis ≈ " + String(xd.getHours()).padStart(2, "0") + ":" + String(xd.getMinutes()).padStart(2, "0") + "."; } }
     }
     /* v108 (Wunsch des Nutzers): farbige Leiste für den Rest zur Schlafenszeit, gleiche fließende Skala wie bei den Vitaminen (x = Rest / 30 mg: bis 15 mg grün, ≈ 22 mg gelb, 30 mg orange, ab 45 mg rot). Volle Breite = 60 mg, Strich bei 30 mg. */
     var xh = atBed / CAF_BED, hue = nutHue(xh), cst = "--h:" + hue + ";--lb:" + Math.max(0, Math.round(12 - Math.abs(hue - 40) / 3)) + ";";
