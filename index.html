@@ -214,7 +214,9 @@ button.xs { min-height: 32px; padding: 2px 10px }
 .hsec li, .hsec p { font-size: 15px; line-height: 1.45 }
 .hsec p { margin: 6px 0 }
 #tour { position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; z-index: 60; background: var(--surface); color: var(--ink); border: 1px solid var(--accent); border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); padding: 12px 16px }
-#upd { z-index: 90; align-items: center } .updsheet { width: min(340px, calc(100% - 40px)); text-align: center; align-items: stretch; gap: 10px; padding: 22px }
+#upd { z-index: 90; align-items: center } #party { z-index: 91; align-items: center } .confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 96 }
+.partysheet { gap: 8px } .partysheet > button { width: 100% } .partysheet .linkbtn { align-self: center; padding: 6px 0 0 } .partyico { background: var(--good-soft, var(--accent-soft)) } .partyico .ic { stroke: var(--good) }
+.partylist { list-style: none; margin: 0 0 4px; padding: 10px 12px; border-radius: 12px; background: var(--sunken); text-align: left; display: flex; flex-direction: column; gap: 4px } .partylist li { font-size: 15px; line-height: 1.35 } .partylist li:first-child { font-weight: 700 } .updsheet { width: min(340px, calc(100% - 40px)); text-align: center; align-items: stretch; gap: 10px; padding: 22px }
 .updsheet h2 { margin: 0 } .updsheet p { margin: 0 0 6px } .updico { align-self: center; width: 52px; height: 52px; border-radius: 50%; background: var(--accent-soft); display: flex; align-items: center; justify-content: center }
 .updico .ic { width: 28px; height: 28px; stroke: var(--accent) }
 #setup { z-index: 70; align-items: flex-end }
@@ -483,6 +485,7 @@ button.danger { color: var(--bad) }
 body.reporting { overflow: hidden }
 @media print { body.reporting > *:not(#report) { display: none !important } body.reporting { overflow: visible; background: #fff } #report { position: static; overflow: visible } #report .rtool { display: none } }
 .cafl { margin: 0 0 10px; padding: 8px 10px; font-size: 14px; border-radius: 10px; background: var(--sunken) } .cafl p { margin: 0 } .cafl p + p { margin-top: 2px } .cafl.warn b { color: var(--bad) } #tendbox { display: contents } .tend { margin: 12px 0 4px; display: flex; flex-direction: column; gap: 6px } .tend .primary { align-self: stretch } .tend p { margin: 0 } .tend.done { padding: 10px 12px; border-radius: 10px; background: var(--good-soft) } .tend.done .linkbtn { align-self: flex-start }
+.cafscroll { overflow-x: auto; overflow-y: hidden; margin: 0 -4px; padding: 0 4px; scrollbar-width: none } .cafscroll::-webkit-scrollbar { display: none } .cafscroll .cafch { max-width: none }
 .cafch { display: block; width: 100%; height: 84px; margin: 6px 0 2px; overflow: visible } .cafch .cfl { fill: none; stroke: var(--accent); stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linejoin: round }
 .cafch .cfa { fill: var(--accent); opacity: .14 } .cafch .cf30 { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke } .cafch .cfnow { stroke: var(--pr); stroke-width: 2.2; vector-effect: non-scaling-stroke } .cafch .cfdot { fill: var(--pr); stroke: var(--surface); stroke-width: 1.5; vector-effect: non-scaling-stroke } .cafch .cfnt { fill: var(--pr); font-weight: 700 } .cafch .cfbt { font-weight: 600 } .cafch .cftick { stroke: var(--muted); stroke-width: 1; vector-effect: non-scaling-stroke } .cafch .cfbed { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 1 3; vector-effect: non-scaling-stroke }
 .cafch text { font-size: 10px; fill: var(--muted); paint-order: stroke; stroke: var(--sunken); stroke-width: 3px; stroke-linejoin: round }
@@ -729,8 +732,10 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 126;
+  var APP_VERSION = 127;
   var CHANGES = [
+    { v: 127, tab: "home", text: "Koffein zählt über Mitternacht weiter: Ein Energy um 22 Uhr steht nach Mitternacht noch in „jetzt im Körper“ und in der Kurve. Die Kurve reicht bis das Koffein praktisch weg ist und lässt sich dann seitlich wischen; neue Zeile „Koffeinfrei (unter 5 mg) ab …“." },
+    { v: 127, tab: "body", text: "Ziel erreicht? Dann gibt es Konfetti und deine Bilanz (Gewicht, Körperfett, Trainings, Kraft) – sobald der 7-Tage-Schnitt das Zielgewicht erreicht, einmal je Phase. Danach fragt die App, wie es weitergeht: halten mit Übergang, Aufbau, weiter runter oder später." },
     { v: 126, tab: "home", text: "Koffeinkurve: feinere Zeitachse (Strich je Stunde, Beschriftung alle 2 Stunden) und ein deutlicher Jetzt-Strich mit Uhrzeit und Punkt auf der Kurve. Statt „zu spät“ steht morgens jetzt verständlich, dass noch ein Kaffee zur Schlafenszeit zu viel wäre." },
     { v: 125, tab: "train", text: "„+ Übung für heute“ und „Ersetzen“ zeigen ohne Suchbegriff alle deine Übungen und den ganzen Katalog nach Muskelgruppen (zum Aufklappen). Übungen, die schon in der Einheit sind, stehen ausgegraut dabei." },
     { v: 124, tab: "prog", text: "Neue Reihenfolge: Kraft nach Körperbereichen ganz oben, darunter der Verlauf je Übung, danach Schwerpunkt und Kennzahlen." },
@@ -1855,6 +1860,70 @@ button, select, input { touch-action: manipulation }
   }
   function phaseBase(list, ph) { return phaseBasePoint(list, ph.start).weight; }
   /* Fortschritt zum Ziel, voraussichtliches Datum nach Faustregel und nach tatsächlichem Trend. */
+  /* v127 (Wunsch des Nutzers: „eine kleine Party, dafür dass man durchgehalten hat“): Erreicht der 7-Tage-Schnitt (mind. 3 Messungen)
+     im Cut bzw. Aufbau das Zielgewicht, einmal je Phase (Merker ph.done) Konfetti und eine Bilanz; darunter die Frage, wie es weitergeht,
+     damit nicht aus Versehen mit Cut-Kalorien weitergerechnet wird. Ein geändertes Ziel löscht den Merker. */
+  function partyDue() {
+    var t = today(), ph = phaseAt(t); if (!ph || ph.done || !isN(ph.goal) || (ph.type !== "cut" && ph.type !== "bulk")) return null;
+    var list = bodyList(), from = addDays(t, -6), ws = list.filter(function (x) { return x.weight != null && x.date >= from && x.date <= t && x.date >= ph.start; });
+    if (ws.length < 3) return null;
+    var av = ws.reduce(function (a, x) { return a + x.weight; }, 0) / ws.length, base = phaseBase(list, ph);
+    if (base == null || (ph.type === "cut" ? av > ph.goal + 0.05 : av < ph.goal - 0.05)) return null;
+    return { ph: ph, av: av, base: base, list: list };
+  }
+  function partyHtml(pd) {
+    var ph = pd.ph, t = today(), wk = Math.max(1, Math.round((Date.parse(t) - Date.parse(ph.start)) / 864e5 / 7)), cut = ph.type === "cut";
+    var fat = function (a, b) { var f = pd.list.filter(function (x) { return x.fat != null && x.date >= a && x.date <= b; }); return f.length ? f.reduce(function (s2, x) { return s2 + x.fat; }, 0) / f.length : null; };
+    var f0 = fat(ph.start, addDays(ph.start, 13)), f1 = fat(addDays(t, -6), t);
+    var nTr = sortedWorkouts().filter(function (o) { return o.w.date >= ph.start && o.w.date <= t && (o.w.entries || []).length; }).length;
+    var keep = S.strP; S.strP = "phase"; var sd = null; try { sd = strengthData(); } catch (e) {} S.strP = keep;
+    var st = sd && sd.upper != null ? (sd.upper >= 2 ? "Kraft gesteigert" : sd.upper >= -2 ? "Kraft gehalten" : "Kraft") + " (Oberkörper " + pctTxt(sd.upper) + (sd.lower != null ? ", Unterkörper " + pctTxt(sd.lower) : "") + ")" : "";
+    var li = [fmt(Math.round(pd.base * 10) / 10) + " → " + fmt(Math.round(pd.av * 10) / 10) + " kg in " + wk + (wk === 1 ? " Woche" : " Wochen") + " (7-Tage-Schnitt)"];
+    if (f0 != null && f1 != null && Math.abs(f1 - f0) >= 0.5) li.push("Körperfett " + fmt(Math.round(f0 * 10) / 10) + " → " + fmt(Math.round(f1 * 10) / 10) + " %");
+    if (nTr) li.push(nTr + (nTr === 1 ? " Training" : " Trainings") + " durchgezogen");
+    if (st) li.push(st);
+    var bt = function (id, txt, cls) { return '<button class="' + (cls || "ghost") + '" data-act="pdo" data-id="' + id + '">' + txt + "</button>"; };
+    return '<div class="sheet updsheet partysheet"><div class="updico partyico">' + ic("trophy") + '</div><h2 id="party-h">' + (cut ? "Ziel erreicht!" : "Aufbauziel erreicht!") + "</h2>" +
+      '<p>' + (cut ? "Du hast durchgehalten – stark!" : "Geschafft – stark aufgebaut!") + '</p><ul class="partylist">' + li.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" +
+      '<p class="small muted">Wie geht es weiter?</p>' +
+      (cut ? bt("maintain", "Halten mit Übergang (3 Wochen)", "primary") + bt("bulk", "Aufbau starten (mit Übergang)") + bt("more", "Noch weiter runter")
+           : bt("maintain", "Halten", "primary") + bt("cut", "Cut starten") + bt("more", "Weiter aufbauen")) + bt("later", "Später entscheiden", "linkbtn") + "</div>";
+  }
+  var PARTY_SHOWN = false;
+  function partyCheck() {
+    if (PARTY_SHOWN || !S.ready || $("party") || $("setup") || $("tour") || $("upd") || document.body.classList.contains("reporting")) return;
+    var pd = partyDue(); if (!pd) return; PARTY_SHOWN = true;
+    var d = document.createElement("div"); d.id = "party"; d.className = "overlay"; d.setAttribute("role", "dialog"); d.setAttribute("aria-modal", "true"); d.setAttribute("aria-labelledby", "party-h");
+    d.innerHTML = partyHtml(pd); document.body.appendChild(d); confetti();
+  }
+  function confetti() {
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var cv = document.createElement("canvas"); cv.className = "confetti"; document.body.appendChild(cv);
+    var dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; var g = cv.getContext("2d"); g.scale(dpr, dpr);
+    var cs = getComputedStyle(document.documentElement), col = ["--accent", "--pr", "--m-f", "--m-c", "--good", "--ph-bulk"].map(function (v) { return cs.getPropertyValue(v).trim() || "#f80"; });
+    var P = []; for (var i = 0; i < 150; i++) P.push({ x: Math.random() * W, y: -20 - Math.random() * H * 0.6, vx: (Math.random() - 0.5) * 2.2, vy: 2 + Math.random() * 3.2, r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.3, w: 6 + Math.random() * 5, h: 3 + Math.random() * 4, c: col[i % col.length] });
+    var t0 = performance.now();
+    (function fr(ts) {
+      var el = ts - t0; g.clearRect(0, 0, W, H);
+      P.forEach(function (q) { q.x += q.vx + Math.sin((el / 400) + q.r) * 0.6; q.y += q.vy; q.r += q.vr; g.save(); g.translate(q.x, q.y); g.rotate(q.r); g.globalAlpha = el > 3500 ? Math.max(0, 1 - (el - 3500) / 1000) : 1; g.fillStyle = q.c; g.fillRect(-q.w / 2, -q.h / 2, q.w, q.h * Math.abs(Math.cos(q.r))); g.restore(); });
+      if (el < 4500) requestAnimationFrame(fr); else cv.remove();
+    })(t0);
+  }
+  /* Antwort auf die Frage nach der Feier: neue Phase ab heute (aus dem Cut mit 3 Wochen Übergang) bzw. nur Merker setzen. */
+  function partyDo(what) {
+    var t = today(), ph = phaseAt(t), d0 = $("party"); if (d0) d0.remove(); var cvs = document.querySelector("canvas.confetti"); if (cvs) cvs.remove();
+    if (!ph) return;
+    var np = clone(S.phases); np.forEach(function (q) { if (q.start === ph.start) q.done = t; });
+    if (what === "maintain" || what === "bulk" || what === "cut") {
+      np = np.filter(function (q) { return q.start !== t || q.start === ph.start; });
+      if (ph.start === t) np = np.filter(function (q) { return q.start !== t; });
+      var nph = { start: t, type: what }; if (ph.type === "cut" && what !== "cut") nph.ramp = 21;
+      np.push(nph); np.sort(function (x, y) { return x.start < y.start ? -1 : 1; });
+    }
+    saveSettings(np); renderAll(false);
+    if (what === "more") { showTab("body"); setTimeout(function () { var g2 = $("ph-goal"); if (g2) { g2.scrollIntoView({ block: "center" }); g2.focus(); } if ($("goalmsg")) $("goalmsg").textContent = "Leg ein neues Zielgewicht fest."; }, 350); }
+    else if (what !== "later") { showTab("body"); setTimeout(function () { if ($("phmsg")) $("phmsg").textContent = PH[what] + " gilt ab heute." + (what !== "cut" && ph.type === "cut" ? " Übergang 3 Wochen: Das Kalorienziel steigt jeden Tag ein Stück." : ""); }, 350); }
+  }
   function goalInfo(list, ph) {
     if (!ph || !isN(ph.goal) || ph.type === "maintain") return "";
     var lw = lastWeight(list), goal = ph.goal, base = phaseBase(list, ph), cut = ph.type === "cut";
@@ -3421,6 +3490,7 @@ button, select, input { touch-action: manipulation }
             var cp = { start: p.start, type: p.type }; if (isN(p.goal) && p.goal > 20 && p.goal < 400) cp.goal = p.goal;
             if (DRE.test(p.anchor) && p.anchor > p.start) cp.anchor = p.anchor;
             if ([14, 21, 28].indexOf(p.ramp) >= 0) cp.ramp = p.ramp;
+            if (DRE.test(p.done)) cp.done = p.done; /* v127: Ziel gefeiert */
             return cp;
           }).sort(function (x, y) { return x.start < y.start ? -1 : 1; }) };
       }
@@ -3901,6 +3971,7 @@ button, select, input { touch-action: manipulation }
     el.innerHTML = h;
   }
   function topNotice() {
+    setTimeout(partyCheck, 500); /* v127 */
     if (MODE === "lock" || $("notice").dataset.lock) return;
     if (warnMsg) return notice(warnMsg);
     if (dataNote) return notice(dataNote);
@@ -5077,6 +5148,7 @@ button, select, input { touch-action: manipulation }
   var HMRE = /^([01]\d|2[0-3]):[0-5]\d$/;
   /* Kleine Strich-Icons für den Block „Heute“ (eigene Zeichnungen, 24er Raster). */
   var ICONS = {
+    trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>',
     dl: '<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/>',
     barcode: '<path d="M3 7V5a1 1 0 0 1 1-1h2M21 7V5a1 1 0 0 0-1-1h-2M3 17v2a1 1 0 0 0 1 1h2M21 17v2a1 1 0 0 1-1 1h-2M7 8v8M10 8v8M13.5 8v8M17 8v8"/>',
     cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -5106,20 +5178,33 @@ button, select, input { touch-action: manipulation }
   function cafAmt(dose, dt) { if (dt <= 0) return 0; var h = dt / 36e5; return dose * CAF_KA / (CAF_KA - CAF_KE) * (Math.exp(-CAF_KE * h) - Math.exp(-CAF_KA * h)); }
   function bedTime() { var b = S.person && HMRE.test(S.person.bed || "") ? S.person.bed : "23:00", d = new Date(), m = /^(\d{2}):(\d{2})$/.exec(b); d.setHours(+m[1], +m[2], 0, 0); if (+m[1] < 12) d.setDate(d.getDate() + 1); return { ms: d.getTime(), hm: b }; }
   /* v112 (Wunsch des Nutzers): Koffeinspiegel über den Tag. Jede Einnahme hebt sofort an, Abbau mit CAF_HL. Von der ersten Einnahme (volle Stunde) bis 1 h nach der Schlafenszeit. */
+  /* v127 (Nutzer: Energy um 22 Uhr, nach Mitternacht stand der Zähler auf null): Einnahmen tragen eine absolute Zeit (cafMs),
+     die der letzten zwei Tage zählen weiter, solange noch ≥ 5 mg im Körper sind (cafEvents in foodBlock). */
+  function cafMs(e, now) { if (isN(e.ms)) return Math.min(now, e.ms); var hm = /^(\d{2}):(\d{2})$/.exec(e.t || ""), dt = new Date(); if (!hm) return now; dt.setHours(+hm[1], +hm[2], 0, 0); return Math.min(now, dt.getTime()); }
+  function cafEvents(t, ent) {
+    var now = Date.now(), out = ent.filter(function (e) { return e.caf > 0; }).map(function (e) { return { caf: e.caf, ms: cafMs(e, now) }; });
+    if (t !== today()) return out;
+    [1, 2].forEach(function (k) { var d = addDays(t, -k), nd = S.nutri["n_" + d]; if (!nd) return;
+      nd.entries.forEach(function (e) { if (!(e.caf > 0)) return; var hm = /^(\d{2}):(\d{2})$/.exec(e.t || "") || [0, "12", "00"], ms = new Date(d + "T" + hm[1] + ":" + hm[2] + ":00").getTime();
+        if (cafAmt(e.caf, now - ms) >= 5) out.push({ caf: e.caf, ms: ms, prev: true }); }); });
+    return out;
+  }
   function cafChart(cs, now, bt) {
-    var tOf = function (e) { var hm = /^(\d{2}):(\d{2})$/.exec(e.t || ""), dt = new Date(); if (!hm) return now; dt.setHours(+hm[1], +hm[2], 0, 0); return Math.min(now, dt.getTime()); };
-    var ev = cs.map(function (e) { return [tOf(e), e.caf]; }).sort(function (a, b) { return a[0] - b[0]; });
-    var t0 = new Date(ev[0][0]); t0.setMinutes(0, 0, 0); var a = t0.getTime(), z = Math.max(bt.ms + 36e5, now + 36e5), st = 6e5;
+    var ev = cs.map(function (e) { return [cafMs(e, now), e.caf]; }).sort(function (a, b) { return a[0] - b[0]; });
     var lvl = function (t) { return ev.reduce(function (s, x) { return s + cafAmt(x[1], t - x[0]); }, 0); };
+    /* Ende: Schlafenszeit + 1 h, mindestens 1 h nach jetzt und bis der Spiegel unter 5 mg fällt (höchstens 36 h nach der letzten Einnahme). */
+    var free = ev[ev.length - 1][0] + 36e5; while (free < ev[ev.length - 1][0] + 36 * 36e5 && lvl(free) >= 5) free += 9e5;
+    var t0 = new Date(ev[0][0]); t0.setMinutes(0, 0, 0); var a = t0.getTime(), z = Math.max(bt.ms + 36e5, now + 36e5, free), st = 6e5;
+    var spanH = (z - a) / 36e5, Wpx = spanH > 16 ? Math.round(spanH * 22) : 0;
     var pts = [], t; st = 3e5; for (t = a; t <= z; t += st) { ev.forEach(function (x) { }); pts.push([t, lvl(t)]); }
-    var mx = Math.max(60, Math.max.apply(0, pts.map(function (p) { return p[1]; })) * 1.1), W = 350, H = 84, T = 14, B = 14, X = function (v) { return (v - a) / (z - a) * W; }, Y = function (v) { return T + (1 - v / mx) * (H - T - B); };
+    var mx = Math.max(60, Math.max.apply(0, pts.map(function (p) { return p[1]; })) * 1.1), W = Wpx || 350, H = 84, T = 14, B = 14, X = function (v) { return (v - a) / (z - a) * W; }, Y = function (v) { return T + (1 - v / mx) * (H - T - B); };
     var d = pts.map(function (p, i) { return (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1); }).join(" ");
     var hh = function (ms) { var x = new Date(ms); return String(x.getHours()).padStart(2, "0") + ":" + String(x.getMinutes()).padStart(2, "0"); };
     var g = '<path class="cfa" d="' + d + " L" + W + " " + Y(0) + " L0 " + Y(0) + 'Z"/><path class="cfl" d="' + d + '"/>' +
       '<line class="cf30" x1="0" x2="' + W + '" y1="' + Y(CAF_BED).toFixed(1) + '" y2="' + Y(CAF_BED).toFixed(1) + '"/>' +
       /* v126 (Wunsch des Nutzers): Zeitachse feiner – Strich je Stunde, Beschriftung je 1/2/3 Stunden je nach Spanne;
          „jetzt“ auffälliger: kräftiger Strich, Punkt auf der Kurve, Beschriftung oben. */
-      (function () { var o = "", k = (z - a) / 36e5 > 18 ? 3 : (z - a) / 36e5 > 8 ? 2 : 1, xb = X(bt.ms), xn = X(now);
+      (function () { var o = "", k = Wpx ? 2 : (z - a) / 36e5 > 8 ? 2 : 1, xb = X(bt.ms), xn = X(now);
         for (var u = a, i = 0; u <= z; u += 36e5, i++) { var xu = X(u); o += '<line class="cftick" x1="' + xu.toFixed(1) + '" x2="' + xu.toFixed(1) + '" y1="' + Y(0) + '" y2="' + (Y(0) + 3) + '"/>';
           if (i % k === 0 && Math.abs(xu - xb) > 22 && xu < W - 10) o += '<text x="' + xu.toFixed(1) + '" y="' + (H - 2) + '" text-anchor="' + (i ? "middle" : "start") + '">' + String(new Date(u).getHours()).padStart(2, "0") + "</text>"; }
         return o; })() +
@@ -5129,12 +5214,15 @@ button, select, input { touch-action: manipulation }
       '<circle class="cfdot" cx="' + X(now).toFixed(1) + '" cy="' + Y(lvl(now)).toFixed(1) + '" r="3.2"/>' +
       '<text class="cfnt" x="' + X(now).toFixed(1) + '" y="' + (T - 4) + '" text-anchor="' + (X(now) < 30 ? "start" : X(now) > W - 30 ? "end" : "middle") + '">jetzt ' + hh(now) + "</text>" +
       '<text x="' + (X(now) + 4).toFixed(1) + '" y="' + (Y(CAF_BED) - 3).toFixed(1) + '">30 mg</text><text x="' + (W - 2) + '" y="' + (T + 8) + '" text-anchor="end">' + Math.round(mx) + " mg</text>";
-    return '<svg class="cafch" viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" role="img" aria-label="Koffeinspiegel über den Tag">' + g + "</svg>";
+    var svg = '<svg class="cafch" viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none"' + (Wpx ? ' style="width:' + Wpx + 'px"' : "") + ' role="img" aria-label="Koffeinspiegel">' + g + "</svg>";
+    /* Breiter als der Bildschirm: seitlich wischbar (overflow-x → Reiter-Wischen ausgenommen), beim Zeichnen auf „jetzt“ gestellt (cafScroll). */
+    return Wpx ? '<div class="cafscroll" data-now="' + Math.round(X(now)) + '">' + svg + "</div>" : svg;
   }
   function cafLine(ent) {
     var cs = ent.filter(function (e) { return e.caf > 0; }); if (!cs.length) return "";
     var now = Date.now(), tot = 0, left = 0, gut = 0, atBed = 0, big = false, bt = bedTime();
-    cs.forEach(function (e) { tot += e.caf; if (e.caf > 200) big = true; var t0 = now, hm = /^(\d{2}):(\d{2})$/.exec(e.t || ""); if (hm) { var dt = new Date(); dt.setHours(+hm[1], +hm[2], 0, 0); t0 = Math.min(now, dt.getTime()); } left += cafAmt(e.caf, now - t0); gut += e.caf * Math.exp(-CAF_KA * Math.max(0, now - t0) / 36e5); atBed += cafAmt(e.caf, bt.ms - t0); });
+    var prev = cs.some(function (e) { return e.prev; });
+    cs.forEach(function (e) { if (!e.prev) { tot += e.caf; if (e.caf > 200) big = true; } var t0 = cafMs(e, now); left += cafAmt(e.caf, now - t0); gut += e.caf * Math.exp(-CAF_KA * Math.max(0, now - t0) / 36e5); atBed += cafAmt(e.caf, bt.ms - t0); });
     var warn = tot > 400 || big, late = atBed > CAF_BED, room = CAF_BED - atBed, until = "";
     if (now < bt.ms) {
       if (room <= 0) until = "Heute besser kein Koffein mehr.";
@@ -5142,9 +5230,14 @@ button, select, input { touch-action: manipulation }
     }
     /* v108 (Wunsch des Nutzers): farbige Leiste für den Rest zur Schlafenszeit, gleiche fließende Skala wie bei den Vitaminen (x = Rest / 30 mg: bis 15 mg grün, ≈ 22 mg gelb, 30 mg orange, ab 45 mg rot). Volle Breite = 60 mg, Strich bei 30 mg. */
     var xh = atBed / CAF_BED, hue = nutHue(xh), cst = "--h:" + hue + ";--lb:" + Math.max(0, Math.round(12 - Math.abs(hue - 40) / 3)) + ";";
-    return '<div class="cafl' + (warn ? " warn" : "") + (late ? " late" : "") + '" style="' + cst + '"><p><b>Koffein ' + Math.round(tot) + " mg</b> · jetzt ≈ " + Math.round(left) + " mg" + (gut >= 5 ? " (+" + Math.round(gut) + " kommen noch)" : " im Körper") + (until ? "" : ib("caf")) + "</p>" +
+    return '<div class="cafl' + (warn ? " warn" : "") + (late ? " late" : "") + '" style="' + cst + '"><p><b>' + (prev && !tot ? "Koffein von gestern" : "Koffein " + (prev ? "heute " : "") + Math.round(tot) + " mg") + "</b> · jetzt ≈ " + Math.round(left) + " mg" + (gut >= 5 ? " (+" + Math.round(gut) + " kommen noch)" : " im Körper") + (until ? "" : ib("caf")) + "</p>" +
       '<div class="cafbar"><span>Schlafen ' + bt.hm + '</span><span class="nb" role="img" aria-label="Zur Schlafenszeit noch etwa ' + Math.round(atBed) + ' mg"><i class="sc" style="width:' + Math.min(100, Math.max(2, atBed / (2 * CAF_BED) * 100)).toFixed(1) + '%"></i><b></b></span><span class="cbed">≈ ' + Math.round(atBed) + " mg</span></div>" +
-      cafChart(cs, now, bt) + (until ? '<p class="small muted">' + until + ib("caf") + "</p>" : "") + "</div>" +
+      cafChart(cs, now, bt) + (function () { /* v127: wann ist das Koffein praktisch weg (< 5 mg)? */
+        var lv = function (t) { return cs.reduce(function (s2, e) { return s2 + cafAmt(e.caf, t - cafMs(e, now)); }, 0); };
+        if (lv(now) + gut < 5) return ""; var tf = now + 9e5; while (tf < now + 48 * 36e5 && (lv(tf) >= 5 || tf < now + 36e5 && lv(tf) < lv(tf + 9e5))) tf += 9e5;
+        var fd2 = new Date(tf), dd = Math.round((new Date(fd2).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 864e5);
+        return '<p class="small muted">Koffeinfrei (unter 5 mg) ab ≈ <b>' + String(fd2.getHours()).padStart(2, "0") + ":" + String(fd2.getMinutes()).padStart(2, "0") + "</b>" + (dd === 1 ? " (morgen)" : dd > 1 ? " (übermorgen)" : "") + "</p>"; })() +
+      (until ? '<p class="small muted">' + until + ib("caf") + "</p>" : "") + "</div>" +
       itx("caf", "Bis 400 mg am Tag und 200 mg auf einmal gelten für Erwachsene als unbedenklich (EFSA)" + (warn ? " – heute liegst du darüber" : "") + ". Für den Schlaf zählt, was beim Zubettgehen noch im Körper ist: Laut einer Auswertung von 24 Studien (Gardiner u. a. 2023) sollte Kaffee mindestens etwa 9 Stunden, ein Booster etwa 13 Stunden vor dem Schlafen getrunken werden. Umgerechnet sind das jeweils noch rund 30 mg. Die Leiste zeigt, was zur Schlafenszeit noch im Körper ist: grün bis etwa 15 mg, dann gelb, orange ab 30 mg (Strich in der Mitte), rot ab 45 mg. Die App rechnet so: Koffein kommt über etwa eine Dreiviertelstunde ins Blut (Höchstwert nach ≈ 45 min, in Wirklichkeit je nach Magen 30 min bis 2 h) und wird mit einer Halbwertszeit von 5 Stunden abgebaut (je nach Mensch 3–7 h). Die Werte sind also Richtwerte. Deine Schlafenszeit stellst du unter Daten → Persönlich ein. Werte der Getränke sind Durchschnitte; für eigene Produkte trag den Koffeingehalt unter Daten → Essen ein.");
   }
   function foodBlock(t, E, di, mc, head, stats) {
@@ -5153,7 +5246,7 @@ button, select, input { touch-action: manipulation }
     var sum = ent.reduce(function (a, e) { var ok = e.f != null && e.c != null; return { p: a.p + e.p, kcal: a.kcal + e.kcal, f: a.f + (ok ? e.f : 0), c: a.c + (ok ? e.c : 0), nofc: a.nofc + (ok ? 0 : 1) }; }, { p: 0, kcal: 0, f: 0, c: 0, nofc: 0 });
     var nf = function (v) { return Math.round(v).toLocaleString("de-DE"); }, kc = di ? di.kcal : 0, rest = kc - sum.kcal, pg = mc ? mc.p : 0;
     /* Kopf: was heute an Kalorien noch offen ist, Balken in Makrofarben, darunter Protein, Fett und Kohlenhydrate. */
-    var top = head + cafLine(ent); /* v105 (Wunsch des Nutzers): Koffein ganz oben, wird sonst unterschätzt */
+    var top = head + cafLine(cafEvents(t, ent)); /* v105 (Wunsch des Nutzers): Koffein ganz oben, wird sonst unterschätzt */
     /* Kalorienbalken in Makrofarben: Anteile aus Eiweiß × 4, Fett × 9, Kohlenhydrate × 4. Kalorien ohne Makroangabe (ältere Einträge) grau. */
     var km = { p: sum.p * 4, f: sum.f * 9, c: sum.c * 4 }, kx = Math.max(0, sum.kcal - km.p - km.f - km.c);
     /* Rundungsreste (Packungsangaben passen selten genau zu 4/9/4 kcal je g) nicht als grauen Strich zeigen, nur echte Einträge ohne Makros (seit v74). */
@@ -5314,7 +5407,7 @@ button, select, input { touch-action: manipulation }
     /* Seit v91 (Wunsch des Nutzers) hier statt unter „Körper“, zugeklappt, damit oben das Eintragen bleibt. */
     h += '<details class="block eatdet"' + (S.eatOpen ? " open" : "") + '><summary><h2>Essen im Rückblick</h2></summary><div id="eatbox">' + (S.eatOpen ? eatBlock() : "") + "</div></details>";
     /* Apple Health steht seit v83 nur noch unter „Körper“ bei den Messwerten. */
-    el.innerHTML = h;
+    el.innerHTML = h; document.querySelectorAll('#tab-home .cafscroll').forEach(function (c) { c.scrollLeft = Math.max(0, +c.dataset.now - c.clientWidth * 0.45); });
   }
 
   /* ---------- Rendern & Events ---------- */
@@ -5428,6 +5521,7 @@ button, select, input { touch-action: manipulation }
     else if (a === "migrate") { if (arm(b, "Ohne Backup umziehen?")) migrate(); }
     else if (a === "migok") { migMsg = ""; renderHome(); renderData(); }
     else if (a === "totoday") { saveDraft(); S.lateDay = false; S.date = today(); S.dayId = null; draft = null; renderTrain(); }
+    else if (a === "pdo") { partyDo(id); }
     else if (a === "updlater") { var ud = $("upd"); if (ud) ud.remove(); }
     else if (a === "reload") doReload();
     else if (a === "tadd" || a === "trep") { S.tpick = a === "tadd" ? { mode: "add" } : { mode: "rep", id: id }; renderTrain(); var tq = $("tpq"); if (tq) { tq.scrollIntoView({ block: "center" }); tq.focus(); } }
@@ -5663,7 +5757,7 @@ button, select, input { touch-action: manipulation }
         if (gv == null || gv < 30 || gv > 300) { $("goalmsg").textContent = "Gib ein Zielgewicht in kg ein, zum Beispiel 90."; return; }
         if (lw2 && (cph.type === "cut" ? gv >= lw2.weight : gv <= lw2.weight)) { $("goalmsg").textContent = cph.type === "cut" ? "Im Cut muss das Ziel unter deinem aktuellen Gewicht von " + fmt(lw2.weight) + " kg liegen." : "Im Aufbau muss das Ziel über deinem aktuellen Gewicht von " + fmt(lw2.weight) + " kg liegen."; return; }
       }
-      var nps = clone(S.phases); nps.forEach(function (q) { if (q.start === cph.start) { if (gv == null) delete q.goal; else q.goal = Math.round(gv * 10) / 10; } });
+      var nps = clone(S.phases); nps.forEach(function (q) { if (q.start === cph.start) { delete q.done; if (gv == null) delete q.goal; else q.goal = Math.round(gv * 10) / 10; } });
       saveSettings(nps); renderBody(true); renderHome();
       $("goalmsg").textContent = gv == null ? "Ziel entfernt." : "Ziel gespeichert.";
     }
