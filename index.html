@@ -641,6 +641,7 @@ button, select, input { touch-action: manipulation }
 /* ---------- Designs (seit v94, Wunsch des Nutzers): Standard / Hölle / Winter Arc. Nur Optik, jederzeit über
    den Berg-Knopf oben oder Daten → Persönlich zurück auf Standard. Beide Designs sind dunkel. ---------- */
 .top { align-items: center } .top .topr { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.3 }
+.msinfo:not([hidden]) { display: flex; gap: 12px; align-items: center; grid-column: 1 / -1; margin: -2px 0 4px } .msfig { width: 104px; height: 139px; flex: none } .msbody > * { fill: var(--sunken); stroke: var(--muted); stroke-width: 1.2; stroke-linejoin: round } .mstape { fill: none; stroke: var(--accent); stroke-width: 3 } .mstx { flex: 1 }
 .ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
 .lookbtn { width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; display: grid; place-items: center }
 .lookbtn svg { width: 17px; height: 17px; fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linejoin: round }
@@ -2779,6 +2780,26 @@ button, select, input { touch-action: manipulation }
   }
 
   /* ---------- Körper ---------- */
+  /* v135 (Wunsch des Nutzers): Abbildung je Umfang hinter dem i. Eigene SVG-Figur, Maßband (Akzentfarbe) an der Messstelle.
+     MEASH[k] = [Ellipse cx, cy, rx, ry, Drehung, Text]. */
+  var MEAS_ALL = "Morgens messen, Band anliegend, nicht einschneidend.";
+  var MEASH = {
+    arm: [[29.5, 57, 8, 3.4, -14], "Oberarm an der dicksten Stelle, Arm locker hängend."],
+    chest: [[60, 56, 22, 4.5, 0], "Waagerecht unter den Achseln auf Höhe der Brustwarzen, nach normalem Ausatmen."],
+    waist: [[60, 80, 18, 4, 0], "Auf Höhe des Bauchnabels, Bauch entspannt, nach normalem Ausatmen."],
+    neck: [[60, 33, 7.5, 2.6, 6], "Direkt unter dem Kehlkopf, Band vorne leicht nach unten geneigt."],
+    hip: [[60, 96, 22, 4.5, 0], "An der breitesten Stelle des Pos, Füße zusammen."],
+    thigh: [[49, 113, 9.5, 3.2, 0], "Dickste Stelle knapp unter dem Po, Gewicht auf beiden Beinen."]
+  };
+  function measFig(k) {
+    var e = MEASH[k][0];
+    return '<svg class="msfig" viewBox="0 0 120 160" aria-hidden="true"><g class="msbody">' +
+      '<circle cx="60" cy="17" r="11"/><path d="M54 27h12v9h-12z"/>' +
+      '<path d="M40 40q20-7 40 0l3 22q-2 20 -3 30l3 10q-23 6-46 0l3-10q-1-10-3-30z"/>' +
+      '<path d="M40 41q-9 2-12 10l-6 34q-1 5 3 6t5-4l6-30z"/><path d="M80 41q9 2 12 10l6 34q1 5-3 6t-5-4l-6-30z"/>' +
+      '<path d="M37 101q12 6 22 2l-2 52h-11l-5-30z"/><path d="M83 101q-12 6-22 2l2 52h11l5-30z"/></g>' +
+      '<ellipse class="mstape" cx="' + e[0] + '" cy="' + e[1] + '" rx="' + e[2] + '" ry="' + e[3] + '" transform="rotate(' + e[4] + " " + e[0] + " " + e[1] + ')"/></svg>';
+  }
   var BF = [["weight", "Gewicht", "kg"], ["fat", "Körperfett", "%"], ["arm", "Arm", "cm"], ["chest", "Brust", "cm"], ["waist", "Taille", "cm"], ["neck", "Hals", "cm"], ["hip", "Hüfte", "cm"], ["thigh", "Oberschenkel", "cm"]];
   var BM = BF.concat([["ffm", "Fettfreie Masse", "kg"]]);
   function bodyVal(b, k) { return k === "ffm" ? (b.weight != null && b.fat != null ? b.weight * (1 - b.fat / 100) : null) : b[k]; }
@@ -2787,7 +2808,7 @@ button, select, input { touch-action: manipulation }
     var list = Object.keys(S.body).map(function (k) { return S.body[k]; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     if (!keepForm || !$("bform")) {
       el.innerHTML = '<div class="block" id="wcorr"></div><div class="block" id="phstat"></div><div class="block" id="bform"><h2>Gewicht, Körperfett und Umfänge eintragen</h2><div class="bgrid"><label class="full">Datum<input type="date" id="b-date" value="' + today() + '" max="' + today() + '"></label>' +
-        BF.map(function (f) { return "<label>" + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
+        BF.map(function (f) { var mh = MEASH[f[0]]; return mh ? "<label><span>" + f[1] + " (" + f[2] + ")" + ib("ms-" + f[0]) + '</span><input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>' + itx("ms-" + f[0], measFig(f[0]) + '<span class="mstx"><b>' + f[1] + ":</b> " + mh[1] + " " + MEAS_ALL + "</span>").replace('class="small muted itext"', 'class="small muted itext msinfo"') : "<label>" + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
         '</div><div class="row" style="align-items:center"><button class="primary" data-act="bsave">Speichern</button><span class="small muted" id="bmsg">Leere Felder werden übersprungen.</span></div><div class="hbox" id="hbody"></div></div><div id="bout" style="display:flex;flex-direction:column;gap:16px"></div>' +
         '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="">Bitte wählen</option><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><label style="flex:1 1 130px">Übergang<select id="ph-ramp"><option value="0">Ohne</option><option value="14">2 Wochen</option><option value="21">3 Wochen</option><option value="28">4 Wochen</option></select></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div><div class="block" id="kcalbox"></div>';
     }
