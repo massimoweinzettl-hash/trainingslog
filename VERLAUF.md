@@ -150,3 +150,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v132: Scan-Dialog „Gefunden“ (`scanOffShow`) zeigt Werte je 100 g/ml mit `nMac` in `.scanval`; `.nkc` jetzt global.
 - v133: Versionsnummer `#ver` in `.topr` (Spalte rechts oben: Status/Motto, darunter „Version n“), auch in den Designs sichtbar.
 - v134: `#ver` zeigt „v<Nummer>“ (Wunsch des Nutzers, üblich), Titel „Version n“.
+- v135: Umfänge mit i (`ib("ms-<k>")`) → `itx` `.msinfo` mit `measFig(k)` (eigene SVG-Figur, Maßband-Ellipse aus `MEASH`) und Textkasten `.mstx` (Gestaltung nach Bildvorlage des Nutzers, nachgezeichnet statt Bild).

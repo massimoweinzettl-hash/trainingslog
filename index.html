@@ -641,7 +641,8 @@ button, select, input { touch-action: manipulation }
 /* ---------- Designs (seit v94, Wunsch des Nutzers): Standard / Hölle / Winter Arc. Nur Optik, jederzeit über
    den Berg-Knopf oben oder Daten → Persönlich zurück auf Standard. Beide Designs sind dunkel. ---------- */
 .top { align-items: center } .top .topr { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.3 }
-.msinfo:not([hidden]) { display: flex; gap: 12px; align-items: center; grid-column: 1 / -1; margin: -2px 0 4px } .msfig { width: 104px; height: 139px; flex: none } .msbody > * { fill: var(--sunken); stroke: var(--muted); stroke-width: 1.2; stroke-linejoin: round } .mstape { fill: none; stroke: var(--accent); stroke-width: 3 } .mstx { flex: 1 }
+.msinfo:not([hidden]) { display: flex; gap: 14px; align-items: center; grid-column: 1 / -1; margin: -2px 0 4px } .msfig { width: 96px; height: 128px; flex: none } .msbody > * { fill: var(--sunken); stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; stroke-opacity: .85 } .mstape { fill: none; stroke: var(--accent); stroke-width: 3.2 }
+.mstx { flex: 1; background: var(--accent-soft); border-radius: 14px; padding: 10px 12px; color: var(--ink); font-size: 14px; line-height: 1.4 } .mstx b { display: block; font-size: 16px; margin-bottom: 2px }
 .ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
 .lookbtn { width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; display: grid; place-items: center }
 .lookbtn svg { width: 17px; height: 17px; fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linejoin: round }
@@ -743,8 +744,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 134;
+  var APP_VERSION = 135;
   var CHANGES = [
+    { v: 135, tab: "body", text: "Umfänge messen: Hinter dem i neben Arm, Brust, Taille, Hals, Hüfte und Oberschenkel zeigt eine Abbildung, wo das Maßband hingehört, dazu ein kurzer Hinweis." },
     { v: 134, tab: "home", text: "Die Versionsnummer oben rechts ist jetzt kurz: „v134“." },
     { v: 133, tab: "home", text: "Oben rechts steht jetzt immer die Versionsnummer, direkt unter „Auf diesem Gerät gespeichert“." },
     { v: 132, tab: "home", text: "Gescanntes Produkt („Gefunden“): Eiweiß, Fett, Kohlenhydrate und kcal stehen jetzt wie in der Essensliste mit Farbpunkten." },
@@ -2808,7 +2810,7 @@ button, select, input { touch-action: manipulation }
     var list = Object.keys(S.body).map(function (k) { return S.body[k]; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     if (!keepForm || !$("bform")) {
       el.innerHTML = '<div class="block" id="wcorr"></div><div class="block" id="phstat"></div><div class="block" id="bform"><h2>Gewicht, Körperfett und Umfänge eintragen</h2><div class="bgrid"><label class="full">Datum<input type="date" id="b-date" value="' + today() + '" max="' + today() + '"></label>' +
-        BF.map(function (f) { var mh = MEASH[f[0]]; return mh ? "<label><span>" + f[1] + " (" + f[2] + ")" + ib("ms-" + f[0]) + '</span><input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>' + itx("ms-" + f[0], measFig(f[0]) + '<span class="mstx"><b>' + f[1] + ":</b> " + mh[1] + " " + MEAS_ALL + "</span>").replace('class="small muted itext"', 'class="small muted itext msinfo"') : "<label>" + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
+        BF.map(function (f) { var mh = MEASH[f[0]]; return mh ? "<label><span>" + f[1] + " (" + f[2] + ")" + ib("ms-" + f[0]) + '</span><input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>' + itx("ms-" + f[0], measFig(f[0]) + '<span class="mstx"><b>' + f[1] + ":</b>" + mh[1] + " " + MEAS_ALL + "</span>").replace('class="small muted itext"', 'class="small muted itext msinfo"') : "<label>" + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
         '</div><div class="row" style="align-items:center"><button class="primary" data-act="bsave">Speichern</button><span class="small muted" id="bmsg">Leere Felder werden übersprungen.</span></div><div class="hbox" id="hbody"></div></div><div id="bout" style="display:flex;flex-direction:column;gap:16px"></div>' +
         '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="">Bitte wählen</option><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><label style="flex:1 1 130px">Übergang<select id="ph-ramp"><option value="0">Ohne</option><option value="14">2 Wochen</option><option value="21">3 Wochen</option><option value="28">4 Wochen</option></select></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div><div class="block" id="kcalbox"></div>';
     }
