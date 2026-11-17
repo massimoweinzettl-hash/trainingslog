@@ -166,3 +166,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v147: Getränke aus der Essensliste zählen beim Wasser mit (`drinkMl`/`drinksOf`: Name endet auf „<Menge> ml“, außer `NODRINK` Sahne/Essig/Sirup/Zitronensaft/Brühe/Öl/Soße); Anzeige „Trinken x / Ziel l“, Zeile „… l Wasser · … l andere Getränke“, Erinnerung nach letztem Glas oder Getränk.
 - v148: `drinkAmt(it, amt)` beim Eintragen → `e.ml` (auch 0 = kein Getränk; Import übernimmt `ml`). Gruppe „Getränke“ zählt immer (g ≈ ml, Stück nicht), sonst Einheit ml ohne `NODRINK`. Alte Einträge ohne `ml`: Name endet auf „… ml“.
 - v148: Scan: Open Food Facts `categories_tags` mitladen; `en:beverages` (ohne alkoholische) → neues eigenes Lebensmittel in Gruppe „Getränke“.
+- v149: Ernährung-Kopf einzeilig (`.foodblk .dhead` nowrap, kompaktere Pillen 11 px), „Training geplant“ rot (`.pp-train.plan`, `--bad`); unter 420 px Breite wieder Umbruch.
