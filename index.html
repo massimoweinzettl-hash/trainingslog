@@ -273,6 +273,7 @@ body.cardioonly .tabs button[data-tab="plan"], body.cardioonly .dsec button[data
 .cdblock { display: flex; flex-direction: column; gap: 8px } .cdform { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; align-items: end } .cdform label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted) }
 .cdlist { list-style: none; margin: 0; padding: 0 } .cdlist li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line) } .cdlist li span:first-child { flex: 1 }
 .cdchart { width: 100%; height: auto; display: block; margin: 6px 0 } .cdbar { fill: color-mix(in srgb, var(--c6) 55%, transparent) } .cdbar.cur { fill: var(--c6) } .cdv { font-size: 9px; fill: var(--muted); text-anchor: middle } .cdx { font-size: 9px; fill: var(--muted); text-anchor: middle }
+.pill.ft { background: #7c3aed; color: #fff } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pill.ft { background: #b18cff; color: #160a33 } } :root[data-theme="dark"] .pill.ft, [data-look] .pill.ft { background: #b18cff; color: #160a33 }
 .pill.cdp { background: color-mix(in srgb, var(--c6) 22%, transparent); color: var(--c6) }
 .drow { display: flex; flex-direction: column; gap: 7px }
 .dline { display: flex; justify-content: space-between; align-items: center; gap: 8px }
@@ -764,8 +765,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 154;
+  var APP_VERSION = 155;
   var CHANGES = [
+    { v: 155, tab: "train", text: "„Freies Training“ hat im Kalender jetzt eine lila Pille." },
     { v: 154, tab: "train", text: "Trainierst du ohne eine einzige Übung aus dem Plan-Tag, steht im Kalender jetzt „Freies Training“ (graue Pille FT, eigener Eintrag in der Legende) statt des Plan-Tags. Die Reihenfolge deines Plans geht danach normal weiter." },
     { v: 153, tab: "home", text: "Trinken: Unter dem Balken steht, wann du zuletzt getrunken hast. Antippen zeigt den Verlauf von heute mit Uhrzeit – jedes Glas lässt sich einzeln mit ✕ löschen. Versehentliches Doppeltippen zählt nur einmal." },
     { v: 152, tab: "home", text: "Koffein: Die Zeile „Koffeinfrei ab …“ ist weg – wichtig ist der Rest zur Schlafenszeit, den Verlauf zeigt die Kurve." },
@@ -2441,7 +2443,7 @@ button, select, input { touch-action: manipulation }
       if (o.w.date.slice(0, 7) !== S.calMonth) return;
       var k = wMeta(o.w); if (!k.c) extra[k.name] = k;
     });
-    var pill = function (k) { return '<span class="pill c' + k.c + '">' + esc(k.ab) + "</span>"; };
+    var pill = function (k) { return '<span class="pill c' + k.c + (k.free ? " ft" : "") + '">' + esc(k.ab) + "</span>"; }; /* v155: freies Training lila */
     var E = energy(bodyList()), nf = function (n) { return n.toLocaleString("de-DE"); };
     var cells = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map(function (x) { return '<span class="wd">' + x + "</span>"; }).join("");
     for (var i = 0; i < off; i++) cells += "<span></span>";
