@@ -662,7 +662,7 @@ button, select, input { touch-action: manipulation }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
 .wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .wsub { margin: 0; align-self: flex-start; color: var(--muted); padding: 0 } .wlist { list-style: none; margin: 0; padding: 0; font-size: 14px } .wlist li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--line) } .wlist li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .cafh { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between } .cafh > .ibtn { flex: none; margin-top: -2px }
-.dlnx { font-weight: 400; opacity: .8 }
+.dlnx { font-weight: 400; opacity: .8 } .calpa { gap: 4px 12px; margin: 2px 0 4px }
 #errtoast { position: fixed; left: 10px; right: 10px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 9999; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 12px 14px; border-radius: 14px; background: var(--ink, #151a22); color: var(--bg, #fff); box-shadow: 0 8px 30px rgba(0,0,0,.3); font-size: 14px; line-height: 1.35 }
 #errtoast span { flex: 1 1 200px } #errtoast button { min-height: 36px; padding: 6px 12px; border-radius: 10px; border: 0; font-weight: 650; background: var(--bg, #fff); color: var(--ink, #151a22) } #errtoast .et-x { background: none; color: inherit; padding: 6px 8px } .restc { display: inline-flex; align-items: center } .cookf .fpadd { margin: 4px 0 } .cooksum { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin: 6px 0 }
 .cupboard { background: var(--sunken); border-radius: 12px; padding: 8px 10px 4px; margin: 4px 0 8px } .cupboard > p { margin: 0 0 2px }
@@ -813,8 +813,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 177; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 178; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 178, tab: "train", text: "Kalender: Beim eingeplanten Training stehen jetzt direkt „Anderen Trainingstag“ und „Planung entfernen“ – falsch geplant ist so schnell korrigiert." },
     { v: 177, tab: "data", text: "Neu: ein Fehlerfänger. Läuft in der App etwas schief, erscheint unten ein Hinweis mit „Bericht kopieren“ – den Text einfach an Claude schicken. Alle aufgezeichneten Fehler findest du auch hinter dem Zahnrad unter „App“." },
     { v: 176, tab: "data", text: "Alle Knöpfe zum Löschen, Entfernen und Verwerfen sind jetzt rot und etwas kräftiger, damit man sie nicht übersieht." },
     { v: 175, tab: "data", text: "Präparate lassen sich jetzt direkt in ihrer Karte löschen („Präparat löschen“). Frühere Tage behalten dabei ihre Vitaminwerte." },
@@ -2373,6 +2374,9 @@ button, select, input { touch-action: manipulation }
   /* Reiter „Training“: nur noch das Eintragen. Der Kalender steht auf der Startseite. */
   function trainViewChips() { return ""; }
 
+  function calPlanChips(sd2, guess) { var cur = sd2 && !guess ? sd2.id : null;
+    return '<div class="lab">' + (cur ? "Welcher Trainingstag?" : "Training einplanen") + '<div class="chips" role="group" aria-label="Trainingstag wählen">' +
+      S.plan.days.map(function (pd) { return '<button data-act="calplan" data-id="' + pd.id + '" aria-pressed="' + (cur === pd.id) + '">' + esc(pd.name) + "</button>"; }).join("") + '<button class="ghost" data-act="calplanx">Abbrechen</button></div></div>'; }
   function renderCal() { var cw = $("calwrap"); if (cw) cw.innerHTML = calendarBlock(); }
   /* Seit v83 steht der Kalender ganz oben im Reiter Training (vorher auf Start/Heute); nächstes Training vorausgewählt. */
   /* Nach „Training starten“/„öffnen“ zum Eintragen unter den Kalender springen. */
@@ -2593,6 +2597,8 @@ button, select, input { touch-action: manipulation }
         if (sd2) {
           var k2 = dayMeta(sd2.id);
           none += '<div class="calw"><p><span class="pill o c' + k2.c + '">' + esc(k2.ab) + "</span> <b>" + esc(k2.name) + '</b> <span class="small muted">' + (guess ? "voraussichtlich" : "eingeplant") + "</span></p>" +
+            /* v178 (Wunsch des Nutzers: Planung ließ sich nicht finden/zurücknehmen): Ändern und Entfernen direkt beim eingeplanten Training */
+            (!guess && S.calSel >= t ? (S.calPlanOpen ? calPlanChips(sd2, guess) : '<div class="row calpa"><button class="ghost xs" data-act="calplanopen">Anderen Trainingstag</button><button class="ghost xs danger" data-act="calunplan">Planung entfernen</button></div>') : "") +
             (S.calSel === S.date && S.tab === "train" ? '<p class="small muted">Übungen und Gewichtsvorschläge stehen unten bei der Einheit.</p>' : sd2.exercises.length ? sd2.exercises.map(function (e) {
               var adv = advise(e, S.calSel);
               return '<p class="small">' + esc(e.name) + ': <span class="muted">' + e.sets + " × " + e.repMin + "–" + e.repMax + " Wdh." + (adv && adv.w > 0 ? ", Vorschlag " + fmt(adv.w) + " kg" : "") + "</span></p>";
@@ -2600,10 +2606,7 @@ button, select, input { touch-action: manipulation }
         } else none += '<p class="small muted">' + (S.calSel >= t ? "Noch kein Training eingeplant." : "Kein Training eingetragen.") + "</p>";
         if (S.calSel === t && sd2) none += '<button class="primary" style="align-self:flex-start" data-act="homestart" data-id="' + sd2.id + '">Training starten</button>';
         else if (S.calSel <= t) none += '<button style="align-self:flex-start" data-act="calnew" data-id="' + S.calSel + '">' + (S.calSel === t ? "Training starten" : "Training nachtragen") + "</button>";
-        if (S.calSel >= t && S.plan && S.plan.days.length && !S.calPlanOpen) none += '<button class="linkbtn" style="align-self:flex-start;padding:6px 0" data-act="calplanopen">' + (sd2 && !guess ? "Planung ändern" : "Training einplanen") + " ›</button>";
-        else if (S.calSel >= t && S.plan && S.plan.days.length) none += '<div class="lab">' + (sd2 && !guess ? "Planung ändern" : "Training einplanen") + '<div class="chips" role="group" aria-label="Training einplanen">' +
-          S.plan.days.map(function (pd) { return '<button data-act="calplan" data-id="' + pd.id + '" aria-pressed="' + (!!sd2 && !guess && sd2.id === pd.id) + '">' + esc(pd.name) + "</button>"; }).join("") + "</div>" +
-          (sd2 && !guess ? "<span>Tippe den markierten Trainingstag erneut an, um die Planung zu entfernen.</span>" : "") + "</div>";
+        if (S.calSel >= t && S.plan && S.plan.days.length && !(sd2 && !guess)) none += S.calPlanOpen ? calPlanChips(sd2, guess) : '<button class="linkbtn" style="align-self:flex-start;padding:6px 0" data-act="calplanopen">' + (guess ? "Anderes Training einplanen" : "Training einplanen") + " ›</button>";
       }
       h += '<div class="caldet' + (V === "d" ? " dview" : "") + '">' + (V === "d" ? "" : "<h3>" + WDAYS[dd.getDay()] + ", " + dlong(S.calSel) + "</h3>") + phl + kd + (sel.length ? sel.map(function (w) {
         var k = wMeta(w);
@@ -6101,6 +6104,8 @@ button, select, input { touch-action: manipulation }
     else if (a === "look") { var inPop = !!b.closest("#lookpop"); lookSet(id); if (inPop) $("lookpop").hidden = true; }
     else if (a === "nutp") { S.nutP = id; if ($("nutbox")) $("nutbox").innerHTML = nutBlock(); }
     else if (a === "calplanopen") { S.calPlanOpen = true; renderCal(); }
+    else if (a === "calplanx") { S.calPlanOpen = false; renderCal(); }
+    else if (a === "calunplan") { var scu = clone(S.sched || {}); delete scu[S.calSel]; S.sched = scu; S.calPlanOpen = false; saveSettings(); renderCal(); if (S.tab === "home") renderHome(); }
     else if (a === "wlog") { S.wOpen = !S.wOpen; renderHome(); }
     else if (a === "wplus" || a === "wminus" || a === "wdel") {
       if (a === "wplus") { var nowT = Date.now(); if (WLAST && nowT - WLAST < 900) return; WLAST = nowT; } /* v153: Doppeltippen zählt einmal */
@@ -6190,7 +6195,7 @@ button, select, input { touch-action: manipulation }
     else if (a === "calplan") {
       /* Training für den gewählten Kalendertag einplanen; erneutes Antippen entfernt die Planung. Alte Einträge (über 60 Tage) fallen weg. */
       var sc = clone(S.sched || {}), lim = new Date(Date.parse(today()) - 60 * 864e5).toISOString().slice(0, 10);
-      if (sc[S.calSel] === id) delete sc[S.calSel]; else sc[S.calSel] = id;
+      if (sc[S.calSel] === id) delete sc[S.calSel]; else sc[S.calSel] = id; S.calPlanOpen = false; /* v178: nach der Wahl zuklappen */
       Object.keys(sc).forEach(function (k) { if (k < lim) delete sc[k]; });
       S.sched = sc; saveSettings(); renderCal();
     }
