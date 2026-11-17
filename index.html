@@ -771,8 +771,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 163;
+  var APP_VERSION = 164;
   var CHANGES = [
+    { v: 164, tab: "data", text: "Scan: „Werte anpassen“ springt jetzt direkt zum geöffneten Produkt mit den Eingabefeldern, statt nur oben in der Lebensmittelliste zu landen." },
     { v: 163, tab: "data", text: "Meine Präparate: Der Name nutzt die ganze Zeile, der Inhalt steht darunter." },
     { v: 162, tab: "data", text: "Korrektur: Präparate unter „Meine Präparate“ lassen sich wieder antippen und bearbeiten." },
     { v: 161, tab: "data", text: "Daten → Essen: Nahrungsergänzung hat jetzt einen eigenen Bereich, getrennt von den Lebensmitteln. Unter „Meine Präparate“ legst du Kapseln mit „+ Präparat“ an, die Vitamine stehen dort gleich offen zum Eintragen. Der Rhythmus (täglich bis alle 14 Tage) ist ein Auswahlrad." },
@@ -5644,6 +5645,10 @@ button, select, input { touch-action: manipulation }
   /* v161: Kurzinhalt eines Präparats statt „0 g · 0 kcal“ (die ersten Werte, die es hat) */
   function suppSum(x) { var b = nutBase(x), o = []; if (b) NUTK.forEach(function (k, i) { if (i === IEPA || i === IDHA || !b[i]) return; o.push(k[1].replace(/^Vitamin /, "") + " " + fmt(nutRound(b[i])) + " " + k[2]); });
     return o.length ? esc(o.slice(0, 3).join(" · ") + (o.length > 3 ? " · +" + (o.length - 3) : "")) + " " + (x.per === "st" ? "je Stück" : "je 100 " + x.per) : '<span class="fmiss">noch kein Inhalt</span>'; }
+  /* v164: nach dem Scan zum geöffneten Eintrag springen (vorher blieb die Seite oben und das Eingabefeld war nicht zu sehen) –
+     egal ob er in der Lebensmittelliste oder unter „Meine Präparate“ steht. */
+  function foodFocus(id) { setTimeout(function () { var r = document.querySelector('.frow.open [data-act="fiopen"][data-id="' + id + '"]'), f = document.querySelector('input[data-fi="name"][data-id="' + id + '"]');
+    if (r) r.scrollIntoView({ block: "center" }); if (f && !r) f.scrollIntoView({ block: "center" }); }, 80); }
   function foodLine(fd, x, q, sup) {
     var unitTxt = function (x) { return x.per === "st" ? "je Stück" : "je " + FPER[x.per]; };
       var open = S.fOpen === x.id, fv = isFav(fd, x.id);
@@ -5893,14 +5898,14 @@ button, select, input { touch-action: manipulation }
     else if (a === "scanoff") {
       var svd = SCAN && SCAN.saved, mo = SCAN && SCAN.mode; if (!svd) return;
       var ito = { id: svd }; scanStop();
-      if (id === "edit") { S.dataSec = "food"; S.fOpen = ito.id; S.fFilter = ""; showTab("data"); }
+      if (id === "edit") { S.dataSec = "food"; S.fOpen = ito.id; S.fFilter = ""; showTab("data"); foodFocus(ito.id); }
       else if (mo === "ni") { S.nSel = "i:" + ito.id; renderHome(); var amo = $("ni-amt"); if (amo) { amo.scrollIntoView({ block: "center" }); amo.focus(); } }
-      else { S.fOpen = ito.id; renderData(); }
+      else { S.fOpen = ito.id; renderData(); foodFocus(ito.id); }
     }
     else if (a === "scanlink") {
       var cdl = SCAN && SCAN.code, mdl = SCAN && SCAN.mode; if (!cdl) return;
       var fdl = clone(foodDoc()), itl = ownItem(fdl, id); if (!itl) return; itl.code = cdl; scanRemember(fdl, itl.id); foodSave(fdl); scanStop();
-      if (mdl === "ni") { S.nSel = "i:" + itl.id; renderHome(); var aml = $("ni-amt"); if (aml) { aml.scrollIntoView({ block: "center" }); aml.focus(); } } else { S.fOpen = itl.id; renderData(); }
+      if (mdl === "ni") { S.nSel = "i:" + itl.id; renderHome(); var aml = $("ni-amt"); if (aml) { aml.scrollIntoView({ block: "center" }); aml.focus(); } } else { S.fOpen = itl.id; renderData(); foodFocus(itl.id); }
     }
     else if (a === "scannew") {
       var po = SCAN && SCAN.off; scanStop(); var fdn2 = clone(foodDoc()), nit = { id: rid("fd"), name: "Neues Produkt", per: "g", p: 0, f: 0, c: 0, kcal: 0, amt: 100, cat: "Eigene", code: id };
