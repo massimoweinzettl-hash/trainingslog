@@ -667,7 +667,7 @@ button, select, input { touch-action: manipulation }
 .cbrow2 { display: flex; align-items: flex-end; gap: 10px; width: 100%; background: none; border: 0; border-bottom: 3px solid var(--line); border-radius: 0; padding: 6px 0 3px; min-height: 0; text-align: left; font-weight: 400; color: var(--ink) } .cbrow2:last-child { border-bottom-color: transparent }
 .cbn { flex: 0 0 34%; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center }
 .shelf { display: flex; flex-direction: column; gap: 2px; min-width: 0 } .shelf .jars { display: flex; align-items: flex-end; gap: 3px; flex-wrap: wrap } .shelf.big { padding: 4px 0 6px; border-bottom: 3px solid var(--line); align-self: stretch }
-.jar { width: 18px; height: 26px } .shelf.big .jar { width: 24px; height: 35px } .jar .jl { fill: var(--muted); opacity: .7 } .jar .jb { fill: none; stroke: var(--muted); stroke-width: 1.3 } .jar .jf { fill: var(--accent); opacity: .75 } .jar.low .jf { fill: var(--warn) } .jar.open .jl { opacity: .35 }
+.jar { width: 18px; height: 26px } .shelf.big .jar { width: 24px; height: 35px } .jar .jl { fill: var(--muted); opacity: .7 } .jar .jb { fill: none; stroke: var(--muted); stroke-width: 1.3 } .jar .jf { fill: var(--accent); opacity: .75 } .jar .jz { fill: none; stroke: var(--muted); stroke-width: 1.2 } .jar.low .jf { fill: var(--warn) } .jar.open .jl { opacity: .35 }
 .jmore { font-size: 12px; color: var(--muted); align-self: center } .slow { color: var(--warn); font-weight: 600 } .dchip.dno { opacity: .7; border-style: dashed }
 .scard { border-bottom: 1px solid var(--line) } .scard .shead { flex-direction: column; align-items: stretch; gap: 2px } .scard .shead .muted { white-space: normal } .scard.off .fn { color: var(--muted) }
 .sbody { display: flex; flex-direction: column; gap: 8px; padding: 2px 0 12px } .sbody > .srow { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end } .sbody .srow label { flex: 1 1 120px } .sbody .sh { margin: 8px 0 0; font-size: 14px; display: flex; align-items: center; gap: 6px } .sbody > button { align-self: flex-start } .sbody .fnutg { margin: 0 } .fsupp .fline { flex-direction: column; align-items: stretch; gap: 2px } .fsupp .fline .muted { white-space: normal } /* v163: Präparat-Name über die ganze Zeile, Inhalt darunter */ .fsupp { margin: 10px 0 8px } .fsupp + button { margin-top: 2px }
@@ -779,8 +779,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 169;
+  var APP_VERSION = 170;
   var CHANGES = [
+    { v: 170, tab: "data", text: "Vorratsschrank: Neben Dosen gibt es jetzt Beutel (z. B. Creatin) und Flaschen. Bei „Form“ kannst du „Pulver (g)“ oder „Flüssig (ml)“ wählen – Pulver bekommt automatisch einen Beutel." },
     { v: 169, tab: "data", text: "Vorratsschrank: Oben bei der Nahrungsergänzung siehst du für jedes Präparat mit Vorrat die vollen Dosen und die offene, die mit jeder Einnahme leerer wird. Wird es knapp, färben sie sich orange." },
     { v: 168, tab: "data", text: "Vorrat in der Reihenfolge, wie man zählt: erst volle Packungen, dann Kapseln pro Packung, dann der Rest in der offenen Packung." },
     { v: 167, tab: "data", text: "Vorrat: Statt „+ 1 Packung“ wählst du jetzt die Anzahl voller Packungen per Drehrad und trägst ein, was in der offenen Packung noch übrig ist." },
@@ -3782,7 +3783,7 @@ button, select, input { touch-action: manipulation }
           if (typeof x.cat === "string" && FCATS.indexOf(x.cat) >= 0) ci.cat = x.cat;
           if (typeof x.code === "string" && /^\d{8,14}$/.test(x.code)) ci.code = x.code;
           if (isN(x.caf) && x.caf >= 0 && x.caf < 5000) ci.caf = x.caf;
-          if (typeof x.form === "string" && SFORMS.some(function (f) { return f[0] === x.form; })) ci.form = x.form; if (isN(x.pack) && x.pack > 0) ci.pack = x.pack; if (x.stock && DRE.test(x.stock.d) && isN(x.stock.c) && x.stock.c >= 0) { ci.stock = { d: x.stock.d, c: x.stock.c }; if (isN(x.stock.full) && x.stock.full >= 0) ci.stock.full = Math.round(x.stock.full); } /* v165 */
+          if (typeof x.form === "string" && SFORMS.some(function (f) { return f[0] === x.form; })) ci.form = x.form; if (/^(dose|beutel|flasche)$/.test(x.cont || "")) ci.cont = x.cont; if (isN(x.pack) && x.pack > 0) ci.pack = x.pack; if (x.stock && DRE.test(x.stock.d) && isN(x.stock.c) && x.stock.c >= 0) { ci.stock = { d: x.stock.d, c: x.stock.c }; if (isN(x.stock.full) && x.stock.full >= 0) ci.stock.full = Math.round(x.stock.full); } /* v165 */
           if (Array.isArray(x.n) && x.n.length >= 21 && x.n.length <= NUTK.length && x.n.every(function (v) { return v === null || isN(v); })) ci.n = x.n; return ci;
         });
         return { kind: "food", v: d.v === 5 || d.v === 4 || d.v === 3 || d.v === 2 ? d.v : 0, items: items,
@@ -5742,11 +5743,19 @@ button, select, input { touch-action: manipulation }
     return p + " · " + (r.days <= 7 ? '<b class="slow">nur noch ' + r.days + (r.days === 1 ? " Tag" : " Tage") + "</b>" : "reicht bis " + dfmt(addDays(r.last, dlEvery(a) - 1)));
   }
   /* v169 (Wunsch des Nutzers): Vorratsschrank – volle Dosen plus eine offene, die mit jeder Einnahme leerer wird. */
-  function suppJar(fr, cls) { var h = Math.max(0, Math.min(1, fr)) * 24; return '<svg class="jar ' + (cls || "") + '" viewBox="0 0 22 32" aria-hidden="true"><rect x="5" y="1" width="12" height="5" rx="1.5" class="jl"/><rect x="2" y="6" width="18" height="25" rx="4" class="jb"/>' + (h > 0 ? '<rect x="3.5" y="' + (30 - h).toFixed(1) + '" width="15" height="' + h.toFixed(1) + '" rx="2.5" class="jf"/>' : "") + "</svg>"; }
+  var CONTS = [["dose", "Dose"], ["beutel", "Beutel"], ["flasche", "Flasche"]];
+  function suppCont(it) { return it.cont || (it.per === "g" ? "beutel" : it.per === "ml" ? "flasche" : "dose"); }
+  function suppJar(fr, cls, k) { var f = Math.max(0, Math.min(1, fr)), o = '<svg class="jar ' + (cls || "") + '" viewBox="0 0 22 32" aria-hidden="true">', h;
+    if (k === "beutel") { h = f * 20; /* v170: Standbeutel mit Zipper (z. B. Creatin) */
+      return o + '<path d="M3.5 4.5h15l1.5 24.5q.1 2-2 2H4q-2.1 0-2-2z" class="jb"/><path d="M3.6 8.2h14.8" class="jz"/>' + (h > 0 ? '<rect x="3.6" y="' + (29.6 - h).toFixed(1) + '" width="14.8" height="' + h.toFixed(1) + '" rx="1.5" class="jf"/>' : "") + "</svg>"; }
+    if (k === "flasche") { h = f * 19;
+      return o + '<rect x="8" y="1" width="6" height="4" rx="1" class="jl"/><path d="M8.5 5h5v3.5q5.5 1.5 5.5 6V28q0 3-3 3H6q-3 0-3-3V14.5q0-4.5 5.5-6z" class="jb"/>' + (h > 0 ? '<rect x="4.5" y="' + (29.6 - h).toFixed(1) + '" width="13" height="' + h.toFixed(1) + '" rx="2" class="jf"/>' : "") + "</svg>"; }
+    h = f * 24; return o + '<rect x="5" y="1" width="12" height="5" rx="1.5" class="jl"/><rect x="2" y="6" width="18" height="25" rx="4" class="jb"/>' + (h > 0 ? '<rect x="3.5" y="' + (30 - h).toFixed(1) + '" width="15" height="' + h.toFixed(1) + '" rx="2.5" class="jf"/>' : "") + "</svg>"; }
   function suppShelf(fd, it, big) {
     if (!it.pack || !it.stock) return ""; var tot = suppLeft(fd, it); if (tot == null) return ""; var sp = suppSplit(it, tot), r = suppRange(fd, it), low = r && r.days <= 7 ? " low" : "", n = Math.min(sp[1], big ? 12 : 6);
-    var jars = (sp[0] > 0 || !sp[1] ? suppJar(sp[0] / it.pack, "open" + low) : "") + new Array(n + 1).join(suppJar(1, "full" + low)) + (sp[1] > n ? '<span class="jmore">+' + (sp[1] - n) + "</span>" : "");
-    return '<div class="shelf' + (big ? " big" : "") + '"><div class="jars">' + jars + '</div><span class="small muted">' + (sp[0] > 0 ? "offen " + fmt(sp[0]) + "/" + fmt(it.pack) : "keine offen") + (sp[1] ? " · " + sp[1] + " voll" : "") + "</span></div>";
+    var ck = suppCont(it), un = it.per === "st" ? "" : " " + it.per;
+    var jars = (sp[0] > 0 || !sp[1] ? suppJar(sp[0] / it.pack, "open" + low, ck) : "") + new Array(n + 1).join(suppJar(1, "full" + low, ck)) + (sp[1] > n ? '<span class="jmore">+' + (sp[1] - n) + "</span>" : "");
+    return '<div class="shelf' + (big ? " big" : "") + '"><div class="jars">' + jars + '</div><span class="small muted">' + (sp[0] > 0 ? "offen " + fmt(sp[0]) + "/" + fmt(it.pack) + un : "keine offen") + (sp[1] ? " · " + sp[1] + " voll" : "") + "</span></div>";
   }
   function suppCard(fd, it) {
     var open = S.fOpen === it.id, a = suppAct(fd, it.id), pa = suppPortion(fd, it), f = suppFac(it, pa), raw = nutRaw(it), bb = nutBase(it), r = suppRange(fd, it), left = suppLeft(fd, it);
@@ -5756,13 +5765,15 @@ button, select, input { touch-action: manipulation }
     h += '<div class="sbody">' + (it.lib ? '<p class="small muted">Vorlage aus der Bibliothek – änderst du etwas, wird es dein eigener Eintrag.</p>' : "") +
       '<label>Name<input class="fname" data-fi="name" data-id="' + it.id + '" value="' + esc(it.name) + '" autocomplete="off"></label>' +
       '<div class="srow"><label>Portion<select data-spa="' + it.id + '" aria-label="Portion">' + amtOpts(it, pa) + "</select></label>" +
-      (it.per === "st" ? '<label>Form<select data-fi="form" data-id="' + it.id + '">' + SFORMS.map(function (x) { return '<option value="' + x[0] + '"' + ((it.form || "Kapsel") === x[0] ? " selected" : "") + ">" + x[1] + "</option>"; }).join("") + "</select></label>" : "") + "</div>" +
+('<label>Form<select data-fi="form" data-id="' + it.id + '">' + SFORMS.map(function (x) { return '<option value="' + x[0] + '"' + (it.per === "st" && (it.form || "Kapsel") === x[0] ? " selected" : "") + ">" + x[1] + "</option>"; }).join("") +
+        '<option value="g"' + (it.per === "g" ? " selected" : "") + '>Pulver (g)</option><option value="ml"' + (it.per === "ml" ? " selected" : "") + ">Flüssig (ml)</option></select></label>") + "</div>" +
       (a ? '<div class="srow"><label>Einnahme' + selWheel('data-dle="' + a.id + '" aria-label="Rhythmus"', rng(1, 14, 1), dlEvery(a), everyLab) + '</label><label>seit<input type="date" class="dlfrom" data-dlf="' + a.id + '" value="' + a.from + '" max="' + today() + '"></label></div>' +
         '<button class="ghost xs" data-act="dldel" data-id="' + a.id + '">Pausieren</button>'
         : '<button class="primary xs" data-act="dladd" data-id="' + it.id + '">Ab heute einnehmen</button>') +
       '<h4 class="sh">Vorrat' + ib("svr") + "</h4>" + suppShelf(fd, it, true) + itx("svr", "Trag ein, wie viele volle Packungen du noch hast, wie viel in einer Packung ist und was in der offenen Packung übrig ist (nach der heutigen Einnahme). Die App zieht an jedem Einnahmetag die Portion ab und warnt unter „Ernährung“, wenn nur noch 7 Tage übrig sind. Leer lassen, wenn du das nicht brauchst.") +
       (function () { var sp2 = suppSplit(it, left); /* v168 (Wunsch des Nutzers): erst Anzahl Packungen, dann Inhalt je Packung, dann Rest der offenen */
-        return '<div class="srow"><label>Volle Packungen' + selWheel('data-ssf="' + it.id + '" aria-label="Volle Packungen auf Vorrat"', rng(0, 30, 1), sp2[1], function (v) { return v + (v === 1 ? " Packung" : " Packungen"); }) + "</label>" +
+        return '<div class="srow"><label>Behälter<select data-fi="cont" data-id="' + it.id + '">' + CONTS.map(function (c) { return '<option value="' + c[0] + '"' + (suppCont(it) === c[0] ? " selected" : "") + ">" + c[1] + "</option>"; }).join("") + "</select></label></div>" +
+          '<div class="srow"><label>Volle Packungen' + selWheel('data-ssf="' + it.id + '" aria-label="Volle Packungen auf Vorrat"', rng(0, 30, 1), sp2[1], function (v) { return v + (v === 1 ? " Packung" : " Packungen"); }) + "</label>" +
           '<label>' + (it.per === "st" ? suppUnit(it, 2) : it.per) + ' pro Packung<input data-fi="pack" data-id="' + it.id + '" value="' + (it.pack ? fmt(it.pack) : "") + '" inputmode="numeric" placeholder="z. B. 210"></label></div>' +
           '<div class="srow"><label>In der offenen Packung noch<span class="unitin"><input data-sso="' + it.id + '" value="' + (left != null ? fmt(sp2[0]) : "") + '" inputmode="decimal" placeholder="–"><span class="muted">' + (it.per === "st" ? suppUnit(it, 2) : it.per) + "</span></span></label></div>"; })() +
       (r ? '<p class="small' + (r.days <= 7 ? " slow" : " muted") + '">' + (r.days ? "Reicht für " + r.days + " Tage, bis " + WDAYS[dateOf(addDays(r.last, dlEvery(a) - 1)).getDay()].slice(0, 2) + ". " + dfmt(addDays(r.last, dlEvery(a) - 1)) : "Vorrat leer – Zeit nachzukaufen.") + "</p>" : "") +
@@ -6631,7 +6642,11 @@ button, select, input { touch-action: manipulation }
         var it3 = ownItem(fd3, t.dataset.id); if (!it3) return; var f3 = t.dataset.fi;
         if (f3 === "name") it3.name = t.value.trim().slice(0, 80) || it3.name;
         else if (f3 === "code") { var cd = t.value.replace(/\D/g, ""); if (cd && (cd.length < 8 || cd.length > 14)) return; if (cd) it3.code = cd; else delete it3.code; }
-        else if (f3 === "form") it3.form = SFORMS.some(function (x) { return x[0] === t.value; }) ? t.value : "Kapsel";
+        else if (f3 === "form") { /* v170: Pulver (g) / Flüssig (ml) stellt die Einheit um; Inhalt pro Portion bleibt gleich */
+          var nper = t.value === "g" || t.value === "ml" ? t.value : "st", pa3 = suppPortion(fd3, it3), of3 = suppFac(it3, pa3);
+          if (nper !== it3.per) { var raw3 = nutRaw(it3); it3.per = nper; var nf3 = suppFac(it3, pa3); if (raw3) it3.n = raw3.map(function (v) { return v == null ? null : v * of3 / nf3; }); it3.kcal = (it3.kcal || 0) * of3 / nf3; it3.p = (it3.p || 0) * of3 / nf3; }
+          if (nper === "st") it3.form = SFORMS.some(function (x) { return x[0] === t.value; }) ? t.value : "Kapsel"; else delete it3.form; }
+        else if (f3 === "cont") { if (/^(dose|beutel|flasche)$/.test(t.value)) it3.cont = t.value; }
         else if (f3 === "pack") { var opk = suppSplit(foodItem(foodDoc(), it3.id) || it3, suppLeft(foodDoc(), foodItem(foodDoc(), it3.id) || it3)), vpk = num(t.value);
           var reStock = function () { if (it3.stock) it3.stock = { d: today(), c: opk[0] + opk[1] * (it3.pack || 0), full: opk[1] }; };
           if (t.value.trim() === "" || !vpk) { delete it3.pack; reStock(); } else if (vpk > 0 && vpk < 1e5) { it3.pack = vpk; reStock(); } else return; }
