@@ -662,7 +662,7 @@ button, select, input { touch-action: manipulation }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
 .wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .wsub { margin: 0; align-self: flex-start; color: var(--muted); padding: 0 } .wlist { list-style: none; margin: 0; padding: 0; font-size: 14px } .wlist li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--line) } .wlist li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .cafh { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between } .cafh > .ibtn { flex: none; margin-top: -2px }
-.dlnx { font-weight: 400; opacity: .8 } .fsupp { margin: 10px 0 8px } .fsupp + button { margin-top: 2px }
+.dlnx { font-weight: 400; opacity: .8 } .fsupp .fline { flex-direction: column; align-items: stretch; gap: 2px } .fsupp .fline .muted { white-space: normal } /* v163: Präparat-Name über die ganze Zeile, Inhalt darunter */ .fsupp { margin: 10px 0 8px } .fsupp + button { margin-top: 2px }
 .ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
 .lookbtn { width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; display: grid; place-items: center }
 .lookbtn svg { width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round }
@@ -771,8 +771,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 162;
+  var APP_VERSION = 163;
   var CHANGES = [
+    { v: 163, tab: "data", text: "Meine Präparate: Der Name nutzt die ganze Zeile, der Inhalt steht darunter." },
     { v: 162, tab: "data", text: "Korrektur: Präparate unter „Meine Präparate“ lassen sich wieder antippen und bearbeiten." },
     { v: 161, tab: "data", text: "Daten → Essen: Nahrungsergänzung hat jetzt einen eigenen Bereich, getrennt von den Lebensmitteln. Unter „Meine Präparate“ legst du Kapseln mit „+ Präparat“ an, die Vitamine stehen dort gleich offen zum Eintragen. Der Rhythmus (täglich bis alle 14 Tage) ist ein Auswahlrad." },
     { v: 160, tab: "home", text: "Omega-3 unterscheidet jetzt EPA und DHA: Unter der Omega-3-Zeile steht „davon EPA … · DHA …“. Bei Präparaten trägst du EPA und DHA getrennt ein (Daten → Essen → Präparat öffnen → Vitamine …), Omega-3 rechnet die App dann selbst aus." },
