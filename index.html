@@ -267,9 +267,10 @@ body.tfocusing .tfocus { position: relative; outline: 2px solid var(--accent); o
 .pp-maintain { color: var(--muted); background: var(--sunken) }
 .pp-train { color: var(--accent); background: var(--accent-soft) } .dpills { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; margin-left: auto }
 body.foodonly .tabs button[data-tab="train"], body.foodonly .tabs button[data-tab="prog"], body.foodonly .tabs button[data-tab="plan"], body.foodonly .dsec button[data-id="ex"] { display: none }
-body.cardioonly .tabs button[data-tab="prog"], body.cardioonly .tabs button[data-tab="plan"], body.cardioonly .dsec button[data-id="ex"] { display: none }
+body.cardioonly .tabs button[data-tab="plan"], body.cardioonly .dsec button[data-id="ex"] { display: none }
 .cdblock { display: flex; flex-direction: column; gap: 8px } .cdform { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; align-items: end } .cdform label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted) }
 .cdlist { list-style: none; margin: 0; padding: 0 } .cdlist li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line) } .cdlist li span:first-child { flex: 1 }
+.cdchart { width: 100%; height: auto; display: block; margin: 6px 0 } .cdbar { fill: color-mix(in srgb, var(--c6) 55%, transparent) } .cdbar.cur { fill: var(--c6) } .cdv { font-size: 9px; fill: var(--muted); text-anchor: middle } .cdx { font-size: 9px; fill: var(--muted); text-anchor: middle }
 .pill.cdp { background: color-mix(in srgb, var(--c6) 22%, transparent); color: var(--c6) }
 .drow { display: flex; flex-direction: column; gap: 7px }
 .dline { display: flex; justify-content: space-between; align-items: center; gap: 8px }
@@ -757,8 +758,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 141;
+  var APP_VERSION = 142;
   var CHANGES = [
+    { v: 142, tab: "prog", text: "Ausdauer unter Fortschritt: Minuten, km und Einheiten dieser Woche, ein Balkendiagramm der letzten 12 Wochen und je Sportart die Summen mit Ø-Tempo (Laufen min/km, Rad km/h)." },
     { v: 141, tab: "train", text: "Neu: Ausdauer. In der Einrichtung und in den Einstellungen wählst du „Wie trainierst du?“ – Krafttraining, Ausdauer (Laufen, Rad …), beides oder gar nicht. Ausdauer trägst du unter Training unter dem Kalender ein (Sportart, Dauer, optional Strecke); diese Tage zählen für die Kalorien als Trainingstage. Wer nur Ausdauer macht, sieht keinen Plan." },
     { v: 140, tab: "home", text: "Neu unter Ernährung: Wasser-Zähler. Mit „+ 250 ml“ trägst du ein Glas ein, „−“ nimmt das letzte zurück. Das Tagesziel richtet sich nach der EFSA (an Trainingstagen etwas mehr). Hast du länger nichts getrunken, erinnert die App beim Öffnen daran. Glasgröße und Ziel stellst du in den Einstellungen ein." },
     { v: 139, tab: "data", text: "Mehr Auswahlräder statt Tippen: Sätze, Wiederholungen und Gewichtsschritt unter Daten → Übungen, Geburtsjahr und Größe (auch in der Einrichtung), „Ergibt … Portionen“ bei Mahlzeiten." },
@@ -1741,7 +1743,7 @@ button, select, input { touch-action: manipulation }
   var CARDIO = { run: ["Laufen", "LA"], bike: ["Radfahren", "RA"], swim: ["Schwimmen", "SW"], walk: ["Gehen/Wandern", "GE"], cross: ["Crosstrainer", "CT"], row: ["Rudern", "RU"], other: ["Sonstiges", "AU"] };
   var TTYPES = [["kraft", "Krafttraining"], ["cardio", "Ausdauer (Laufen, Rad …)"], ["both", "Beides"], ["none", "Gar nicht, nur Ernährung"]];
   function cardioOn(ds) { var c = S.cardio || {}; return Object.keys(c).filter(function (k) { return c[k] && c[k].date === ds; }).sort().map(function (k) { var o = c[k]; return { id: k, type: o.type, min: o.min, km: o.km, t: o.t }; }); }
-  var TABS_ALL = ["home", "train", "prog", "body", "plan", "data"], TABS_FOOD = ["home", "body", "data"], TABS_CARDIO = ["home", "train", "body", "data"];
+  var TABS_ALL = ["home", "train", "prog", "body", "plan", "data"], TABS_FOOD = ["home", "body", "data"], TABS_CARDIO = ["home", "train", "prog", "body", "data"];
   function applyMode() {
     var fo = foodOnly(), co = cardioOnly(); document.body.classList.toggle("foodonly", fo); document.body.classList.toggle("cardioonly", co); TABS = fo ? TABS_FOOD : co ? TABS_CARDIO : TABS_ALL;
     if (co && S.dataSec === "ex") S.dataSec = "food";
@@ -2511,7 +2513,31 @@ button, select, input { touch-action: manipulation }
     }
     return h;
   }
+  /* v142: Ausdauer unter Fortschritt – Wochenminuten der letzten 12 Wochen, diese Woche, je Sportart (12 Wochen) mit Tempo. */
+  function cardioProgHtml() {
+    var C = S.cardio || {}, all = Object.keys(C).map(function (k) { return C[k]; }).filter(function (c) { return c && CARDIO[c.type]; });
+    if (!all.length) return ttype() === "kraft" ? "" : '<div class="block"><h2>Ausdauer</h2><p class="empty">Noch keine Ausdauer eingetragen. Unter „Training“ trägst du Laufen, Rad & Co. ein, dann erscheint hier dein Verlauf.</p></div>';
+    var now = new Date(), mon = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7)), ds0 = function (d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+    var W = []; for (var i = 11; i >= 0; i--) { var a = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7 * i); W.push({ from: ds0(a), to: addDays(ds0(a), 6), min: 0, km: 0, n: 0 }); }
+    all.forEach(function (c) { W.forEach(function (w) { if (c.date >= w.from && c.date <= w.to) { w.min += c.min; w.km += c.km || 0; w.n++; } }); });
+    var cur = W[11], mx = Math.max(60, Math.max.apply(null, W.map(function (w) { return w.min; }))), bw = 24, gap = 6, H = 90, svg = "";
+    W.forEach(function (w, i) { var x = 4 + i * (bw + gap), hh = w.min ? Math.max(2, w.min / mx * H) : 0;
+      svg += '<rect x="' + x + '" y="' + (H - hh + 14).toFixed(1) + '" width="' + bw + '" height="' + hh.toFixed(1) + '" rx="3" class="cdbar' + (i === 11 ? " cur" : "") + '"/>' + (w.min ? '<text x="' + (x + bw / 2) + '" y="' + (H - hh + 10).toFixed(1) + '" class="cdv">' + w.min + "</text>" : "") +
+        (i % 3 === 2 || i === 11 ? '<text x="' + (x + bw / 2) + '" y="' + (H + 28) + '" class="cdx">' + (i === 11 ? "jetzt" : w.from.slice(8, 10) + "." + w.from.slice(5, 7) + ".") + "</text>" : ""); });
+    var from12 = W[0].from, by = {}; all.filter(function (c) { return c.date >= from12; }).forEach(function (c) { var b = by[c.type] = by[c.type] || { n: 0, min: 0, km: 0, kmMin: 0 }; b.n++; b.min += c.min; if (c.km) { b.km += c.km; b.kmMin += c.min; } });
+    var pace = function (t, b) { if (!b.km || !b.kmMin) return ""; if (t === "bike") return " · Ø " + fmt(Math.round(b.km / (b.kmMin / 60) * 10) / 10) + " km/h"; if (t === "run" || t === "walk") { var sp = b.kmMin / b.km, mm = Math.floor(sp), ss = Math.round((sp - mm) * 60); if (ss === 60) { mm++; ss = 0; } return " · Ø " + mm + ":" + pad(ss) + " min/km"; } return ""; };
+    return '<div class="block"><h2>Ausdauer' + ib("cdp") + "</h2>" + itx("cdp", "Minuten pro Woche (Montag bis Sonntag) aus deinen Einträgen unter „Training“. Darunter je Sportart die letzten 12 Wochen; das Tempo zählt nur Einheiten mit Strecke.") +
+      '<div class="stats"><div><b>' + cur.min + '</b><span>Minuten diese Woche</span></div><div><b>' + (cur.km ? fmt(Math.round(cur.km * 10) / 10) : "–") + '</b><span>km diese Woche</span></div><div><b>' + cur.n + "</b><span>" + (cur.n === 1 ? "Einheit" : "Einheiten") + "</span></div></div>" +
+      '<svg class="cdchart" viewBox="0 0 364 ' + (H + 34) + '" role="img" aria-label="Ausdauer-Minuten pro Woche, letzte 12 Wochen">' + svg + "</svg>" +
+      '<ul class="cdlist">' + Object.keys(CARDIO).filter(function (k) { return by[k]; }).map(function (k) { var b = by[k]; return "<li><span><b>" + esc(CARDIO[k][0]) + "</b> " + b.n + "× · " + b.min + " min" + (b.km ? " · " + fmt(Math.round(b.km * 10) / 10) + " km" : "") + pace(k, b) + "</span></li>"; }).join("") + "</ul>" +
+      '<p class="small muted">Letzte 12 Wochen</p></div>';
+  }
   function renderProgress() {
+    if (!S.ready) return;
+    if (cardioOnly()) { $("tab-prog").innerHTML = cardioProgHtml(); return; }
+    renderProgress0(); if (ttype() === "both" || Object.keys(S.cardio || {}).length) $("tab-prog").insertAdjacentHTML("beforeend", cardioProgHtml());
+  }
+  function renderProgress0() {
     var el = $("tab-prog"); if (!S.ready) return;
     var ws = sortedWorkouts(), names = exNames(), h = "";
     var now = new Date(), mon = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
