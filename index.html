@@ -300,7 +300,7 @@ body.cardioonly .tabs button[data-tab="plan"], body.cardioonly .dsec button[data
 .dline1 .ic { width: 16px; height: 16px } .dline1 b { color: var(--ink) } .dline1 b.def { color: var(--ph-cut) } .dline1 b.sur { color: var(--good) }
 .dline1 .ibtn { margin-left: 2px }
 .foodblk .nadd { border-top: 1px solid var(--line); padding-top: 12px }
-.row.nlinks { flex-wrap: nowrap; gap: 4px; justify-content: space-between }
+.row.nlinks { flex-wrap: nowrap; gap: 4px; justify-content: space-between } @media (max-width: 400px) { .row.nlinks { flex-wrap: wrap; justify-content: flex-start } }
 .row.nlinks .ghost { padding-left: 4px; padding-right: 4px; font-size: 15px; white-space: nowrap }
 .fcat { margin: 14px 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted) }
 .frow { border-bottom: 1px solid var(--line) }
@@ -662,7 +662,7 @@ button, select, input { touch-action: manipulation }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
 .wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .wsub { margin: 0; align-self: flex-start; color: var(--muted); padding: 0 } .wlist { list-style: none; margin: 0; padding: 0; font-size: 14px } .wlist li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--line) } .wlist li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .cafh { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between } .cafh > .ibtn { flex: none; margin-top: -2px }
-.dlnx { font-weight: 400; opacity: .8 }
+.dlnx { font-weight: 400; opacity: .8 } .restc { display: inline-flex; align-items: center } .cookf .fpadd { margin: 4px 0 } .cooksum { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin: 6px 0 }
 .cupboard { background: var(--sunken); border-radius: 12px; padding: 8px 10px 4px; margin: 4px 0 8px } .cupboard > p { margin: 0 0 2px }
 .cbrow2 { display: flex; align-items: flex-end; gap: 10px; width: 100%; background: none; border: 0; border-bottom: 3px solid var(--line); border-radius: 0; padding: 6px 0 3px; min-height: 0; text-align: left; font-weight: 400; color: var(--ink) } .cbrow2:last-child { border-bottom-color: transparent }
 .cbn { flex: 0 0 34%; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center }
@@ -779,8 +779,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 170;
+  var APP_VERSION = 171;
   var CHANGES = [
+    { v: 171, tab: "home", text: "Neu unter Ernährung: „Gericht berechnen“ für einmal Gekochtes. Zutaten scannen oder suchen und abwiegen, einstellen, wie viele Portionen herauskommen, und 1 Portion eintragen. Der Rest steht danach unter „Reste“ – nächste Portion mit einem Tippen." },
     { v: 170, tab: "data", text: "Vorratsschrank: Neben Dosen gibt es jetzt Beutel (z. B. Creatin) und Flaschen. Bei „Form“ kannst du „Pulver (g)“ oder „Flüssig (ml)“ wählen – Pulver bekommt automatisch einen Beutel." },
     { v: 169, tab: "data", text: "Vorratsschrank: Oben bei der Nahrungsergänzung siehst du für jedes Präparat mit Vorrat die vollen Dosen und die offene, die mit jeder Einnahme leerer wird. Wird es knapp, färben sie sich orange." },
     { v: 168, tab: "data", text: "Vorrat in der Reihenfolge, wie man zählt: erst volle Packungen, dann Kapseln pro Packung, dann der Rest in der offenen Packung." },
@@ -3790,6 +3791,8 @@ button, select, input { touch-action: manipulation }
           fav: (Array.isArray(d.fav) ? d.fav : []).filter(function (x) { return typeof x === "string" && (fid[x] || LIBMAP[x]); }).slice(0, 300),
           daily: (Array.isArray(d.daily) ? d.daily : []).filter(function (x) { return x && typeof x.id === "string" && typeof x.item === "string" && (fid[x.item] || LIBMAP[x.item]) && isN(x.amt) && x.amt > 0 && DRE.test(x.from) && (x.to == null || DRE.test(x.to)); }).slice(0, 30).map(function (x) { var o = { id: x.id.slice(0, 40), item: x.item, amt: x.amt, from: x.from }; if (x.to) o.to = x.to; if (isN(x.every) && x.every >= 2 && x.every <= 14) o.every = Math.round(x.every); return o; }),
           scan: (Array.isArray(d.scan) ? d.scan : []).filter(function (x) { return typeof x === "string" && (fid[x] || LIBMAP[x]); }).slice(0, 2000),
+          cooks: (Array.isArray(d.cooks) ? d.cooks : []).filter(function (c) { return c && IRE.test(c.id) && Array.isArray(c.parts) && DRE.test(c.date || ""); }).slice(0, 20).map(function (c) { var o = { id: c.id, name: txt80(c.name).slice(0, 40), portions: isN(c.portions) && c.portions >= 1 && c.portions <= 20 ? Math.round(c.portions) : 1, date: c.date,
+            parts: c.parts.filter(function (q) { return q && (fid[q.item] || LIBMAP[q.item]) && isN(q.amt); }).slice(0, 40).map(function (q) { return { item: q.item, amt: q.amt }; }) }; if (c.done) { o.done = true; o.left = isN(c.left) ? Math.max(0, Math.round(c.left)) : 0; } return o; }), /* v171 */
           meals: (d.meals || []).slice(0, 50).map(function (m) {
           if (!IRE.test(m.id)) throw 0;
           return { id: m.id, name: txt80(m.name).slice(0, 40), portions: isN(m.portions) && m.portions >= 1 && m.portions <= 50 ? Math.round(m.portions) : 1, parts: (m.parts || []).filter(function (q) { return (fid[q.item] || LIBMAP[q.item]) && isN(q.amt); }).slice(0, 30).map(function (q) { return { item: q.item, amt: q.amt }; }) };
@@ -4044,7 +4047,7 @@ button, select, input { touch-action: manipulation }
      Bei jeder Version, die die Bedienung ändert, hier mitpflegen. Kurz halten, Details stehen hinter den blauen i. */
   var HELP = [
     ["Erste Schritte", "@@FIRST@@"],
-    ["Ernährung", "<p>Hier trägst du ein, was du isst, und siehst, was heute noch offen ist.</p><ul><li><b>Die große Zahl</b> sind die Kalorien, die heute noch offen sind. Der Balken darunter zeigt Eiweiß, Fett und Kohlenhydrate. Der blasse orange Abschnitt sind die Kalorien, die dein noch fehlendes Eiweiß brauchen wird. Darunter stehen Defizit bzw. Überschuss und dein geschätzter Verbrauch; das i daneben zeigt Schritt für Schritt, wie dein Ziel von heute zustande kommt.</li><li><b>Essen eintragen:</b> ins Suchfeld tippen, Lebensmittel oder Mahlzeit antippen, Menge angeben, „Eintragen“. Ohne Suchbegriff siehst du Mahlzeiten, Favoriten, eigene Lebensmittel und die ganze Bibliothek zum Durchscrollen. Wischst du in der Trefferliste, geht die Tastatur weg; zum Weitertippen wieder ins Suchfeld tippen.</li><li><b>Barcode:</b> Das Barcode-Symbol neben dem Suchfeld öffnet die Kamera. Bekannte Produkte werden ohne Internet erkannt. Unbekannte fragt die App mit Internet einmal bei Open Food Facts ab und speichert sie, danach gehen auch sie offline.</li><li><b>Ohne Waage:</b> „Mittag schätzen“ trägt eine kleine, mittlere oder große Mahlzeit als Schätzung ein.</li><li><b>Liste:</b> Unter jedem Eintrag stehen Eiweiß (orange), Fett (gelb), Kohlenhydrate (türkis) und die kcal, ganz unten die Summe. „–“ heißt, der Wert fehlt beim Lebensmittel und zählt nicht zur Summe. Die Uhrzeit links lässt sich antippen und ändern, wichtig vor allem bei Koffein.</li><li><b>Wasser:</b> Mit „+ 250 ml“ trägst du ein Glas ein, „−“ nimmt das letzte zurück. Das Ziel richtet sich nach der EFSA (Frauen etwa 1,5 l, Männer 2 l getrunken, an Trainingstagen 0,5 l mehr), Glasgröße und Ziel stellst du in den Einstellungen ein. Hast du länger nichts getrunken, steht beim Öffnen ein Hinweis da. Getränke aus der Essensliste (alles in ml, auch gescannt) zählen automatisch mit.</li><li><b>Nur heute:</b> Eintragen kannst du nur für heute. Frühere Tage siehst du unter „Essen im Rückblick“.</li><li><b>Täglich:</b> Supplements, die du jeden Tag nimmst, legst du einmal unter Daten → Essen an (je Kapsel, Anzahl mit dem Auswahlrad, Beginn über das Datum hinter „seit“). Sie zählen automatisch bei den Vitaminen mit, ohne Kalorien. In der Zeile „Täglich“ tippst du eines an, wenn du es heute ausgelassen hast.</li><li><b>Koffein:</b> Sobald du etwas mit Koffein einträgst, erscheint oben eine Box: Summe, wie viel gerade im Körper ist, der Verlauf als Kurve, was zu deiner Schlafenszeit noch übrig ist (orange ab 30 mg) und bis wann ein Kaffee noch geht. Gerechnet wird mit etwa 45 Minuten Aufnahme und 5 Stunden Halbwertszeit; bei dir kann das abweichen. Die Schlafenszeit stellst du in den Einstellungen (Zahnrad oben) ein.</li><li><b>Vitamine &amp; Mineralstoffe</b> (zum Aufklappen): heute oder im 7-Tage-Schnitt, gemessen an den Empfehlungen der DGE. Blau heißt unter dem Ziel, Grün im Rahmen, Gelb bis Rot nähert sich der sicheren Obergrenze oder liegt darüber. Der volle Teil eines Balkens kommt aus deinem Essen, der schraffierte aus Präparaten. „Erfasst: x %“ sagt, für wie viel deiner Kalorien Werte vorliegen.</li><li><b>Essen im Rückblick</b> (ganz unten): Kalorien pro Tag gegen dein Ziel, dazu der Gewichtstrend. Tage ohne Eintrag sind grau. Tippe auf einen Tag oder blättere mit ‹ ›, um zu sehen, was du gegessen hast.</li></ul>"],
+    ["Ernährung", "<p>Hier trägst du ein, was du isst, und siehst, was heute noch offen ist.</p><ul><li><b>Die große Zahl</b> sind die Kalorien, die heute noch offen sind. Der Balken darunter zeigt Eiweiß, Fett und Kohlenhydrate. Der blasse orange Abschnitt sind die Kalorien, die dein noch fehlendes Eiweiß brauchen wird. Darunter stehen Defizit bzw. Überschuss und dein geschätzter Verbrauch; das i daneben zeigt Schritt für Schritt, wie dein Ziel von heute zustande kommt.</li><li><b>Essen eintragen:</b> ins Suchfeld tippen, Lebensmittel oder Mahlzeit antippen, Menge angeben, „Eintragen“. Ohne Suchbegriff siehst du Mahlzeiten, Favoriten, eigene Lebensmittel und die ganze Bibliothek zum Durchscrollen. Wischst du in der Trefferliste, geht die Tastatur weg; zum Weitertippen wieder ins Suchfeld tippen.</li><li><b>Barcode:</b> Das Barcode-Symbol neben dem Suchfeld öffnet die Kamera. Bekannte Produkte werden ohne Internet erkannt. Unbekannte fragt die App mit Internet einmal bei Open Food Facts ab und speichert sie, danach gehen auch sie offline.</li><li><b>Ohne Waage:</b> „Schätzen“ trägt eine kleine, mittlere oder große Mahlzeit als Schätzung ein. „Gericht berechnen“: alle Zutaten eines selbst gekochten Gerichts eintragen (wiegen oder scannen), wählen, wie viele Portionen es ergibt, und 1 Portion eintragen – der Rest steht unter „Reste“ und ist mit einem Tippen eingetragen.</li><li><b>Liste:</b> Unter jedem Eintrag stehen Eiweiß (orange), Fett (gelb), Kohlenhydrate (türkis) und die kcal, ganz unten die Summe. „–“ heißt, der Wert fehlt beim Lebensmittel und zählt nicht zur Summe. Die Uhrzeit links lässt sich antippen und ändern, wichtig vor allem bei Koffein.</li><li><b>Wasser:</b> Mit „+ 250 ml“ trägst du ein Glas ein, „−“ nimmt das letzte zurück. Das Ziel richtet sich nach der EFSA (Frauen etwa 1,5 l, Männer 2 l getrunken, an Trainingstagen 0,5 l mehr), Glasgröße und Ziel stellst du in den Einstellungen ein. Hast du länger nichts getrunken, steht beim Öffnen ein Hinweis da. Getränke aus der Essensliste (alles in ml, auch gescannt) zählen automatisch mit.</li><li><b>Nur heute:</b> Eintragen kannst du nur für heute. Frühere Tage siehst du unter „Essen im Rückblick“.</li><li><b>Täglich:</b> Supplements, die du jeden Tag nimmst, legst du einmal unter Daten → Essen an (je Kapsel, Anzahl mit dem Auswahlrad, Beginn über das Datum hinter „seit“). Sie zählen automatisch bei den Vitaminen mit, ohne Kalorien. In der Zeile „Täglich“ tippst du eines an, wenn du es heute ausgelassen hast.</li><li><b>Koffein:</b> Sobald du etwas mit Koffein einträgst, erscheint oben eine Box: Summe, wie viel gerade im Körper ist, der Verlauf als Kurve, was zu deiner Schlafenszeit noch übrig ist (orange ab 30 mg) und bis wann ein Kaffee noch geht. Gerechnet wird mit etwa 45 Minuten Aufnahme und 5 Stunden Halbwertszeit; bei dir kann das abweichen. Die Schlafenszeit stellst du in den Einstellungen (Zahnrad oben) ein.</li><li><b>Vitamine &amp; Mineralstoffe</b> (zum Aufklappen): heute oder im 7-Tage-Schnitt, gemessen an den Empfehlungen der DGE. Blau heißt unter dem Ziel, Grün im Rahmen, Gelb bis Rot nähert sich der sicheren Obergrenze oder liegt darüber. Der volle Teil eines Balkens kommt aus deinem Essen, der schraffierte aus Präparaten. „Erfasst: x %“ sagt, für wie viel deiner Kalorien Werte vorliegen.</li><li><b>Essen im Rückblick</b> (ganz unten): Kalorien pro Tag gegen dein Ziel, dazu der Gewichtstrend. Tage ohne Eintrag sind grau. Tippe auf einen Tag oder blättere mit ‹ ›, um zu sehen, was du gegessen hast.</li></ul>"],
     ["Training", "<p><b>Ausdauer</b> (Laufen, Rad, Schwimmen …) trägst du unter dem Kalender ein: Sportart, Dauer, optional Strecke. Den Tag wählst du im Kalender, auch rückwirkend. Diese Tage zählen für die Kalorien als Trainingstage. Ob du Kraft, Ausdauer oder beides machst, stellst du in den Einstellungen unter „Training“ ein.</p><p>Oben der Kalender, darunter die Einheit zum Eintragen.</p><ul><li><b>Training starten:</b> im Kalender einen Tag antippen, Trainingstag wählen, „Training starten“. Ansicht Tag, Woche oder Monat wählst du oben rechts. Vergangene Einheiten öffnest du genauso und trägst nach.</li><li><b>Sätze eintragen:</b> Gewicht und Wiederholungen eintippen, gespeichert wird automatisch. Ein Satz zählt, sobald Wiederholungen drinstehen.</li><li><b>Gewichtsvorschlag:</b> Ab der zweiten Einheit schlägt die App das Gewicht vor. Die Regel: erst in allen Sätzen die obere Wiederholungsgrenze schaffen, dann geht das Gewicht um den „Schritt“ der Übung hoch.</li><li><b>Aufwärmsätze</b> stehen eingeklappt über jeder Übung.</li><li><b>+ Übung für heute</b> und <b>Ersetzen</b> ändern nur diese Einheit, mit Häkchen auch den Plan. Hast du dich vertan, nimmt „eingetragene Sätze mitnehmen“ die Sätze zur richtigen Übung mit (nur am selben Tag).</li><li><b>Training beenden:</b> unten unter der Einheit. Bis dahin rechnet die App beim Kalorienziel mit deinem vollen Plan-Tag, danach nur mit den Sätzen, die du wirklich gemacht hast. „Weiter trainieren“ macht es rückgängig.</li><li><b>Krafttest:</b> ein Satz mit etwa 85 % deines geschätzten Maximums bis eine Wiederholung vor Schluss. Für Schwerpunktübungen erinnert die App alle 4 Wochen.</li><li><b>Plan ändern:</b> der Link hinter den Trainingstagen führt zum Plan-Assistenten.</li></ul>"],
     ["Fortschritt", "<p>Zeigt, ob du stärker wirst. Aussagekräftig wird es nach etwa drei bis vier Wochen.</p><ul><li><b>Kraft nach Körperbereichen:</b> Die Körperkarte färbt jede Muskelgruppe danach, wie sich dein geschätztes Maximum im Zeitraum verändert hat: orange = gleich, tiefrot = ab +20 %, graublau = schwächer, grau = keine Daten. Mit ▶ oder dem Regler läuft der Zeitraffer. Mit dem Zeitraum „Phase“ siehst du, ob du im Cut deine Kraft hältst. Im Diagramm darunter wählst du die Linien über die Knöpfe.</li><li><b>Verlauf pro Übung</b> als 1RM, schwerstes Gewicht oder Volumen.</li><li><b>Schwerpunkt:</b> deine wichtigsten Übungen mit geschätztem Maximum (1RM), Veränderung in der Phase, Rekord und nächstem Krafttest. Den Schwerpunkt setzt du unter Daten → Übungen.</li><li><b>Sätze pro Muskelgruppe:</b> 10–20 Sätze pro Woche sind ein üblicher Bereich für Muskelaufbau.</li><li><b>Rekorde</b> und Krafttest-Ergebnisse stehen am Ende.</li></ul><p class=\"small muted\">Das 1RM ist eine Schätzung aus Gewicht und Wiederholungen (Epley-Formel), kein gemessener Wert.</p>"],
     ["Körper", "<p>Gewicht, Körperfett, Umfänge und deine Phasen.</p><ul><li><b>Gewicht eintragen:</b> am besten täglich oder mehrmals pro Woche, morgens nach dem Aufstehen. Einzelne Werte schwanken um 1–2 kg, die App achtet auf den Verlauf. Auf dem iPhone holt „Aus Apple Health holen“ Gewicht und Körperfett über einen Kurzbefehl.</li><li><b>Messung korrigieren:</b> in der Tabelle „Messungen“ das Datum antippen. Die Werte stehen dann oben im Formular: ändern oder ein Feld leeren, „Speichern“. „Löschen“ entfernt den ganzen Tag.</li><li><b>Gewichtsdiagramm:</b> deine Messungen mit dem Korridor deiner Phase. Liegst du im Korridor, passt das Tempo. Hast du Körperfettwerte, läuft das Körperfett als gestrichelte Linie mit (Schnitt der letzten 7 Tage, Skala rechts). Tippe auf einen Tag, dann stehen unter dem Diagramm Datum, Gewicht und Körperfett dieses Tages; noch einmal tippen blendet es wieder aus.</li><li><b>Körperfett ohne Waage:</b> Ein Maßband reicht. Taille auf Höhe des Bauchnabels und Hals messen, Frauen zusätzlich die Hüfte an der breitesten Stelle.</li><li><b>Phasen:</b> Cut, Aufbau oder Halten mit Beginn und Zielgewicht. Mit „Übergang“ (Reverse Diet) wandert dein Kalorienziel nach einem Cut über 2 bis 4 Wochen gleichmäßig zum neuen Ziel, statt zu springen; 3 Wochen sind vorausgewählt. Der Korridor zeigt, ob du im Plan liegst. Fällst du heraus, schlägt die App Aufholen oder einen Neustart vor.</li><li><b>Kalorien und Makros:</b> Der Grundumsatz kommt aus Gewicht, Größe, Alter und Geschlecht, mit Körperfett genauer über die fettfreie Masse. Dazu kommen dein Alltag und dein Training. Trägst du Gewicht und Essen ein, leitet die App nach zwei Wochen deinen echten Bedarf aus dem Gewichtsverlauf ab. Die Tabelle zeigt den Wochenschnitt (Ø), die Zeile „Heute“ darunter dein Ziel für heute wie unter Ernährung.</li></ul>"],
@@ -4148,7 +4151,7 @@ button, select, input { touch-action: manipulation }
       function () { var n = S.plan && S.plan.days ? S.plan.days.length : 0; return n ? [1, "Plan steht: " + n + (n === 1 ? " Trainingstag" : " Trainingstage")] : [0, "Noch kein Plan. Ohne Plan gibt es keine Vorschläge im Training"]; }],
     ["Training eintragen", "Im Studio: oben im Kalender den Tag antippen, „Training starten“, dann je Satz Gewicht und Wiederholungen eintragen. Gespeichert wird automatisch. Am Ende „Training beenden“. Ab der zweiten Einheit schlägt die App dir das Gewicht vor.", "train", function () { return [$("calwrap")]; },
       function () { var n = Object.keys(S.workouts).length + Object.keys(S.cardio || {}).length; return n ? [1, "Erstes Training ist eingetragen"] : [0, "Machst du beim nächsten Training, jetzt einfach „Weiter“"]; }],
-    ["Essen eintragen", "Probier es gleich aus: ins Suchfeld tippen, Lebensmittel antippen, Menge angeben, „Eintragen“. Das Barcode-Symbol scannt Verpackungen, „Mittag schätzen“ hilft ohne Waage.", "home", function () { return [document.querySelector(".nadd"), document.querySelector(".nlinks")]; },
+    ["Essen eintragen", "Probier es gleich aus: ins Suchfeld tippen, Lebensmittel antippen, Menge angeben, „Eintragen“. Das Barcode-Symbol scannt Verpackungen, „Schätzen“ hilft ohne Waage, „Gericht berechnen“ bei selbst Gekochtem mit mehreren Portionen.", "home", function () { return [document.querySelector(".nadd"), document.querySelector(".nlinks")]; },
       function () { var ok = Object.keys(S.nutri).some(function (k) { var n = S.nutri[k]; return n && n.entries && n.entries.length; }); return ok ? [1, "Dein erster Eintrag ist drin"] : [0, "Noch nichts eingetragen"]; }],
     ["Gewicht eintragen", "Trag dein Gewicht regelmäßig ein, am besten morgens nach dem Aufstehen. Einzelne Werte schwanken, die App achtet auf den Verlauf. Nach zwei Wochen mit Gewicht und Essen kennt sie deinen echten Verbrauch.", "body", function () { return [$("bform")]; },
       function () { var ok = Object.keys(S.body).some(function (k) { return S.body[k] && S.body[k].weight != null; }); return ok ? [1, "Dein Gewicht ist eingetragen"] : [0, "Noch kein Gewicht. Ohne Gewicht keine Kalorien"]; }],
@@ -5263,6 +5266,29 @@ button, select, input { touch-action: manipulation }
     }, { p: 0, kcal: 0, f: 0, c: 0 });
   }
   function unitOf(it) { return it.per === "st" ? "Stk." : it.per; }
+  /* v171 (Wunsch des Nutzers: Mutter kocht einmalig, 4 Portionen): Gericht berechnen – Zutaten wiegen oder scannen, am Ende „ergibt n Portionen“,
+     1 Portion eintragen; der Rest bleibt als „Reste“ unter Ernährung (mit einem Tippen die nächste Portion). food.cooks = [{id, name, parts, portions, done?, left?, date}] */
+  function cookDraft(fd) { return (fd.cooks || []).filter(function (c) { return !c.done; })[0] || null; }
+  function cookAddPart(id) { var fd = clone(foodDoc()), c = cookDraft(fd), it = foodItem(fd, id); if (!it) return; if (!c) { c = cookNew(fd); } c.parts.push({ item: it.id, amt: it.amt || 100 }); foodSave(fd); }
+  function cookNew(fd) { var c = { id: rid("ck"), name: "Gericht " + dfmt(today()).replace(/\.$/, ""), parts: [], portions: 4, date: today() }; fd.cooks = (fd.cooks || []).concat([c]); return c; }
+  function cookEat(fd, c) { var v = mealPortion(fd, c), mn = mealNut(fd, c); nutriAdd(today(), { caf: mn.caf, n: mn.n, nk: mn.nk, name: c.name + (mealPortions(c) > 1 ? " (1 Portion)" : ""), p: v.p, kcal: v.kcal, f: v.f, c: v.c }); }
+  function cookForm(fd) {
+    var c = cookDraft(fd) || { name: "Gericht " + dfmt(today()).replace(/\.$/, ""), parts: [], portions: 4 }, tot = mealVal(fd, c), pn = mealPortions(c), pv = mealPortion(fd, c), scan = navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+    return '<div class="nform cookf"><label>Name<input data-ck="name" value="' + esc(c.name) + '" autocomplete="off" maxlength="40"></label>' +
+      '<p class="small muted">Alle Zutaten so eintragen, wie sie in den Topf kommen (gewogen oder gescannt), dann wählen, wie viele Portionen herauskommen.</p>' +
+      c.parts.map(function (q, i) { var it = foodItem(fd, q.item); if (!it) return "";
+        return '<div class="fpart"><span>' + esc(it.name) + '</span><input data-ckp="' + i + '" value="' + fmt(q.amt) + '" inputmode="decimal" aria-label="Menge ' + esc(it.name) + '"><span class="muted small">' + unitOf(it) + '</span><button class="ghost xs" data-act="ckdel" data-n="' + i + '" aria-label="' + esc(it.name) + ' entfernen">✕</button></div>'; }).join("") +
+      '<div class="fpadd"><span class="qwrap"><input autocorrect="off" class="cbq" data-cb="ck" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="+ Zutat suchen" aria-label="Zutat suchen">' +
+      (scan ? '<button class="scanbtn" data-act="scan" data-id="ck" aria-label="Zutat scannen">' + ic("barcode") + "</button>" : "") + '</span><div class="cbres tpres" id="cbr-ck" hidden></div></div>' +
+      (c.parts.length ? '<p class="small cooksum">Gesamt ' + nMac(tot.p, tot.f, tot.c, '<span class="nkc">' + Math.round(tot.kcal).toLocaleString("de-DE") + " kcal</span>") + "</p>" +
+        '<label class="fmport">Ergibt' + selWheel('data-ck="portions" aria-label="Anzahl Portionen"', rng(1, 20, 1), pn) + (pn === 1 ? "Portion" : "Portionen") + "</label>" +
+        '<p class="small cooksum"><b>1 Portion</b> ' + nMac(pv.p, pv.f, pv.c, '<span class="nkc">' + Math.round(pv.kcal).toLocaleString("de-DE") + " kcal</span>") + "</p>" +
+        '<div class="row"><button class="primary" data-act="ckeat">1 Portion eintragen</button><button class="ghost" data-act="ckx">Verwerfen</button></div>' : "") + "</div>";
+  }
+  function cookRests(fd) {
+    var r = (fd.cooks || []).filter(function (c) { return c.done && c.left > 0; }); if (!r.length) return "";
+    return '<div class="dlyline"><span class="small muted">Reste:</span>' + r.map(function (c) { return '<span class="restc"><button class="dchip" data-act="ckrest" data-id="' + c.id + '" aria-label="Eine Portion ' + esc(c.name) + ' eintragen">+ ' + esc(shortName(c.name)) + '<span class="dlnx"> · ' + c.left + (c.left === 1 ? " Portion" : " Port.") + (c.date !== today() ? " vom " + dfmt(c.date) : "") + '</span></button><button class="ghost xs" data-act="ckrx" data-id="' + c.id + '" aria-label="Reste entfernen">✕</button></span>'; }).join("") + "</div>";
+  }
   function nutriAdd(date, e) {
     var id = "n_" + date, d = clone(S.nutri[id] || { kind: "nutri", date: date, entries: [] });
     e.id = rid("n"); e.t = nowHM(); e.p = Math.round(e.p * 10) / 10; e.kcal = Math.round(e.kcal);
@@ -5344,6 +5370,7 @@ button, select, input { touch-action: manipulation }
       offEnrich(it, code);
       scanStop();
       if (st.mode === "ni") { S.nSel = "i:" + it.id; renderHome(); var am = $("ni-amt"); if (am) { am.scrollIntoView({ block: "center" }); am.focus(); } }
+      else if (st.mode === "ck") { cookAddPart(it.id); S.nForm = "cook"; renderHome(); }
       else { S.fFilter = code; S.fOpen = it.id; renderData(); }
       return;
     }
@@ -5642,7 +5669,7 @@ button, select, input { touch-action: manipulation }
       '<div class="cbres tpres" id="cbr-ni" hidden></div>' +
       '<label class="namt"' + (selIt ? "" : " hidden") + '>Menge<span class="unitin"><input id="ni-amt" inputmode="decimal" autocomplete="off" placeholder="' + (selIt ? fmt(selIt.amt) : "") + '"><span class="muted" id="ni-unit">' + (selIt ? unitOf(selIt) : "") + "</span></span></label>" +
       '<button class="primary" data-act="nadd">Eintragen</button></div>' +
-      '<div class="row nlinks"><button class="ghost" data-act="nform" data-id="est" aria-expanded="' + (S.nForm === "est") + '">Mittag schätzen</button><button class="ghost" data-act="fgo">Lebensmittel bearbeiten</button></div>';
+      '<div class="row nlinks"><button class="ghost" data-act="nform" data-id="est" aria-expanded="' + (S.nForm === "est") + '">Schätzen</button><button class="ghost" data-act="nform" data-id="cook" aria-expanded="' + (S.nForm === "cook") + '">Gericht berechnen</button><button class="ghost" data-act="fgo">Lebensmittel</button></div>';
     if (S.nForm === "est") h += '<div class="nform"><div class="chips">' + EST.map(function (x, i) { return '<button data-act="nest" data-id="' + i + '">' + x[0] + ' <span class="muted">≈ ' + x[1] + " g · " + x[2] + " kcal</span></button>"; }).join("") + "</div>" +
       '<div class="ngrid"><label>Bezeichnung<input id="ne-name" autocomplete="off" placeholder="z. B. Kantine"></label><label>Eiweiß (g)<input id="ne-p" inputmode="decimal" autocomplete="off"></label><label>Kalorien<input id="ne-k" inputmode="numeric" autocomplete="off"></label><label>Fett (g)<input id="ne-f" inputmode="decimal" autocomplete="off" placeholder="optional"></label><label>Kohlenh. (g)<input id="ne-c" inputmode="decimal" autocomplete="off" placeholder="optional"></label></div><button class="primary" data-act="nestc">Hinzufügen</button></div>';
     if (ent.length) h += '<ul class="nlist">' + ent.map(function (e) {
@@ -5650,8 +5677,9 @@ button, select, input { touch-action: manipulation }
     }).join("") + (ent.length > 1 ? (function () { /* v129 (Wunsch des Nutzers): Summe unter der Liste */
       var sm = { p: 0, f: 0, c: 0, k: 0, nf: 0, nc: 0 }; ent.forEach(function (e) { sm.p += e.p || 0; sm.k += e.kcal || 0; if (e.f == null) sm.nf++; else sm.f += e.f; if (e.c == null) sm.nc++; else sm.c += e.c; });
       return '<li class="nsum"><span class="nsl">Summe</span><span class="nnm">' + nMac(sm.p, sm.f, sm.c, '<span class="nkc">' + Math.round(sm.k).toLocaleString("de-DE") + " kcal</span>") + '</span><button class="ghost xs" tabindex="-1" aria-hidden="true" style="visibility:hidden">✕</button></li>'; })() : "") + "</ul>";
-    h += dailyLine(t, fd);
-    h += tip("food", "Wie genau ist das?", "Die Werte der Lebensmittel sind typische Durchschnittswerte. Gleich sie unter „Lebensmittel bearbeiten“ mit deinen Verpackungen ab. Schätzungen sind mit ≈ markiert und nur grob. Das Ziel kommt aus deinen Makros für heute. Die Uhrzeit setzt die App beim Eintragen, antippen zum Ändern.");
+    if (S.nForm === "cook") h += cookForm(fd);
+    h += cookRests(fd) + dailyLine(t, fd);
+    h += tip("food", "Wie genau ist das?", "Die Werte der Lebensmittel sind typische Durchschnittswerte. Gleich sie unter „Lebensmittel“ mit deinen Verpackungen ab. Schätzungen sind mit ≈ markiert und nur grob. Das Ziel kommt aus deinen Makros für heute. Die Uhrzeit setzt die App beim Eintragen, antippen zum Ändern.");
     return h;
   }
   /* v129 (Wunsch des Nutzers): Eiweiß, Fett, KH je Eintrag mit den Farben der Kalorienübersicht; fehlende Werte als „–“. */
@@ -5991,13 +6019,14 @@ button, select, input { touch-action: manipulation }
       var svd = SCAN && SCAN.saved, mo = SCAN && SCAN.mode; if (!svd) return;
       var ito = { id: svd }; scanStop();
       if (id === "edit") { S.dataSec = "food"; S.fOpen = ito.id; S.fFilter = ""; showTab("data"); foodFocus(ito.id); }
+      else if (mo === "ck") { cookAddPart(ito.id); S.nForm = "cook"; renderHome(); }
       else if (mo === "ni") { S.nSel = "i:" + ito.id; renderHome(); var amo = $("ni-amt"); if (amo) { amo.scrollIntoView({ block: "center" }); amo.focus(); } }
       else { S.fOpen = ito.id; renderData(); foodFocus(ito.id); }
     }
     else if (a === "scanlink") {
       var cdl = SCAN && SCAN.code, mdl = SCAN && SCAN.mode; if (!cdl) return;
       var fdl = clone(foodDoc()), itl = ownItem(fdl, id); if (!itl) return; itl.code = cdl; scanRemember(fdl, itl.id); foodSave(fdl); scanStop();
-      if (mdl === "ni") { S.nSel = "i:" + itl.id; renderHome(); var aml = $("ni-amt"); if (aml) { aml.scrollIntoView({ block: "center" }); aml.focus(); } } else { S.fOpen = itl.id; renderData(); foodFocus(itl.id); }
+      if (mdl === "ck") { cookAddPart(itl.id); S.nForm = "cook"; renderHome(); } else if (mdl === "ni") { S.nSel = "i:" + itl.id; renderHome(); var aml = $("ni-amt"); if (aml) { aml.scrollIntoView({ block: "center" }); aml.focus(); } } else { S.fOpen = itl.id; renderData(); foodFocus(itl.id); }
     }
     else if (a === "scannew") {
       var po = SCAN && SCAN.off; scanStop(); var fdn2 = clone(foodDoc()), nit = { id: rid("fd"), name: "Neues Produkt", per: "g", p: 0, f: 0, c: 0, kcal: 0, amt: 100, cat: "Eigene", code: id };
@@ -6055,6 +6084,7 @@ button, select, input { touch-action: manipulation }
         if (id.indexOf("own:") === 0) { S.pick[pdi] = "own"; S.pickName = id.slice(4); renderPlan(); window.scrollTo(0, ypx); var pn = $("pickname-" + pdi); if (pn) pn.focus(); }
         else { S.pick[pdi] = id; pickAdd(pdi); S.pickName = ""; renderPlan(); window.scrollTo(0, ypx); }
       }
+      else if (ck === "ck") { cookAddPart(id.slice(2)); var yck = window.scrollY; renderHome(); window.scrollTo(0, yck); var cq = document.querySelector('.cbq[data-cb="ck"]'); if (cq) cq.focus({ preventScroll: true }); }
       else if (ck === "dl") {
         var fdl2 = clone(foodDoc()), itd = foodItem(fdl2, id.slice(2)); if (!itd) return;
         fdl2.daily = (fdl2.daily || []).concat([{ id: rid("dl"), item: itd.id, amt: itd.amt || 1, from: today() }]); foodSave(fdl2);
@@ -6355,7 +6385,7 @@ button, select, input { touch-action: manipulation }
       if (!arm(b, sessions(id).length ? "Mit Verlauf löschen?" : "Sicher löschen?")) return;
       deleteExercise(id); S.exOpen = null; planChanged(true); renderAll(true); showTab("data");
     }
-    else if (a === "nform") { S.nForm = S.nForm === id ? null : id; renderHome(); var nf0 = document.querySelector(".nform input, .nform select"); if (nf0 && id === "item") nf0.focus(); }
+    else if (a === "nform") { S.nForm = S.nForm === id ? null : id; if (S.nForm === "cook" && !cookDraft(foodDoc())) { var fdc = clone(foodDoc()); cookNew(fdc); foodSave(fdc); } renderHome(); var nf0 = document.querySelector(".nform input, .nform select"); if (nf0 && id === "item") nf0.focus(); }
     else if (a === "nadd") {
       var fdn = foodDoc(), sv = niSel(fdn), ref = sv.slice(2);
       if (sv.indexOf("m:") === 0) { var mn = fdn.meals.filter(function (m) { return m.id === ref; })[0]; if (!mn) return; var vn = mealPortion(fdn, mn), mnn = mealNut(fdn, mn); nutriAdd(today(), { caf: mnn.caf, n: mnn.n, nk: mnn.nk, name: mn.name + (mealPortions(mn) > 1 ? " (1 Portion)" : ""), p: vn.p, kcal: vn.kcal, f: vn.f, c: vn.c }); }
@@ -6365,6 +6395,18 @@ button, select, input { touch-action: manipulation }
         var vi = partVal(itn, amn); nutriAdd(today(), { ml: Math.round(drinkAmt(itn, amn)), caf: Math.round(cafOf(itn, amn)), n: nutPack(nutOf(itn, amn)), nk: nutPart(itn) ? 0 : undefined, name: itn.name + " " + fmt(amn) + " " + unitOf(itn), p: vi.p, kcal: vi.kcal, f: vi.f, c: vi.c });
       }
       S.nSel = sv; renderHome();
+    }
+    else if (/^ck(del|eat|x|rest|rx)$/.test(a)) {
+      var fdk = clone(foodDoc()), ck2 = cookDraft(fdk);
+      if (a === "ckdel") { if (!ck2) return; ck2.parts.splice(+b.dataset.n, 1); }
+      else if (a === "ckx") { if (!ck2 || !arm(b, "Gericht verwerfen?")) return; fdk.cooks = fdk.cooks.filter(function (c) { return c !== ck2; }); S.nForm = null; }
+      else if (a === "ckeat") { if (!ck2 || !ck2.parts.length) return; cookEat(fdk, ck2); ck2.done = true; ck2.left = mealPortions(ck2) - 1; ck2.date = today(); if (!ck2.left) fdk.cooks = fdk.cooks.filter(function (c) { return c !== ck2; }); S.nForm = null; }
+      else { var cr = (fdk.cooks || []).filter(function (c) { return c.id === id; })[0]; if (!cr) return;
+        if (a === "ckrx" && !arm(b, "Reste entfernen?")) return;
+        if (a === "ckrest") { cookEat(fdk, cr); cr.left--; }
+        if (a === "ckrx" || cr.left <= 0) fdk.cooks = fdk.cooks.filter(function (c) { return c !== cr; }); }
+      fdk.cooks = (fdk.cooks || []).filter(function (c) { return !c.done || c.date >= addDays(today(), -14); }); /* Reste nach 2 Wochen weg */
+      foodSave(fdk); var yk = window.scrollY; renderHome(); window.scrollTo(0, yk);
     }
     else if (a === "nest") { var es = EST[+id]; nutriAdd(today(), { name: es[0], p: es[1], kcal: es[2], f: es[3], c: es[4], est: true }); S.nForm = null; renderHome(); }
     else if (a === "nestc") {
@@ -6503,7 +6545,7 @@ button, select, input { touch-action: manipulation }
     var key = t.dataset.cb, close = function () {
       if (cbKept === key) return;
       if (cbHold) { cbHold = false; setTimeout(close, 400); return; }
-      if (document.activeElement === t) return;
+      if (document.activeElement === t || !t.isConnected) return; /* v171: ein neu gezeichnetes Suchfeld (gleiche id) nicht mitschließen */
       var cr = $("cbr-" + key); if (cr) cr.hidden = true;
       if (key === "ni" && t.isConnected) { var fd = foodDoc(); t.value = selName(fd, niSel(fd)); t.placeholder = "Suchen, z. B. Reis"; }
     };
@@ -6594,6 +6636,13 @@ button, select, input { touch-action: manipulation }
     else if (t.id === "rep-from" || t.id === "rep-to") { if (DRE.test(t.value)) S[t.id === "rep-from" ? "repFrom" : "repTo"] = t.value; }
     else if (t.id === "set-glass" || t.id === "set-wgoal") { if (S.person) { var pw = clone(S.person); if (t.id === "set-glass") pw.glass = +t.value; else pw.wgoal = t.value ? +t.value : null; saveSettings(null, pw); renderHome(); if ($("setmsg")) $("setmsg").textContent = "Gespeichert."; } }
     else if (t.id === "pe-bed") { if (S.person) { var pb2 = Object.assign({}, S.person, { bed: t.value !== "23:00" ? t.value : null }); saveSettings(null, pb2); renderHome(); if ($("setmsg")) $("setmsg").textContent = "Schlafenszeit gespeichert."; } }
+    else if (t.dataset.ck || t.dataset.ckp != null) {
+      var fdc2 = clone(foodDoc()), cc2 = cookDraft(fdc2); if (!cc2) return;
+      if (t.dataset.ck === "name") cc2.name = t.value.trim().slice(0, 40) || cc2.name;
+      else if (t.dataset.ck === "portions") cc2.portions = Math.max(1, Math.min(20, Math.round(num(t.value) || 1)));
+      else { var vk2 = num(t.value); if (vk2 == null || vk2 < 0) return; cc2.parts[+t.dataset.ckp].amt = vk2; }
+      var yc2 = window.scrollY; foodSave(fdc2); renderHome(); window.scrollTo(0, yc2);
+    }
     else if (t.dataset.spa) {
       var fds = clone(foodDoc()), its = ownItem(fds, t.dataset.spa), vs = num(t.value); if (!its || vs == null || vs <= 0) return; its.amt = vs;
       var ds = suppAct(fds, its.id); if (ds && ds.amt !== vs) { if (ds.from < today()) { ds.to = addDays(today(), -1); var ns = { id: rid("dl"), item: ds.item, amt: vs, from: today() }; if (ds.every) ns.every = ds.every; fds.daily.push(ns); } else ds.amt = vs; } /* frühere Tage behalten die alte Portion */
