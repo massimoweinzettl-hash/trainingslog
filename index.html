@@ -771,8 +771,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 161;
+  var APP_VERSION = 162;
   var CHANGES = [
+    { v: 162, tab: "data", text: "Korrektur: Präparate unter „Meine Präparate“ lassen sich wieder antippen und bearbeiten." },
     { v: 161, tab: "data", text: "Daten → Essen: Nahrungsergänzung hat jetzt einen eigenen Bereich, getrennt von den Lebensmitteln. Unter „Meine Präparate“ legst du Kapseln mit „+ Präparat“ an, die Vitamine stehen dort gleich offen zum Eintragen. Der Rhythmus (täglich bis alle 14 Tage) ist ein Auswahlrad." },
     { v: 160, tab: "home", text: "Omega-3 unterscheidet jetzt EPA und DHA: Unter der Omega-3-Zeile steht „davon EPA … · DHA …“. Bei Präparaten trägst du EPA und DHA getrennt ein (Daten → Essen → Präparat öffnen → Vitamine …), Omega-3 rechnet die App dann selbst aus." },
     { v: 159, tab: "home", text: "Vitamine & Mineralstoffe: Präparate nicht mehr grau, sondern in derselben Farbe wie das Essen, nur blasser. Die Legende passt jetzt zu den Balken." },
@@ -5946,7 +5947,7 @@ button, select, input { touch-action: manipulation }
       var fds = clone(foodDoc()); fds.fav = (fds.fav || []).slice(); var si = fds.fav.indexOf(id); if (si >= 0) fds.fav.splice(si, 1); else fds.fav.unshift(id);
       foodSave(fds); var ckk = b.dataset.cb;
       if (ckk) { var inp = document.querySelector('.cbq[data-cb="' + ckk + '"]'), crr = $("cbr-" + ckk); if (crr && inp) { crr.innerHTML = cbResults(ckk, inp.value); crr.hidden = false; cbHold = true; if (cbKept !== ckk) inp.focus({ preventScroll: true }); } }
-      else { var yy = window.scrollY; $("flist").innerHTML = foodListHtml(foodDoc()); window.scrollTo(0, yy); }
+      else { var yy = window.scrollY; if (b.closest(".fsupp")) renderData(); else $("flist").innerHTML = foodListHtml(foodDoc()); window.scrollTo(0, yy); }
     }
     else if (a === "cbpick") {
       var ck = b.dataset.cb; cbHold = false; cbKept = null;
@@ -6230,6 +6231,7 @@ button, select, input { touch-action: manipulation }
       S.dataSec = "ex"; S.exOpen = id; S.exFilter = ""; showTab("data");
       var xb = document.querySelector('[data-act="exopen"][data-id="' + id + '"]'); if (xb) { xb.scrollIntoView({ block: "start" }); window.scrollBy(0, -70); xb.focus({ preventScroll: true }); }
     }
+    else if (a === "fiopen" && b.closest(".fsupp")) { S.fOpen = S.fOpen === id ? null : id; S.fsOpen = true; var yso = window.scrollY; renderData(); window.scrollTo(0, yso); var fo3 = document.querySelector('.fsupp [data-act="fiopen"][data-id="' + id + '"]'); if (fo3) fo3.focus({ preventScroll: true }); } /* v162: Präparate stehen außerhalb von #flist */
     else if (a === "fiopen") { S.fOpen = S.fOpen === id ? null : id; $("flist").innerHTML = foodListHtml(foodDoc()); var fo2 = document.querySelector('[data-act="fiopen"][data-id="' + id + '"]'); if (fo2) fo2.focus(); }
     else if (a === "fclear") { S.fFilter = ""; var ff = $("ffilter"); ff.value = ""; b.hidden = true; $("flist").innerHTML = foodListHtml(foodDoc()); ff.focus(); }
     else if (a === "fgo") { S.dataSec = "food"; showTab("data"); window.scrollTo(0, 0); }
