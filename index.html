@@ -773,8 +773,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 166;
+  var APP_VERSION = 167;
   var CHANGES = [
+    { v: 167, tab: "data", text: "Vorrat: Statt „+ 1 Packung“ wählst du jetzt die Anzahl voller Packungen per Drehrad und trägst ein, was in der offenen Packung noch übrig ist." },
     { v: 166, tab: "home", text: "Omega-3: Sind EPA und DHA eingetragen, zählt nur deren Summe – eine zusätzliche „Omega-3 gesamt“-Angabe vom Etikett bläht den Wert nicht mehr auf." },
     { v: 165, tab: "data", text: "Nahrungsergänzung neu: eine Karte je Präparat (Daten → Essen). Antippen und alles so eintragen, wie es auf der Packung steht – Inhalt pro Portion, Kapseln pro Portion, wie oft, seit wann. Neu: Vorrat mit „+ 1 Packung“; die App zeigt, wie lange er reicht, und warnt unter „Ernährung“, wenn nur noch 7 Tage übrig sind." },
     { v: 164, tab: "data", text: "Scan: „Werte anpassen“ springt jetzt direkt zum geöffneten Produkt mit den Eingabefeldern, statt nur oben in der Lebensmittelliste zu landen." },
@@ -3773,7 +3774,7 @@ button, select, input { touch-action: manipulation }
           if (typeof x.cat === "string" && FCATS.indexOf(x.cat) >= 0) ci.cat = x.cat;
           if (typeof x.code === "string" && /^\d{8,14}$/.test(x.code)) ci.code = x.code;
           if (isN(x.caf) && x.caf >= 0 && x.caf < 5000) ci.caf = x.caf;
-          if (typeof x.form === "string" && SFORMS.some(function (f) { return f[0] === x.form; })) ci.form = x.form; if (isN(x.pack) && x.pack > 0) ci.pack = x.pack; if (x.stock && DRE.test(x.stock.d) && isN(x.stock.c) && x.stock.c >= 0) ci.stock = { d: x.stock.d, c: x.stock.c }; /* v165 */
+          if (typeof x.form === "string" && SFORMS.some(function (f) { return f[0] === x.form; })) ci.form = x.form; if (isN(x.pack) && x.pack > 0) ci.pack = x.pack; if (x.stock && DRE.test(x.stock.d) && isN(x.stock.c) && x.stock.c >= 0) { ci.stock = { d: x.stock.d, c: x.stock.c }; if (isN(x.stock.full) && x.stock.full >= 0) ci.stock.full = Math.round(x.stock.full); } /* v165 */
           if (Array.isArray(x.n) && x.n.length >= 21 && x.n.length <= NUTK.length && x.n.every(function (v) { return v === null || isN(v); })) ci.n = x.n; return ci;
         });
         return { kind: "food", v: d.v === 5 || d.v === 4 || d.v === 3 || d.v === 2 ? d.v : 0, items: items,
@@ -5719,6 +5720,7 @@ button, select, input { touch-action: manipulation }
     return Math.max(0, Math.round(c * 10) / 10);
   }
   /* Wie lange reicht der Vorrat? Letzter Tag mit voller Portion (ab morgen gezählt), dazu die Tage bis dahin. */
+  function suppSplit(it, tot) { if (tot == null || !it.pack) return [tot || 0, 0]; var full = it.stock && isN(it.stock.full) ? it.stock.full : 0, fn = Math.min(full, Math.max(0, Math.floor(tot / it.pack + 1e-9))); return [Math.round((tot - fn * it.pack) * 10) / 10, fn]; }
   function suppRange(fd, it) {
     var c = suppLeft(fd, it), a = suppAct(fd, it.id); if (c == null || !a) return null; var doses = Math.floor(c / a.amt + 1e-9), t = today(), d = t, k = 0;
     if (doses <= 0) return { left: c, days: 0, last: null };
@@ -5743,10 +5745,12 @@ button, select, input { touch-action: manipulation }
       (a ? '<div class="srow"><label>Einnahme' + selWheel('data-dle="' + a.id + '" aria-label="Rhythmus"', rng(1, 14, 1), dlEvery(a), everyLab) + '</label><label>seit<input type="date" class="dlfrom" data-dlf="' + a.id + '" value="' + a.from + '" max="' + today() + '"></label></div>' +
         '<button class="ghost xs" data-act="dldel" data-id="' + a.id + '">Pausieren</button>'
         : '<button class="primary xs" data-act="dladd" data-id="' + it.id + '">Ab heute einnehmen</button>') +
-      '<h4 class="sh">Vorrat' + ib("svr") + "</h4>" + itx("svr", "Trag ein, wie viel du gerade noch hast (nach der heutigen Einnahme), z. B. Kapseln in der offenen Packung. Mit „+ 1 Packung“ kommen weitere volle Packungen dazu. Die App zieht an jedem Einnahmetag die Portion ab und warnt unter „Ernährung“, wenn nur noch 7 Tage übrig sind. Leer lassen, wenn du das nicht brauchst.") +
+      '<h4 class="sh">Vorrat' + ib("svr") + "</h4>" + itx("svr", "Trag ein, wie viel in einer Packung ist, wie viele volle Packungen du noch hast und was in der offenen Packung übrig ist (nach der heutigen Einnahme). Die App zieht an jedem Einnahmetag die Portion ab und warnt unter „Ernährung“, wenn nur noch 7 Tage übrig sind. Leer lassen, wenn du das nicht brauchst.") +
       '<div class="srow"><label>Packung' + '<span class="unitin"><input data-fi="pack" data-id="' + it.id + '" value="' + (it.pack ? fmt(it.pack) : "") + '" inputmode="numeric" placeholder="z. B. 210"><span class="muted">' + (it.per === "st" ? suppUnit(it, 2) : it.per) + "</span></span></label>" +
-      '<label>Noch da<span class="unitin"><input data-sst="' + it.id + '" value="' + (left != null ? fmt(left) : "") + '" inputmode="decimal" placeholder="–"><span class="muted">' + (it.per === "st" ? suppUnit(it, 2) : it.per) + "</span></span></label></div>" +
-      (it.pack ? '<button class="xs" data-act="sstp" data-id="' + it.id + '">+ 1 Packung (' + fmt(it.pack) + ")</button>" : "") +
+      (it.pack ? (function () { var sp2 = suppSplit(it, left); /* v167: offene Packung + Anzahl voller Packungen statt „+ 1 Packung“ */
+        return '<label>Volle Packungen' + selWheel('data-ssf="' + it.id + '" aria-label="Volle Packungen auf Vorrat"', rng(0, 30, 1), sp2[1], function (v) { return v + (v === 1 ? " Packung" : " Packungen"); }) + "</label></div>" +
+          '<div class="srow"><label>In der offenen Packung noch<span class="unitin"><input data-sso="' + it.id + '" value="' + (left != null ? fmt(sp2[0]) : "") + '" inputmode="decimal" placeholder="–"><span class="muted">' + (it.per === "st" ? suppUnit(it, 2) : it.per) + "</span></span></label></div>"; })()
+        : '<label>Noch da<span class="unitin"><input data-sst="' + it.id + '" value="' + (left != null ? fmt(left) : "") + '" inputmode="decimal" placeholder="–"><span class="muted">' + (it.per === "st" ? suppUnit(it, 2) : it.per) + "</span></span></label></div>") +
       (r ? '<p class="small' + (r.days <= 7 ? " slow" : " muted") + '">' + (r.days ? "Reicht für " + r.days + " Tage, bis " + WDAYS[dateOf(addDays(r.last, dlEvery(a) - 1)).getDay()].slice(0, 2) + ". " + dfmt(addDays(r.last, dlEvery(a) - 1)) : "Vorrat leer – Zeit nachzukaufen.") + "</p>" : "") +
       '<h4 class="sh">Inhalt pro Portion (' + fmt(pa) + " " + suppUnit(it, pa) + ")" + ib("sinh") + "</h4>" + itx("sinh", "So, wie es auf dem Etikett steht: meist „pro Tagesportion“. Ändert sich die Portion, rechnet die App den Inhalt mit. Bei Omega-3 nur EPA und DHA eintragen – „Omega-3 gesamt“ leer lassen, die App rechnet EPA + DHA (Ziel und Grenzen gelten nur dafür; die Gesamtangabe auf Etiketten enthält oft weitere Fettsäuren). Leer = nicht enthalten.") +
       '<div class="fnutg">' + NUTK.map(function (k, i) { if (i < 4 && !(raw && raw[i] != null)) return ""; var v = raw && raw[i] != null ? nutRound(raw[i] * f) : null;
@@ -6567,6 +6571,11 @@ button, select, input { touch-action: manipulation }
       var fds = clone(foodDoc()), its = ownItem(fds, t.dataset.spa), vs = num(t.value); if (!its || vs == null || vs <= 0) return; its.amt = vs;
       var ds = suppAct(fds, its.id); if (ds && ds.amt !== vs) { if (ds.from < today()) { ds.to = addDays(today(), -1); var ns = { id: rid("dl"), item: ds.item, amt: vs, from: today() }; if (ds.every) ns.every = ds.every; fds.daily.push(ns); } else ds.amt = vs; } /* frühere Tage behalten die alte Portion */
       var yspa = window.scrollY; foodSave(fds); renderData(); renderHome(); window.scrollTo(0, yspa);
+    }
+    else if (t.dataset.ssf || t.dataset.sso) {
+      var fdq2 = clone(foodDoc()), itq2 = ownItem(fdq2, t.dataset.ssf || t.dataset.sso); if (!itq2 || !itq2.pack) return; var cur2 = suppSplit(itq2, suppLeft(foodDoc(), foodItem(foodDoc(), itq2.id)));
+      var op2 = cur2[0], fu2 = cur2[1], vq2 = num(t.value); if (vq2 == null || vq2 < 0 || vq2 > 1e5) return; if (t.dataset.ssf) fu2 = Math.round(vq2); else op2 = vq2;
+      itq2.stock = { d: today(), c: op2 + fu2 * itq2.pack, full: fu2 }; var yq2 = window.scrollY; foodSave(fdq2); renderData(); renderHome(); window.scrollTo(0, yq2);
     }
     else if (t.dataset.sst) {
       var fdt = clone(foodDoc()), itt = ownItem(fdt, t.dataset.sst); if (!itt) return; var vt = num(t.value);
