@@ -369,7 +369,7 @@ textarea { font: 16px/1.4 var(--body); color: var(--ink); background: var(--sunk
 button { font: 600 14px var(--body); border-radius: 8px; cursor: pointer; padding: 10px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink) }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) }
 button.ghost { border-color: transparent; background: none; color: var(--accent); padding: 8px 6px }
-button.danger { color: var(--bad) }
+button.danger, button.ghost.danger { color: var(--bad); font-weight: 650 } button.danger:not(.ghost):not(.mv) { border-color: var(--bad) } /* v176 (Wunsch des Nutzers): Löschen überall rot und deutlich */
 
 .chips { display: flex; gap: 6px; flex-wrap: wrap }
 .chips button { padding: 7px 12px; border-radius: 999px; font-weight: 500 }
@@ -779,8 +779,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 175;
+  var APP_VERSION = 176;
   var CHANGES = [
+    { v: 176, tab: "data", text: "Alle Knöpfe zum Löschen, Entfernen und Verwerfen sind jetzt rot und etwas kräftiger, damit man sie nicht übersieht." },
     { v: 175, tab: "data", text: "Präparate lassen sich jetzt direkt in ihrer Karte löschen („Präparat löschen“). Frühere Tage behalten dabei ihre Vitaminwerte." },
     { v: 174, tab: "data", text: "Vorratsschrank: In den Dosen sieht man jetzt den Inhalt – Kapseln, Tabletten, Pulver oder Flüssigkeit." },
     { v: 173, tab: "home", text: "„Gericht berechnen“ öffnet sich jetzt direkt unter dem Knopf, nicht mehr unter der Essensliste." },
@@ -2123,7 +2124,7 @@ button, select, input { touch-action: manipulation }
     if (!ph || ph.type === "maintain") return "";
     var lw = lastWeight(list);
     return '<div class="row goalrow"><label style="flex:1 1 140px">Zielgewicht im ' + PH[ph.type] + ' (kg)<input id="ph-goal" inputmode="decimal" autocomplete="off" placeholder="' + (lw ? "z. B. " + fmt(Math.round(lw.weight * (ph.type === "cut" ? 0.95 : 1.04))) : "") + '" value="' + (isN(ph.goal) ? fmt(ph.goal) : "") + '"></label>' +
-      '<button data-act="goalsave">' + (isN(ph.goal) ? "Ziel ändern" : "Ziel speichern") + "</button>" + (isN(ph.goal) ? '<button class="ghost" data-act="goaldel">Entfernen</button>' : "") + '</div><p class="small muted" id="goalmsg"></p>';
+      '<button data-act="goalsave">' + (isN(ph.goal) ? "Ziel ändern" : "Ziel speichern") + "</button>" + (isN(ph.goal) ? '<button class="ghost danger" data-act="goaldel">Entfernen</button>' : "") + '</div><p class="small muted" id="goalmsg"></p>';
   }
   function phaseStatus(list) {
     var t = today(), p = phaseAt(t), tr = trendOf(list, trendFrom(p)), lastW = null;
@@ -2421,7 +2422,7 @@ button, select, input { touch-action: manipulation }
         }).join("") + '</div><div class="row srow"><button class="ghost" data-act="addset" data-id="' + ex.id + '">+ Satz</button>' +
         (ex.focus ? "" : '<button class="ghost' + (isTest ? " on" : "") + '" data-act="testtoggle" data-id="' + ex.id + '" aria-pressed="' + isTest + '">' + (isTest ? "Krafttest: aktiv" : "Krafttest") + "</button>") +
         '<button class="ghost" data-act="trep" data-id="' + ex.id + '">Ersetzen</button>' +
-        (!inPlan[ex.id] && !rows.some(function (r) { return num(r.r) > 0; }) ? '<button class="ghost" data-act="tdel" data-id="' + ex.id + '">' + (wasOf[ex.id] ? "Rückgängig" : "Entfernen") + "</button>" : "") +
+        (!inPlan[ex.id] && !rows.some(function (r) { return num(r.r) > 0; }) ? '<button class="ghost' + (wasOf[ex.id] ? "" : " danger") + '" data-act="tdel" data-id="' + ex.id + '">' + (wasOf[ex.id] ? "Rückgängig" : "Entfernen") + "</button>" : "") +
         "</div>" + (S.tpick && S.tpick.mode === "rep" && S.tpick.id === ex.id ? tpickHtml() : "") + '<p class="small" id="nx-' + ex.id + '"' + (nextText(ex) ? "" : " hidden") + "><b>" + esc(nextText(ex)) + '</b></p><p class="prnote" id="pr-' + ex.id + '"' + (prText(ex) ? "" : " hidden") + "><span>" + esc(prText(ex)) + "</span></p></div>";
     });
     h += S.tpick && S.tpick.mode === "add" ? tpickHtml() : '<button class="ghost tadd" data-act="tadd">+ Übung für heute</button>';
@@ -5287,7 +5288,7 @@ button, select, input { touch-action: manipulation }
       (c.parts.length ? '<p class="small cooksum">Gesamt ' + nMac(tot.p, tot.f, tot.c, '<span class="nkc">' + Math.round(tot.kcal).toLocaleString("de-DE") + " kcal</span>") + "</p>" +
         '<label class="fmport">Ergibt' + selWheel('data-ck="portions" aria-label="Anzahl Portionen"', rng(1, 20, 1), pn) + (pn === 1 ? "Portion" : "Portionen") + "</label>" +
         '<p class="small cooksum"><b>1 Portion</b> ' + nMac(pv.p, pv.f, pv.c, '<span class="nkc">' + Math.round(pv.kcal).toLocaleString("de-DE") + " kcal</span>") + "</p>" +
-        '<div class="row"><button class="primary" data-act="ckeat">1 Portion eintragen</button><button class="ghost" data-act="ckx">Verwerfen</button></div>' : "") + "</div>";
+        '<div class="row"><button class="primary" data-act="ckeat">1 Portion eintragen</button><button class="ghost danger" data-act="ckx">Verwerfen</button></div>' : "") + "</div>";
   }
   function cookRests(fd) {
     var r = (fd.cooks || []).filter(function (c) { return c.done && c.left > 0; }); if (!r.length) return "";
@@ -5714,7 +5715,7 @@ button, select, input { touch-action: manipulation }
           '</div><p class="small muted">Je ' + (x.per === "st" ? "Stück/Portion" : x.per === "ml" ? "100 ml" : "100 g") + ", wie auf der Packung. Leer = unbekannt.</p></details>" +
           '<label class="fsp2">Barcode<input data-fi="code" data-id="' + x.id + '" value="' + esc(x.code || (/^p_\d+$/.test(x.id) ? x.id.slice(2) : "")) + '" inputmode="numeric" placeholder="optional" autocomplete="off"></label>' +
           '<label class="fcatsel">Gruppe<select data-fi="cat" data-id="' + x.id + '">' + FCATS.map(function (c) { return "<option" + (c === (x.cat || "Eigene") ? " selected" : "") + ">" + c + "</option>"; }).join("") + "</select></label>" +
-          (sup && !(fd.daily || []).some(function (d) { return d.item === x.id && (!d.to || d.to >= today()); }) ? '<button class="xs" data-act="dladd" data-id="' + x.id + '">Regelmäßig einnehmen</button>' : "") + (x.lib ? "" : '<button class="ghost xs" data-act="fidel" data-id="' + x.id + '">' + (LIBMAP[x.id] ? "Auf Bibliothek zurücksetzen" : "Löschen") + "</button>") + "</div>" : "") + "</div>";
+          (sup && !(fd.daily || []).some(function (d) { return d.item === x.id && (!d.to || d.to >= today()); }) ? '<button class="xs" data-act="dladd" data-id="' + x.id + '">Regelmäßig einnehmen</button>' : "") + (x.lib ? "" : '<button class="ghost xs' + (LIBMAP[x.id] ? "" : " danger") + '" data-act="fidel" data-id="' + x.id + '">' + (LIBMAP[x.id] ? "Auf Bibliothek zurücksetzen" : "Löschen") + "</button>") + "</div>" : "") + "</div>";
   }
   function foodListHtml(fd) {
     var q = norm(S.fFilter || "");
@@ -5827,7 +5828,7 @@ button, select, input { touch-action: manipulation }
       '<label>kcal je ' + (it.per === "st" ? suppUnit(it, 1) : "100" + u1) + '<input data-fi="kcal" data-id="' + it.id + '" value="' + fmt(it.kcal) + '" inputmode="decimal"></label><label>Eiweiß g<input data-fi="p" data-id="' + it.id + '" value="' + fmt(it.p) + '" inputmode="decimal"></label>' +
       '<label class="fsp2">Barcode<input data-fi="code" data-id="' + it.id + '" value="' + esc(it.code || "") + '" inputmode="numeric" placeholder="optional" autocomplete="off"></label>' +
       '<label class="fcatsel">Gruppe<select data-fi="cat" data-id="' + it.id + '">' + FCATS.map(function (c) { return "<option" + (c === (it.cat || "Eigene") ? " selected" : "") + ">" + c + "</option>"; }).join("") + "</select></label>" +
-      "</div></details>" + '<button class="ghost xs sdel" data-act="sdel" data-id="' + it.id + '">' + (it.lib ? "Vorlage ausblenden" : "Präparat löschen") + "</button></div>";
+      "</div></details>" + '<button class="ghost xs sdel danger" data-act="sdel" data-id="' + it.id + '">' + (it.lib ? "Vorlage ausblenden" : "Präparat löschen") + "</button></div>";
     return h + "</div>";
   }
   function dailyManage(fd) {

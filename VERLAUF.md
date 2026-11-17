@@ -193,3 +193,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v173: `cookForm` direkt unter den Knöpfen (vor der Essensliste), beim Öffnen sanft ins Bild scrollen.
 - v174: Dosen-Inhalt sichtbar: `suppFill` (Pulver bei g, Flüssigkeit bei ml/Tropfen, Tabletten, sonst Kapseln), `jarPat` zeichnet im gefüllten Teil Kapseln (schräge Pillen), Tabletten (Kreise), Pulver (Punkte) oder eine Wasserlinie.
 - v175: „Präparat löschen“ sichtbar in der Karte (`sdel`, mit Rückfrage). Mit Einnahme vor heute → `it.gone` (aus Listen/Suche raus, `foodAll` filtert; frühere Tage behalten Werte), Einnahme endet gestern; sonst ganz entfernen. Vorlagen: „Vorlage ausblenden“. Import behält gone.
+- v176: `button.danger` (auch ghost) rot + halbfett, nicht-ghost mit rotem Rand; danger an: Präparat löschen, Lebensmittel löschen, Gericht verwerfen, Ziel entfernen, Übung im Training entfernen.
