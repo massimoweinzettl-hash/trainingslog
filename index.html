@@ -648,8 +648,11 @@ button, select, input { touch-action: manipulation }
 .top { align-items: center } .top .topr { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.3 }
 .msinfo:not([hidden]) { display: flex; gap: 14px; align-items: center; grid-column: 1 / -1; margin: -2px 0 4px } .msfig { width: 96px; height: 128px; flex: none } .msbody > * { fill: var(--sunken); stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; stroke-opacity: .85 } .mstape { fill: none; stroke: var(--accent); stroke-width: 3.2 }
 .mstx { flex: 1; background: var(--accent-soft); border-radius: 14px; padding: 10px 12px; color: var(--ink); font-size: 14px; line-height: 1.4 } .mstx b { display: block; font-size: 16px; margin-bottom: 2px }
-.wline { display: flex; flex-direction: column; gap: 6px; padding: 10px 0 2px; border-top: 1px solid var(--line); margin-top: 6px } .whead { display: flex; align-items: center; gap: 8px } .wtx { flex: 1; display: inline-flex; align-items: center; gap: 6px; font-size: 14px } .wtx .ic { width: 18px; height: 18px; color: var(--c6) }
-.wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--c6); border-radius: 3px } .wplus { color: var(--c6); border-color: color-mix(in srgb, var(--c6) 50%, transparent) } .whint { margin: 0; color: var(--c6); font-weight: 600 } .wline.due .wplus { background: var(--c6); color: var(--surface); border-color: var(--c6) }
+.wline { --wc: #2f7fc6 } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wline { --wc: #6eb4f0 } } :root[data-theme="dark"] .wline, [data-look] .wline { --wc: #6eb4f0 }
+.wline { display: flex; flex-direction: column; gap: 6px; padding: 10px 0 2px; border-top: 1px solid var(--line); margin-top: 6px } .whead { display: flex; align-items: center; gap: 8px } .wtx { flex: 1; display: inline-flex; align-items: center; gap: 6px; font-size: 14px } .wtx .ic { width: 18px; height: 18px; color: var(--wc) }
+.wglass { width: 40px; height: 40px; flex: none; margin: -4px 0 } .wgg { fill: #e6f1fb } .wgw { fill: #6eaee6 } .wgs { fill: #9fd0f8 } .wgb { fill: rgba(255, 255, 255, .55) } .wgo { fill: none; stroke: var(--ink); stroke-width: 3.4; stroke-linejoin: round } .wgr { fill: #eef6fd }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
+.wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
 .lookbtn { width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; display: grid; place-items: center }
 .lookbtn svg { width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round }
@@ -758,8 +761,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 143;
+  var APP_VERSION = 144;
   var CHANGES = [
+    { v: 144, tab: "home", text: "Wasser-Zähler mit Glas: Der Wasserstand im Glas steigt, je näher du deinem Tagesziel kommst." },
     { v: 143, tab: "data", text: "Daten → Übungen: Der Katalog steht jetzt nach Muskelgruppen sortiert zum Aufklappen (Brust, Rücken, Schultern, Arme, Beine, Bauch) statt als eine lange Liste. Bei einer Suche erscheinen die Treffer direkt." },
     { v: 142, tab: "prog", text: "Ausdauer unter Fortschritt: Minuten, km und Einheiten dieser Woche, ein Balkendiagramm der letzten 12 Wochen und je Sportart die Summen mit Ø-Tempo (Laufen min/km, Rad km/h)." },
     { v: 141, tab: "train", text: "Neu: Ausdauer. In der Einrichtung und in den Einstellungen wählst du „Wie trainierst du?“ – Krafttraining, Ausdauer (Laufen, Rad …), beides oder gar nicht. Ausdauer trägst du unter Training unter dem Kalender ein (Sportart, Dauer, optional Strecke); diese Tage zählen für die Kalorien als Trainingstage. Wer nur Ausdauer macht, sieht keinen Plan." },
@@ -5377,6 +5381,13 @@ button, select, input { touch-action: manipulation }
   function waterGoal(train) { var g = S.person && S.person.wgoal; return isN(g) && g >= 500 && g <= 6000 ? g : waterAuto(train); }
   function waterOf(t) { var n = S.nutri["n_" + t]; return n && Array.isArray(n.water) ? n.water : []; }
   function lit(ml) { return fmt(Math.round(ml / 50) * 50 / 1000); }
+  /* v144 (Wunsch des Nutzers, Vorbild: Becher-Piktogramm): eigenes SVG-Glas, Wasserstand = Anteil am Tagesziel. */
+  function waterGlassSvg(f) {
+    f = Math.max(0, Math.min(1, f)); var yb = 54, yt = 14, y = yb - (yb - yt - 4) * f, xl = function (yy) { return 10 + (yy - 8) / 48 * 7; }, xr = function (yy) { return 54 - (yy - 8) / 48 * 7; };
+    var water = f > 0.02 ? '<path class="wgw" d="M' + xl(y).toFixed(1) + " " + y.toFixed(1) + " L" + xl(yb).toFixed(1) + " " + yb + " Q32 " + (yb + 4) + " " + xr(yb).toFixed(1) + " " + yb + " L" + xr(y).toFixed(1) + " " + y.toFixed(1) + ' Z"/><ellipse class="wgs" cx="32" cy="' + y.toFixed(1) + '" rx="' + ((xr(y) - xl(y)) / 2).toFixed(1) + '" ry="3"/>' +
+      (f > 0.25 ? '<circle class="wgb" cx="27" cy="' + (yb - 8).toFixed(1) + '" r="2.4"/><circle class="wgb" cx="37" cy="' + (yb - 14 * f - 4).toFixed(1) + '" r="1.6"/><circle class="wgb" cx="31" cy="' + (yb - 22 * f - 2).toFixed(1) + '" r="1.2"/>' : "") : "";
+    return '<svg class="wglass" viewBox="0 0 64 64" aria-hidden="true"><path class="wgg" d="M10 8 L17 56 Q32 60 47 56 L54 8 Z"/>' + water + '<path class="wgo" d="M10 8 L17 56 Q32 60 47 56 L54 8"/><ellipse class="wgo wgr" cx="32" cy="8" rx="22" ry="4.5"/></svg>';
+  }
   function waterLine(t, train) {
     if (t !== today()) return "";
     var w = waterOf(t), sum = w.reduce(function (a, x) { return a + x.ml; }, 0), goal = waterGoal(train), pc = Math.min(100, sum / goal * 100), gl = waterGlass();
@@ -5387,7 +5398,7 @@ button, select, input { touch-action: manipulation }
       if (lm == null) hint = "Heute noch nichts getrunken – Zeit für ein Glas.";
       else if (nm - lm >= 150) hint = "Seit " + Math.floor((nm - lm) / 60) + " Std. kein Wasser – Zeit für ein Glas.";
     }
-    return '<div class="wline' + (hint ? " due" : "") + '"><div class="whead"><span class="wtx">' + ic("drop") + "Wasser <b>" + lit(sum) + "</b> / " + lit(goal) + " l" + ib("wat") + "</span>" +
+    return '<div class="wline' + (hint ? " due" : "") + '"><div class="whead"><span class="wtx">' + waterGlassSvg(sum / goal) + "Wasser <b>" + lit(sum) + "</b> / " + lit(goal) + " l" + ib("wat") + "</span>" +
       (w.length ? '<button class="ghost xs" data-act="wminus" aria-label="Letztes Glas entfernen">−</button>' : "") + '<button class="xs wplus" data-act="wplus">+ ' + gl + " ml</button></div>" +
       '<span class="wbar"><i style="width:' + pc.toFixed(1) + '%"></i></span>' + (hint ? '<p class="small whint">' + hint + "</p>" : "") +
       itx("wat", "Zählt, was du hier mit + einträgst. Kaffee, Tee und andere Getränke zählen nicht automatisch – trag sie bei Bedarf als Glas mit ein. Ziel " + (S.person && isN(S.person.wgoal) ? "fest eingestellt" : "nach EFSA: insgesamt etwa 2,5 l Wasser am Tag für Männer und 2,0 l für Frauen, rund 80 % davon aus Getränken, an Trainingstagen etwa 0,5 l mehr; an heißen Tagen und bei viel Schwitzen mehr") + ". Glasgröße und Ziel änderst du in den Einstellungen (Zahnrad). Die App kann nicht von selbst erinnern, solange sie geschlossen ist – beim Öffnen weist sie dich darauf hin, wenn länger nichts getrunken wurde.") + "</div>";
