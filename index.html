@@ -198,11 +198,11 @@ button.xs { min-height: 32px; padding: 2px 10px }
 .nadd:has(.namt[hidden]) .primary { grid-column: 1 / -1 }
 .unitin { display: flex; align-items: center; gap: 6px }
 .unitin input { min-width: 0 }
-.nlist li { grid-template-columns: auto minmax(0, 1fr) auto auto }
+.nlist li { grid-template-columns: auto minmax(0, 1fr) auto }
 .nlist .nnm { display: flex; flex-direction: column; min-width: 0 } .nlist .nnm > span:first-child { overflow-wrap: anywhere }
 .nmac { display: flex; gap: 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 1px } .nmac i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: 1px }
 .nmac .mp i { background: var(--pr) } .nmac .mf i { background: var(--m-f) } .nmac .mc i { background: var(--m-c) }
-.nlist .nkc { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right } .nlist li.nsum { border-bottom: 0; font-weight: 600 } .nlist .nsl { width: 3.9em; padding: 0 5px; font-size: 13px; box-sizing: content-box } .nlist li.nsum .nmac { font-weight: 500; color: var(--ink) }
+.nlist .nkc { font-variant-numeric: tabular-nums; white-space: nowrap; margin-left: auto; color: var(--ink); font-weight: 500 } .nlist li.nsum { border-bottom: 0; font-weight: 600 } .nlist .nsl { width: 3.9em; padding: 0 5px; font-size: 13px; box-sizing: content-box } .nlist li.nsum .nmac { font-weight: 500; color: var(--ink) } .nlist li.nsum .nkc { font-weight: 700 }
 .ntime::-webkit-calendar-picker-indicator { display: none }
 .ntime::-webkit-date-and-time-value { text-align: left }
 .ntime { width: 3.9em; min-height: 26px; padding: 2px 5px; font-size: 13px; font-variant-numeric: tabular-nums; -webkit-appearance: none; appearance: none; background: var(--sunken); border: 0; border-radius: 8px; color: var(--muted) }
@@ -5315,16 +5315,16 @@ button, select, input { touch-action: manipulation }
     if (S.nForm === "est") h += '<div class="nform"><div class="chips">' + EST.map(function (x, i) { return '<button data-act="nest" data-id="' + i + '">' + x[0] + ' <span class="muted">≈ ' + x[1] + " g · " + x[2] + " kcal</span></button>"; }).join("") + "</div>" +
       '<div class="ngrid"><label>Bezeichnung<input id="ne-name" autocomplete="off" placeholder="z. B. Kantine"></label><label>Eiweiß (g)<input id="ne-p" inputmode="decimal" autocomplete="off"></label><label>Kalorien<input id="ne-k" inputmode="numeric" autocomplete="off"></label><label>Fett (g)<input id="ne-f" inputmode="decimal" autocomplete="off" placeholder="optional"></label><label>Kohlenh. (g)<input id="ne-c" inputmode="decimal" autocomplete="off" placeholder="optional"></label></div><button class="primary" data-act="nestc">Hinzufügen</button></div>';
     if (ent.length) h += '<ul class="nlist">' + ent.map(function (e) {
-      return '<li><input type="time" class="ntime" data-nt="' + e.id + '" value="' + (e.t || "") + '" aria-label="Uhrzeit ' + esc(e.name) + '"><span class="nnm"><span>' + (e.est ? "≈ " : "") + esc(e.name) + "</span>" + nMac(e.p, e.f, e.c) + '</span><span class="nkc muted">' + Math.round(e.kcal).toLocaleString("de-DE") + ' kcal</span><button class="ghost xs" data-act="ndel" data-id="' + e.id + '" aria-label="' + esc(e.name) + ' entfernen">✕</button></li>';
+      return '<li><input type="time" class="ntime" data-nt="' + e.id + '" value="' + (e.t || "") + '" aria-label="Uhrzeit ' + esc(e.name) + '"><span class="nnm"><span>' + (e.est ? "≈ " : "") + esc(e.name) + "</span>" + nMac(e.p, e.f, e.c, '<span class="nkc">' + Math.round(e.kcal).toLocaleString("de-DE") + " kcal</span>") + '</span><button class="ghost xs" data-act="ndel" data-id="' + e.id + '" aria-label="' + esc(e.name) + ' entfernen">✕</button></li>';
     }).join("") + (ent.length > 1 ? (function () { /* v129 (Wunsch des Nutzers): Summe unter der Liste */
       var sm = { p: 0, f: 0, c: 0, k: 0, nf: 0, nc: 0 }; ent.forEach(function (e) { sm.p += e.p || 0; sm.k += e.kcal || 0; if (e.f == null) sm.nf++; else sm.f += e.f; if (e.c == null) sm.nc++; else sm.c += e.c; });
-      return '<li class="nsum"><span class="nsl">Summe</span><span class="nnm">' + nMac(sm.p, sm.f, sm.c) + '</span><span class="nkc">' + Math.round(sm.k).toLocaleString("de-DE") + " kcal</span><span></span></li>"; })() : "") + "</ul>";
+      return '<li class="nsum"><span class="nsl">Summe</span><span class="nnm">' + nMac(sm.p, sm.f, sm.c, '<span class="nkc">' + Math.round(sm.k).toLocaleString("de-DE") + " kcal</span>") + '</span><button class="ghost xs" tabindex="-1" aria-hidden="true" style="visibility:hidden">✕</button></li>'; })() : "") + "</ul>";
     h += dailyLine(t, fd);
     h += tip("food", "Wie genau ist das?", "Die Werte der Lebensmittel sind typische Durchschnittswerte. Gleich sie unter „Lebensmittel bearbeiten“ mit deinen Verpackungen ab. Schätzungen sind mit ≈ markiert und nur grob. Das Ziel kommt aus deinen Makros für heute. Die Uhrzeit setzt die App beim Eintragen, antippen zum Ändern.");
     return h;
   }
   /* v129 (Wunsch des Nutzers): Eiweiß, Fett, KH je Eintrag mit den Farben der Kalorienübersicht; fehlende Werte als „–“. */
-  function nMac(p, f, c) { var g = function (v) { return v == null ? "–" : fmt(Math.round(v)) + " g"; }; return '<span class="nmac"><span class="mp" title="Eiweiß"><i></i>' + g(p) + '</span><span class="mf" title="Fett"><i></i>' + g(f) + '</span><span class="mc" title="Kohlenhydrate"><i></i>' + g(c) + "</span></span>"; }
+  function nMac(p, f, c, tail) { var g = function (v) { return v == null ? "–" : fmt(Math.round(v)) + " g"; }; return '<span class="nmac"><span class="mp" title="Eiweiß"><i></i>' + g(p) + '</span><span class="mf" title="Fett"><i></i>' + g(f) + '</span><span class="mc" title="Kohlenhydrate"><i></i>' + g(c) + "</span>" + (tail || "") + "</span>"; }
   function foodListHtml(fd) {
     var q = norm(S.fFilter || ""), unitTxt = function (x) { return x.per === "st" ? "je Stück" : "je " + FPER[x.per]; };
     var all = foodAll(fd), line = function (x) {
