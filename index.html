@@ -511,7 +511,7 @@ body.reporting { overflow: hidden }
 .cafbar .nb { position: relative; height: 8px; border-radius: 4px; background: var(--surface); overflow: hidden } .cafbar .nb i { display: block; height: 100%; border-radius: 4px; background: hsl(var(--h) var(--nut-s) calc(var(--nut-l) + var(--lb, 0) * var(--nut-lk) * 1%)) }
 .cafbar .nb b { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--muted); opacity: .5 } .cafbar .cbed { font-variant-numeric: tabular-nums } .cafl.late .cbed { color: hsl(var(--h) var(--nut-s) calc(var(--nut-tl) + var(--lb, 0) * var(--nut-lk) * .5%)); font-weight: 600 }
 .dlrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 14px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px }
-.dlrow > span { grid-column: 1 / 3; grid-row: 1 } .dlrow > button { grid-column: 3; grid-row: 1 } .dlrow > .dlamt { grid-row: 2 } .dlrow > .dlamt + .dlamt { grid-column: 2 / 4; justify-self: start }
+.dlrow { display: flex !important; flex-wrap: wrap; column-gap: 8px } .dlrow .dlamt { gap: 4px } .dlrow .dlamt select { padding: 4px 6px } .dlrow > span { flex: 1 1 calc(100% - 48px); order: 0 } .dlrow > button { order: 1 } .dlrow > .dlamt { order: 2 } /* v158: drei Felder in Zeile 2, bei Bedarf umbrechend */
 .dlamt { display: flex; flex-direction: row; align-items: center; gap: 6px; font-size: 12px } .dlamt input { width: 56px } .dlamt select { width: auto; min-width: 64px; min-height: 36px; padding: 4px 8px; font-size: 14px }
 .dlamt input.dlfrom { width: 7.4em; min-height: 36px; padding: 4px 6px; font-size: 14px; font-variant-numeric: tabular-nums; background: var(--sunken); border: 0; border-radius: 8px; color: var(--ink) } .dlfrom::-webkit-calendar-picker-indicator { display: none }
 .fitem .fnut { margin-top: 4px; grid-column: 1 / -1 } .fnut summary { cursor: pointer; color: var(--accent) } .fnutg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 6px } .fnutg label { font-size: 11.5px; line-height: 1.2; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px }
@@ -662,6 +662,7 @@ button, select, input { touch-action: manipulation }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
 .wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .wsub { margin: 0; align-self: flex-start; color: var(--muted); padding: 0 } .wlist { list-style: none; margin: 0; padding: 0; font-size: 14px } .wlist li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--line) } .wlist li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .cafh { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between } .cafh > .ibtn { flex: none; margin-top: -2px }
+.dlnx { font-weight: 400; opacity: .8 }
 .ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
 .lookbtn { width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; display: grid; place-items: center }
 .lookbtn svg { width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round }
@@ -770,8 +771,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 157;
+  var APP_VERSION = 158;
   var CHANGES = [
+    { v: 158, tab: "data", text: "Tägliche Einnahme kann jetzt auch „alle 2 Tage“, „alle 3 Tage“ bis „alle 2 Wochen“ sein (Daten → Essen). Für die Vitamine zählt die Dosis gleichmäßig verteilt; unter Ernährung steht „heute dran“ bzw. der Tag der nächsten Einnahme." },
     { v: 157, tab: "plan", text: "Plan: Jeder Trainingstag bekommt über „Farbe“ seine eigene Farbe (8 zur Auswahl). Kalender, Legende und Wochenansicht übernehmen sie." },
     { v: 156, tab: "home", text: "Vitamine & Mineralstoffe: Essen und Präparate sind klar getrennt – im Balken Essen farbig, Präparate grau; rechts die Summe und darunter Essen + Präparate. Neben jedem Nährstoff ein i mit Empfehlung, Obergrenze und Quelle (DGE/ÖGE, EFSA, BfR). Omega-3 richtet sich jetzt nach der vorsorglichen BfR-Grenze von 1,5 g." },
     { v: 155, tab: "train", text: "„Freies Training“ hat im Kalender jetzt eine lila Pille." },
@@ -2694,6 +2696,12 @@ button, select, input { touch-action: manipulation }
   /* Tägliche Einnahme (seit v101, Wunsch des Nutzers): food.daily = [{id, item, amt, from, to?}], zählt automatisch an jedem Tag
      von from bis to (einschließlich); ausgelassen wird je Tag über n_<Datum>.skip = [daily-id]. Nur Nährstoffe/Koffein, keine kcal. */
   function dailyOn(d, fd) { fd = fd || foodDoc(); var nd = S.nutri["n_" + d], sk = nd && nd.skip || []; return (fd.daily || []).filter(function (x) { return x.from <= d && (!x.to || x.to >= d) && sk.indexOf(x.id) < 0; }); }
+  /* v158 (Wunsch des Nutzers): Präparate „alle n Tage“ (x.every 2–14). Für die Nährstoffe zählt die Dosis gleichmäßig verteilt (Dosis ÷ n pro Tag) –
+     passt für Speicherstoffe (D, A, E, K, B12, Eisen); wasserlösliche wie C werden in Wahrheit schneller ausgeschieden (im i erklärt). */
+  var EVERY = [[1, "täglich"], [2, "alle 2 Tage"], [3, "alle 3 Tage"], [4, "alle 4 Tage"], [5, "alle 5 Tage"], [7, "1× pro Woche"], [10, "alle 10 Tage"], [14, "alle 2 Wochen"]];
+  function dlEvery(x) { return isN(x.every) && x.every >= 2 && x.every <= 14 ? x.every : 1; }
+  function dlDue(x, d) { var n = dlEvery(x); if (n === 1) return true; var k = Math.round((dateOf(d) - dateOf(x.from)) / 864e5); return k >= 0 && k % n === 0; }
+  function dlNext(x, d) { for (var i = 0; i < 15; i++) { var dd = addDays(d, i); if (dlDue(x, dd)) return dd; } return d; }
   function dailyAll(d, fd) { fd = fd || foodDoc(); return (fd.daily || []).filter(function (x) { return x.from <= d && (!x.to || x.to >= d); }); }
   function nutSum(dates) {
     var n = null, sp = null, ck = 0, tk = 0, days = 0, fd = foodDoc(), t = today();
@@ -2701,7 +2709,7 @@ button, select, input { touch-action: manipulation }
       var nd = S.nutri["n_" + d], dl = dailyOn(d, fd); if ((!nd || !nd.entries.length) && !dl.length) return; if (nd && nd.entries.length) days++;
       if (nd) nd.entries.forEach(function (e) { tk += e.kcal || 0; if (Array.isArray(e.n)) { n = nutAdd(nutPad(n), nutPad(e.n)); ck += e.nk != null ? e.nk : e.kcal || 0; } });
       if (!(nd && nd.entries.length) && (d !== t || dates.length > 1)) return; /* v121: heute ohne Eintrag zählt nur in der Ansicht „Heute“ · v102: Tage ohne Einträge zählen nicht – sonst teilt der 7-Tage-Schnitt Präparate von 7 Tagen durch weniger Tage */
-      dl.forEach(function (x) { var v = nutOf(foodItem(fd, x.item), x.amt); if (v) { n = nutAdd(nutPad(n), v); sp = nutAdd(nutPad(sp), v); } });
+      dl.forEach(function (x) { var v = nutOf(foodItem(fd, x.item), x.amt / dlEvery(x)); if (v) { n = nutAdd(nutPad(n), v); sp = nutAdd(nutPad(sp), v); } }); /* v158: alle n Tage → Dosis ÷ n */
     });
     return { n: n, s: sp, ck: ck, tk: tk, days: days };
   }
@@ -3756,7 +3764,7 @@ button, select, input { touch-action: manipulation }
         });
         return { kind: "food", v: d.v === 5 || d.v === 4 || d.v === 3 || d.v === 2 ? d.v : 0, items: items,
           fav: (Array.isArray(d.fav) ? d.fav : []).filter(function (x) { return typeof x === "string" && (fid[x] || LIBMAP[x]); }).slice(0, 300),
-          daily: (Array.isArray(d.daily) ? d.daily : []).filter(function (x) { return x && typeof x.id === "string" && typeof x.item === "string" && (fid[x.item] || LIBMAP[x.item]) && isN(x.amt) && x.amt > 0 && DRE.test(x.from) && (x.to == null || DRE.test(x.to)); }).slice(0, 30).map(function (x) { var o = { id: x.id.slice(0, 40), item: x.item, amt: x.amt, from: x.from }; if (x.to) o.to = x.to; return o; }),
+          daily: (Array.isArray(d.daily) ? d.daily : []).filter(function (x) { return x && typeof x.id === "string" && typeof x.item === "string" && (fid[x.item] || LIBMAP[x.item]) && isN(x.amt) && x.amt > 0 && DRE.test(x.from) && (x.to == null || DRE.test(x.to)); }).slice(0, 30).map(function (x) { var o = { id: x.id.slice(0, 40), item: x.item, amt: x.amt, from: x.from }; if (x.to) o.to = x.to; if (isN(x.every) && x.every >= 2 && x.every <= 14) o.every = Math.round(x.every); return o; }),
           scan: (Array.isArray(d.scan) ? d.scan : []).filter(function (x) { return typeof x === "string" && (fid[x] || LIBMAP[x]); }).slice(0, 2000),
           meals: (d.meals || []).slice(0, 50).map(function (m) {
           if (!IRE.test(m.id)) throw 0;
@@ -3971,7 +3979,7 @@ button, select, input { touch-action: manipulation }
             return "<tr><td>" + esc(n[1]) + (over ? " (über Obergrenze " + fmt(ul || uls) + " " + n[2] + ")" : "") + '</td><td class="' + cls + '">' + rf(nutRound(v), v < 10 ? 1 : 0) + " " + n[2] + "</td><td>" + (sp ? rf(nutRound(sp), sp < 10 ? 1 : 0) : "–") + "</td><td>" + (n[6] === "info" ? "–" : (n[6] === "max" ? "max. " : "") + rf(nutRound(ref), ref < 10 ? 1 : 0)) + "</td><td>" + (pc != null && n[6] !== "info" ? Math.round(pc) + " %" : "–") + "</td></tr>"; }).join("") + "</tbody></table></div>";
       }
       var fd = foodDoc(), dl = (fd.daily || []).filter(function (x) { return x.from <= to && (!x.to || x.to >= from); });
-      h += "<h3>Supplements (tägliche Einnahme)</h3>" + (dl.length ? "<div class=tw><table><thead><tr><th>Präparat</th><th>Menge/Tag</th><th>von</th><th>bis</th></tr></thead><tbody>" + dl.map(function (x) { var it = foodItem(fd, x.item); return "<tr><td>" + esc(it ? it.name : "?") + "</td><td>" + fmt(x.amt) + (it && it.per !== "st" ? " " + it.per : "") + "</td><td>" + dlong(x.from) + "</td><td>" + (x.to ? dlong(x.to) : "laufend") + "</td></tr>"; }).join("") + "</tbody></table></div>" : '<p class="rnote">Keine im Zeitraum.</p>');
+      h += "<h3>Supplements (tägliche Einnahme)</h3>" + (dl.length ? "<div class=tw><table><thead><tr><th>Präparat</th><th>Menge/Tag</th><th>von</th><th>bis</th></tr></thead><tbody>" + dl.map(function (x) { var it = foodItem(fd, x.item); return "<tr><td>" + esc(it ? it.name : "?") + "</td><td>" + fmt(x.amt) + (it && it.per !== "st" ? " " + it.per : "") + (dlEvery(x) > 1 ? " (" + EVERY.filter(function (e) { return e[0] === dlEvery(x); }).concat([[0, "alle " + dlEvery(x) + " Tage"]])[0][1] + ")" : "") + "</td><td>" + dlong(x.from) + "</td><td>" + (x.to ? dlong(x.to) : "laufend") + "</td></tr>"; }).join("") + "</tbody></table></div>" : '<p class="rnote">Keine im Zeitraum.</p>');
       var cd = days.filter(nd).map(function (d) { return nd(d).entries.reduce(function (s, e) { return s + (e.caf || 0); }, 0); }).filter(function (c) { return c > 0; });
       if (cd.length) h += "<h3>Koffein</h3><p>Ø " + rf(avg(cd)) + " mg an " + cd.length + " Tagen mit Koffein, höchster Tag " + rf(Math.max.apply(0, cd)) + " mg" + (Math.max.apply(0, cd) > 400 ? ' <span class="hi">(über 400 mg, EFSA)</span>' : "") + ".</p>";
     }
@@ -5431,8 +5439,8 @@ button, select, input { touch-action: manipulation }
   function dailyLine(t, fd) {
     var all = dailyAll(t, fd); if (!all.length) return "";
     var nd = S.nutri["n_" + t], sk = nd && nd.skip || [];
-    return '<div class="dlyline"><span class="small muted">Täglich:</span>' + all.map(function (x) { var it = foodItem(fd, x.item), on = sk.indexOf(x.id) < 0;
-      return '<button class="dchip" data-act="dskip" data-id="' + x.id + '" aria-pressed="' + on + '" aria-label="' + esc(it ? it.name : "?") + (on ? " genommen, antippen zum Auslassen" : " ausgelassen") + '">' + (on ? "✓ " : "") + esc(shortName(it ? it.name : "?")) + "</button>"; }).join("") + "</div>";
+    return '<div class="dlyline"><span class="small muted">Einnahme:</span>' + all.map(function (x) { var it = foodItem(fd, x.item), on = sk.indexOf(x.id) < 0;
+      return '<button class="dchip" data-act="dskip" data-id="' + x.id + '" aria-pressed="' + on + '" aria-label="' + esc(it ? it.name : "?") + (on ? " genommen, antippen zum Auslassen" : " ausgelassen") + '">' + (on ? "✓ " : "") + esc(shortName(it ? it.name : "?")) + (dlEvery(x) > 1 ? '<span class="dlnx">' + (dlDue(x, t) ? " · heute dran" : " · " + WDAYS[dateOf(dlNext(x, t)).getDay()].slice(0, 2) + ".") + "</span>" : "") + "</button>"; }).join("") + "</div>";
   }
   /* v140 (Wunsch des Nutzers: Trinkerinnerung): Wasser-Zähler unter Ernährung. n_<Datum>.water = [{t: "HH:MM", ml}].
      Ziel automatisch nach EFSA (Gesamtwasser 2,5 l Männer / 2,0 l Frauen, ≈ 80 % davon aus Getränken) + 0,5 l an Trainingstagen,
@@ -5666,9 +5674,9 @@ button, select, input { touch-action: manipulation }
   }
   function dailyManage(fd) {
     var t = today(), act = (fd.daily || []).filter(function (x) { return !x.to || x.to >= t; });
-    var h = "<h2>Tägliche Einnahme" + ib("dly") + "</h2>" + itx("dly", "Was du jeden Tag nimmst (z. B. Vitamine, Omega-3). Zählt automatisch bei Vitamine &amp; Mineralstoffe mit, ohne Kalorien. Einen Tag auslassen: unter „Ernährung“ antippen.");
+    var h = "<h2>Tägliche Einnahme" + ib("dly") + "</h2>" + itx("dly", "Was du regelmäßig nimmst (z. B. Vitamine, Omega-3), täglich oder alle paar Tage. Zählt automatisch bei Vitamine &amp; Mineralstoffe mit, ohne Kalorien. Bei „alle n Tage“ verteilt die App die Dosis gleichmäßig auf die Tage (Dosis ÷ n) – das passt für Stoffe, die der Körper speichert (Vitamin D, A, E, K, B12, Eisen). Wasserlösliche wie Vitamin C scheidet er schneller aus, dort ist die Rechnung geschönt. Den Tag beginnt der Rhythmus mit „seit“. Einen Tag auslassen: unter „Ernährung“ antippen.");
     h += act.map(function (x) { var it = foodItem(fd, x.item);
-      return '<div class="dlrow"><span>' + esc(it ? it.name : "?") + '</span><label class="dlamt">Menge<select data-dl="' + x.id + '" aria-label="Menge ' + esc(it ? it.name : "") + '">' + amtOpts(it, x.amt) + "</select>" + (it && it.per === "st" ? "×" : "") + '</label><label class="dlamt">seit<input type="date" class="dlfrom" data-dlf="' + x.id + '" value="' + x.from + '" max="' + t + '" aria-label="' + esc(it ? it.name : "") + ' täglich seit"></label><button class="ghost xs" data-act="dldel" data-id="' + x.id + '" aria-label="' + esc(it ? it.name : "") + ' nicht mehr täglich">✕</button></div>'; }).join("");
+      return '<div class="dlrow"><span>' + esc(it ? it.name : "?") + '</span><label class="dlamt"><select data-dl="' + x.id + '" aria-label="Menge ' + esc(it ? it.name : "") + '">' + amtOpts(it, x.amt) + "</select>" + (it && it.per === "st" ? "×" : "") + '</label><label class="dlamt"><select data-dle="' + x.id + '" aria-label="Rhythmus ' + esc(it ? it.name : "") + '">' + EVERY.map(function (e) { return '<option value="' + e[0] + '"' + (dlEvery(x) === e[0] ? " selected" : "") + ">" + e[1] + "</option>"; }).join("") + '</select></label><label class="dlamt">seit<input type="date" class="dlfrom" data-dlf="' + x.id + '" value="' + x.from + '" max="' + t + '" aria-label="' + esc(it ? it.name : "") + ' täglich seit"></label><button class="ghost xs" data-act="dldel" data-id="' + x.id + '" aria-label="' + esc(it ? it.name : "") + ' nicht mehr täglich">✕</button></div>'; }).join("");
     return h + '<div class="fpadd"><input autocorrect="off" class="cbq" data-cb="dl" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="+ täglich einnehmen …" aria-label="Tägliche Einnahme hinzufügen"><div class="cbres tpres" id="cbr-dl" hidden></div></div>';
   }
   function foodManage(fd) {
@@ -6456,12 +6464,17 @@ button, select, input { touch-action: manipulation }
     }
     else if (t.dataset.dl) {
       var fdq = clone(foodDoc()), dq = (fdq.daily || []).filter(function (x) { return x.id === t.dataset.dl; })[0], vq = num(t.value); if (!dq || vq == null || vq <= 0 || dq.to && dq.to < today()) return; /* v104: beendete Einträge nicht noch einmal teilen */
-      if (dq.from < today()) { dq.to = addDays(today(), -1); fdq.daily.push({ id: rid("dl"), item: dq.item, amt: vq, from: today() }); } else dq.amt = vq; /* frühere Tage behalten die alte Menge */
+      if (dq.from < today()) { dq.to = addDays(today(), -1); var nq = { id: rid("dl"), item: dq.item, amt: vq, from: today() }; if (dq.every) nq.every = dq.every; fdq.daily.push(nq); } else dq.amt = vq; /* frühere Tage behalten die alte Menge */
       foodSave(fdq); renderData(); renderHome();
     }
     else if (t.id === "rep-from" || t.id === "rep-to") { if (DRE.test(t.value)) S[t.id === "rep-from" ? "repFrom" : "repTo"] = t.value; }
     else if (t.id === "set-glass" || t.id === "set-wgoal") { if (S.person) { var pw = clone(S.person); if (t.id === "set-glass") pw.glass = +t.value; else pw.wgoal = t.value ? +t.value : null; saveSettings(null, pw); renderHome(); if ($("setmsg")) $("setmsg").textContent = "Gespeichert."; } }
     else if (t.id === "pe-bed") { if (S.person) { var pb2 = Object.assign({}, S.person, { bed: t.value !== "23:00" ? t.value : null }); saveSettings(null, pb2); renderHome(); if ($("setmsg")) $("setmsg").textContent = "Schlafenszeit gespeichert."; } }
+    else if (t.dataset.dle) {
+      var fde = clone(foodDoc()), de = (fde.daily || []).filter(function (x) { return x.id === t.dataset.dle; })[0], ve = +t.value; if (!de || !(ve >= 1 && ve <= 14) || de.to && de.to < today()) return;
+      if (de.from < today()) { de.to = addDays(today(), -1); var ne = { id: rid("dl"), item: de.item, amt: de.amt, from: today() }; if (ve > 1) ne.every = ve; fde.daily.push(ne); } else { if (ve > 1) de.every = ve; else delete de.every; } /* frühere Tage behalten den alten Rhythmus */
+      foodSave(fde); renderData(); renderHome();
+    }
     else if (t.dataset.dlf) {
       /* v104: Beginn ändern (auch rückwirkend). Ab dem neuen Datum gilt dieser Eintrag; ältere Einträge desselben Präparats werden davor beendet bzw. entfallen, damit nichts doppelt zählt. */
       var fdf = clone(foodDoc()), df = (fdf.daily || []).filter(function (x) { return x.id === t.dataset.dlf; })[0], vf = t.value;
