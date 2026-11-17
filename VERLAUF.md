@@ -148,3 +148,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v130: `nMac` Klasse `.z` bei 0 g/fehlend → Punkt mit `opacity: var(--pg-op)` (wie „offen“).
 - v131: `nAmtHtml(name)` setzt Menge am Namensende (Zahl + g/ml/Stk./Stück) fett (`.namt2`, nowrap).
 - v132: Scan-Dialog „Gefunden“ (`scanOffShow`) zeigt Werte je 100 g/ml mit `nMac` in `.scanval`; `.nkc` jetzt global.
+- v133: Versionsnummer `#ver` in `.topr` (Spalte rechts oben: Status/Motto, darunter „Version n“), auch in den Designs sichtbar.

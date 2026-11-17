@@ -640,7 +640,8 @@ td button { padding: 4px 8px; font-size: 13px }
 button, select, input { touch-action: manipulation }
 /* ---------- Designs (seit v94, Wunsch des Nutzers): Standard / Hölle / Winter Arc. Nur Optik, jederzeit über
    den Berg-Knopf oben oder Daten → Persönlich zurück auf Standard. Beide Designs sind dunkel. ---------- */
-.top { align-items: center } .top .sync, .top .motto { margin-left: auto }
+.top { align-items: center } .top .topr { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.3 }
+.ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
 .lookbtn { width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; display: grid; place-items: center }
 .lookbtn svg { width: 17px; height: 17px; fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linejoin: round }
 .motto { display: none; font-size: 13px; font-style: italic }
@@ -681,7 +682,7 @@ button, select, input { touch-action: manipulation }
 <div class="wrap">
   <div class="top">
     <h1>Trainingslog</h1><button class="lookbtn" data-act="lookmenu" aria-label="Design wählen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19l6-9 4 6 3-4 5 7z"/><path d="M8.2 11.2l.8 1.3 1-1"/></svg></button>
-    <span class="sync" id="sync" role="status">Lade deine Daten …</span><span class="motto" aria-hidden="true"></span>
+    <span class="topr"><span class="sync" id="sync" role="status">Lade deine Daten …</span><span class="motto" aria-hidden="true"></span><span class="ver" id="ver"></span></span>
   </div>
   <div class="lookpop chips" id="lookpop" hidden></div>
   <label class="profrow" id="profrow" hidden>Profil<select id="profsel"></select></label>
@@ -741,8 +742,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 132;
+  var APP_VERSION = 133;
   var CHANGES = [
+    { v: 133, tab: "home", text: "Oben rechts steht jetzt immer die Versionsnummer, direkt unter „Auf diesem Gerät gespeichert“." },
     { v: 132, tab: "home", text: "Gescanntes Produkt („Gefunden“): Eiweiß, Fett, Kohlenhydrate und kcal stehen jetzt wie in der Essensliste mit Farbpunkten." },
     { v: 131, tab: "home", text: "Essensliste: Die Menge hinter dem Lebensmittel (z. B. 200 g) steht jetzt fett." },
     { v: 130, tab: "home", text: "Essensliste: Steht bei Eiweiß, Fett oder Kohlenhydraten 0 g (oder fehlt der Wert), ist der Farbpunkt blass – wie „offen“ in der Kalorienübersicht." },
@@ -942,6 +944,8 @@ button, select, input { touch-action: manipulation }
   }
   /* Im Design sind Reiterleiste und Statusleiste oben durchsichtig (Berge sichtbar), erst beim Scrollen mit Unschärfe. */
   window.addEventListener("scroll", function () { var on = window.scrollY > 40; if (document.documentElement.classList.contains("scr") !== on) document.documentElement.classList.toggle("scr", on); }, { passive: true });
+  /* v133 (Wunsch des Nutzers): Versionsnummer immer sichtbar unter dem Speicherstatus */
+  try { document.getElementById("ver").textContent = "Version " + APP_VERSION; } catch (e) {}
   function setSync(t, err) { var el = $("sync"); el.textContent = t; el.classList.toggle("err", !!err); }
   function notice(t) { var el = $("notice"); el.hidden = !t; el.textContent = t || ""; }
   function applyDocs(list) {
