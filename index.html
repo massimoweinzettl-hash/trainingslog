@@ -773,8 +773,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 165;
+  var APP_VERSION = 166;
   var CHANGES = [
+    { v: 166, tab: "home", text: "Omega-3: Sind EPA und DHA eingetragen, zählt nur deren Summe – eine zusätzliche „Omega-3 gesamt“-Angabe vom Etikett bläht den Wert nicht mehr auf." },
     { v: 165, tab: "data", text: "Nahrungsergänzung neu: eine Karte je Präparat (Daten → Essen). Antippen und alles so eintragen, wie es auf der Packung steht – Inhalt pro Portion, Kapseln pro Portion, wie oft, seit wann. Neu: Vorrat mit „+ 1 Packung“; die App zeigt, wie lange er reicht, und warnt unter „Ernährung“, wenn nur noch 7 Tage übrig sind." },
     { v: 164, tab: "data", text: "Scan: „Werte anpassen“ springt jetzt direkt zum geöffneten Produkt mit den Eingabefeldern, statt nur oben in der Lebensmittelliste zu landen." },
     { v: 163, tab: "data", text: "Meine Präparate: Der Name nutzt die ganze Zeile, der Inhalt steht darunter." },
@@ -5231,7 +5232,7 @@ button, select, input { touch-action: manipulation }
   var IO3 = 21, IEPA = 22, IDHA = 23;
   function nutRaw(it) { return it ? nutPad(Array.isArray(it.n) ? it.n : it.per === "st" && NUTST[it.id] || NUTR[it.id] || null) : null; } /* wie eingetragen, ohne berechnetes Omega-3 */
   function nutBase(it) { var b = it ? nutPad(Array.isArray(it.n) ? it.n : it.per === "st" && NUTST[it.id] || NUTR[it.id] || null) : null;
-    if (b && (b[IEPA] != null || b[IDHA] != null)) { b = b.slice(); b[IO3] = Math.max(b[IO3] || 0, (b[IEPA] || 0) + (b[IDHA] || 0)); } /* v160: Omega-3 mindestens EPA + DHA (Packungen nennen oft nur die beiden) */
+    if (b && (b[IEPA] != null || b[IDHA] != null)) { b = b.slice(); b[IO3] = (b[IEPA] || 0) + (b[IDHA] || 0); } /* v166: Sind EPA/DHA angegeben, zählt nur deren Summe – „Omega-3 gesamt“ auf Etiketten enthält oft DPA, ALA o. Ä., Ziel und Grenzen gelten für EPA + DHA */
     return b; } /* v101: eigenes n (selbst eingetragen) hat Vorrang */
   function nutOf(it, amt) { var b = nutBase(it); if (!b) return null; var k = it.per === "st" ? amt : amt / 100; return b.map(function (v) { return v == null ? null : v * k; }); }
   function nutAdd(a, b) { if (!a) return b ? b.slice() : null; if (!b) return a; return a.map(function (v, i) { return v == null && b[i] == null ? null : (v || 0) + (b[i] || 0); }); }
@@ -5747,7 +5748,7 @@ button, select, input { touch-action: manipulation }
       '<label>Noch da<span class="unitin"><input data-sst="' + it.id + '" value="' + (left != null ? fmt(left) : "") + '" inputmode="decimal" placeholder="–"><span class="muted">' + (it.per === "st" ? suppUnit(it, 2) : it.per) + "</span></span></label></div>" +
       (it.pack ? '<button class="xs" data-act="sstp" data-id="' + it.id + '">+ 1 Packung (' + fmt(it.pack) + ")</button>" : "") +
       (r ? '<p class="small' + (r.days <= 7 ? " slow" : " muted") + '">' + (r.days ? "Reicht für " + r.days + " Tage, bis " + WDAYS[dateOf(addDays(r.last, dlEvery(a) - 1)).getDay()].slice(0, 2) + ". " + dfmt(addDays(r.last, dlEvery(a) - 1)) : "Vorrat leer – Zeit nachzukaufen.") + "</p>" : "") +
-      '<h4 class="sh">Inhalt pro Portion (' + fmt(pa) + " " + suppUnit(it, pa) + ")" + ib("sinh") + "</h4>" + itx("sinh", "So, wie es auf dem Etikett steht: meist „pro Tagesportion“. Ändert sich die Portion, rechnet die App den Inhalt mit. Bei Omega-3 EPA und DHA getrennt eintragen, Omega-3 gesamt ergibt sich dann von selbst. Leer = nicht enthalten.") +
+      '<h4 class="sh">Inhalt pro Portion (' + fmt(pa) + " " + suppUnit(it, pa) + ")" + ib("sinh") + "</h4>" + itx("sinh", "So, wie es auf dem Etikett steht: meist „pro Tagesportion“. Ändert sich die Portion, rechnet die App den Inhalt mit. Bei Omega-3 nur EPA und DHA eintragen – „Omega-3 gesamt“ leer lassen, die App rechnet EPA + DHA (Ziel und Grenzen gelten nur dafür; die Gesamtangabe auf Etiketten enthält oft weitere Fettsäuren). Leer = nicht enthalten.") +
       '<div class="fnutg">' + NUTK.map(function (k, i) { if (i < 4 && !(raw && raw[i] != null)) return ""; var v = raw && raw[i] != null ? nutRound(raw[i] * f) : null;
         return "<label>" + k[1] + " " + k[2] + '<input data-fnp="' + i + '" data-id="' + it.id + '" value="' + (v != null ? fmt(v) : "") + '" inputmode="decimal" placeholder="' + (i === IO3 && bb && bb[IO3] && (!raw || raw[IO3] == null) ? "= " + fmt(nutRound(bb[IO3] * f)) : "–") + '"></label>'; }).join("") + "</div>" +
       '<details class="fnut"><summary class="small">Mehr: Kalorien, Barcode, Gruppe</summary><div class="fitem">' +
