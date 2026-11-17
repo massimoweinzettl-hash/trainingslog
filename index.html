@@ -650,7 +650,7 @@ button, select, input { touch-action: manipulation }
 .mstx { flex: 1; background: var(--accent-soft); border-radius: 14px; padding: 10px 12px; color: var(--ink); font-size: 14px; line-height: 1.4 } .mstx b { display: block; font-size: 16px; margin-bottom: 2px }
 .wline { --wc: #2f7fc6 } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wline { --wc: #6eb4f0 } } :root[data-theme="dark"] .wline, [data-look] .wline { --wc: #6eb4f0 }
 .wline { display: flex; flex-direction: column; gap: 6px; padding: 10px 0 2px; border-top: 1px solid var(--line); margin-top: 6px } .whead { display: flex; align-items: center; gap: 8px } .wtx { flex: 1; display: inline-flex; align-items: center; gap: 6px; font-size: 14px } .wtx .ic { width: 18px; height: 18px; color: var(--wc) }
-.wglass { width: 40px; height: 40px; flex: none; margin: -4px 0 } .wgg { fill: #e6f1fb } .wgw { fill: #6eaee6 } .wgs { fill: #9fd0f8 } .wgb { fill: rgba(255, 255, 255, .55) } .wgo { fill: none; stroke: var(--ink); stroke-width: 3.4; stroke-linejoin: round } .wgr { fill: #eef6fd }
+.wgbtn { padding: 0; border: 0; background: none; min-height: 0; display: inline-flex; border-radius: 8px } .wgbtn:active .wglass { transform: scale(.9) } .wglass { transition: transform .12s; width: 40px; height: 40px; flex: none; margin: -4px 0 } .wgg { fill: #e6f1fb } .wgw { fill: #6eaee6 } .wgs { fill: #9fd0f8 } .wgb { fill: rgba(255, 255, 255, .55) } .wgo { fill: none; stroke: var(--ink); stroke-width: 3.4; stroke-linejoin: round } .wgr { fill: #eef6fd }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
 .wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
@@ -761,8 +761,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 144;
+  var APP_VERSION = 145;
   var CHANGES = [
+    { v: 145, tab: "home", text: "Wasser: Das Glas selbst antippen trägt ein Glas ein, mit kurzem Klick-Feedback (auf dem iPhone ab iOS 18)." },
     { v: 144, tab: "home", text: "Wasser-Zähler mit Glas: Der Wasserstand im Glas steigt, je näher du deinem Tagesziel kommst." },
     { v: 143, tab: "data", text: "Daten → Übungen: Der Katalog steht jetzt nach Muskelgruppen sortiert zum Aufklappen (Brust, Rücken, Schultern, Arme, Beine, Bauch) statt als eine lange Liste. Bei einer Suche erscheinen die Treffer direkt." },
     { v: 142, tab: "prog", text: "Ausdauer unter Fortschritt: Minuten, km und Einheiten dieser Woche, ein Balkendiagramm der letzten 12 Wochen und je Sportart die Summen mit Ø-Tempo (Laufen min/km, Rad km/h)." },
@@ -5382,6 +5383,17 @@ button, select, input { touch-action: manipulation }
   function waterOf(t) { var n = S.nutri["n_" + t]; return n && Array.isArray(n.water) ? n.water : []; }
   function lit(ml) { return fmt(Math.round(ml / 50) * 50 / 1000); }
   /* v144 (Wunsch des Nutzers, Vorbild: Becher-Piktogramm): eigenes SVG-Glas, Wasserstand = Anteil am Tagesziel. */
+  /* v145 (Wunsch des Nutzers): haptisches Feedback. Android/Chrome: navigator.vibrate. iPhone/Safari kennt vibrate nicht – Umweg seit iOS 18:
+     Antippen eines versteckten Schalters (<input type="checkbox" switch>) löst den System-Klick aus. Nur innerhalb einer Berührung wirksam; auf echtem iPhone zu bestätigen. */
+  var HAPT = null;
+  function haptic() {
+    try { if (navigator.vibrate && navigator.vibrate(15)) return; } catch (e) {}
+    try {
+      if (!HAPT) { HAPT = document.createElement("label"); HAPT.setAttribute("aria-hidden", "true"); HAPT.style.cssText = "position:fixed;left:-100px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none";
+        var cb = document.createElement("input"); cb.type = "checkbox"; cb.setAttribute("switch", ""); cb.tabIndex = -1; HAPT.appendChild(cb); document.body.appendChild(HAPT); }
+      HAPT.click();
+    } catch (e) {}
+  }
   function waterGlassSvg(f) {
     f = Math.max(0, Math.min(1, f)); var yb = 54, yt = 14, y = yb - (yb - yt - 4) * f, xl = function (yy) { return 10 + (yy - 8) / 48 * 7; }, xr = function (yy) { return 54 - (yy - 8) / 48 * 7; };
     var water = f > 0.02 ? '<path class="wgw" d="M' + xl(y).toFixed(1) + " " + y.toFixed(1) + " L" + xl(yb).toFixed(1) + " " + yb + " Q32 " + (yb + 4) + " " + xr(yb).toFixed(1) + " " + yb + " L" + xr(y).toFixed(1) + " " + y.toFixed(1) + ' Z"/><ellipse class="wgs" cx="32" cy="' + y.toFixed(1) + '" rx="' + ((xr(y) - xl(y)) / 2).toFixed(1) + '" ry="3"/>' +
@@ -5398,7 +5410,7 @@ button, select, input { touch-action: manipulation }
       if (lm == null) hint = "Heute noch nichts getrunken – Zeit für ein Glas.";
       else if (nm - lm >= 150) hint = "Seit " + Math.floor((nm - lm) / 60) + " Std. kein Wasser – Zeit für ein Glas.";
     }
-    return '<div class="wline' + (hint ? " due" : "") + '"><div class="whead"><span class="wtx">' + waterGlassSvg(sum / goal) + "Wasser <b>" + lit(sum) + "</b> / " + lit(goal) + " l" + ib("wat") + "</span>" +
+    return '<div class="wline' + (hint ? " due" : "") + '"><div class="whead"><span class="wtx"><button class="wgbtn" data-act="wplus" aria-label="Ein Glas (' + gl + ' ml) eintragen">' + waterGlassSvg(sum / goal) + "</button>Wasser <b>" + lit(sum) + "</b> / " + lit(goal) + " l" + ib("wat") + "</span>" +
       (w.length ? '<button class="ghost xs" data-act="wminus" aria-label="Letztes Glas entfernen">−</button>' : "") + '<button class="xs wplus" data-act="wplus">+ ' + gl + " ml</button></div>" +
       '<span class="wbar"><i style="width:' + pc.toFixed(1) + '%"></i></span>' + (hint ? '<p class="small whint">' + hint + "</p>" : "") +
       itx("wat", "Zählt, was du hier mit + einträgst. Kaffee, Tee und andere Getränke zählen nicht automatisch – trag sie bei Bedarf als Glas mit ein. Ziel " + (S.person && isN(S.person.wgoal) ? "fest eingestellt" : "nach EFSA: insgesamt etwa 2,5 l Wasser am Tag für Männer und 2,0 l für Frauen, rund 80 % davon aus Getränken, an Trainingstagen etwa 0,5 l mehr; an heißen Tagen und bei viel Schwitzen mehr") + ". Glasgröße und Ziel änderst du in den Einstellungen (Zahnrad). Die App kann nicht von selbst erinnern, solange sie geschlossen ist – beim Öffnen weist sie dich darauf hin, wenn länger nichts getrunken wurde.") + "</div>";
@@ -5808,7 +5820,7 @@ button, select, input { touch-action: manipulation }
     else if (a === "calplanopen") { S.calPlanOpen = true; renderCal(); }
     else if (a === "wplus" || a === "wminus") {
       var wd = S.nutri["n_" + today()] ? clone(S.nutri["n_" + today()]) : { kind: "nutri", date: today(), entries: [] }, wl = Array.isArray(wd.water) ? wd.water.slice() : [];
-      if (a === "wplus") { if (wl.length < 60) wl.push({ t: nowHM(), ml: waterGlass() }); } else wl.pop();
+      haptic(); if (a === "wplus") { if (wl.length < 60) wl.push({ t: nowHM(), ml: waterGlass() }); } else wl.pop();
       if (wl.length) wd.water = wl; else delete wd.water;
       put("n_" + today(), wd.entries.length || wd.skip || wd.water ? wd : null); renderHome();
     }
