@@ -93,7 +93,10 @@ button:disabled { opacity: .4; cursor: default }
 .calday.sel { background: var(--accent-soft); border-color: var(--accent) }
 .pill { display: inline-block; padding: 3px 5px; border-radius: 5px; font-size: 10.5px; font-weight: 700; line-height: 1; letter-spacing: .02em; color: var(--c-ink); background: var(--muted) }
 .pill.c1 { background: var(--c1) } .pill.c2 { background: var(--c2) } .pill.c3 { background: var(--c3) }
-.pill.c4 { background: var(--c4) } .pill.c5 { background: var(--c5) } .pill.c6 { background: var(--c6) }
+.pill.c4 { background: var(--c4) } .pill.c5 { background: var(--c5) } .pill.c6 { background: var(--c6) } .pill.c7 { background: var(--c7) } .pill.c8 { background: var(--c8) }
+:root { --c7: #5b7a12; --c8: #4b5563 } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --c7: #b5dc5a; --c8: #b4bfcf } } :root[data-theme="dark"], [data-look] { --c7: #b5dc5a; --c8: #b4bfcf }
+.pill.o.c7 { color: var(--c7); box-shadow: inset 0 0 0 1.5px var(--c7) } .pill.o.c8 { color: var(--c8); box-shadow: inset 0 0 0 1.5px var(--c8) }
+.coldot { width: 12px; height: 12px; padding: 0; border-radius: 50%; margin-right: 5px; vertical-align: -1px } .chips.colpick { gap: 4px; margin: 4px 0 8px; flex-wrap: nowrap; justify-content: space-between } .chips.colpick button, .chips.colpick button[aria-pressed="true"] { flex: none; min-width: 0; width: 36px; height: 36px; padding: 0; display: grid; place-items: center; background: none; border: 0 } .chips.colpick .colsw { margin: 0 } .colpick button { padding: 3px; border-radius: 50%; min-height: 0; border: 0; background: none } .colpick .colsw { display: block; width: 28px; height: 28px; padding: 0; border-radius: 50% } .colpick button[aria-pressed="true"] { box-shadow: 0 0 0 2.5px var(--ink) }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px }
 .legend span { display: inline-flex; align-items: center; gap: 6px }
 .calhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px } .calt { display: flex; align-items: baseline; gap: 8px } .calt b { font-size: 18px }
@@ -767,8 +770,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 156;
+  var APP_VERSION = 157;
   var CHANGES = [
+    { v: 157, tab: "plan", text: "Plan: Jeder Trainingstag bekommt über „Farbe“ seine eigene Farbe (8 zur Auswahl). Kalender, Legende und Wochenansicht übernehmen sie." },
     { v: 156, tab: "home", text: "Vitamine & Mineralstoffe: Essen und Präparate sind klar getrennt – im Balken Essen farbig, Präparate grau; rechts die Summe und darunter Essen + Präparate. Neben jedem Nährstoff ein i mit Empfehlung, Obergrenze und Quelle (DGE/ÖGE, EFSA, BfR). Omega-3 richtet sich jetzt nach der vorsorglichen BfR-Grenze von 1,5 g." },
     { v: 155, tab: "train", text: "„Freies Training“ hat im Kalender jetzt eine lila Pille." },
     { v: 154, tab: "train", text: "Trainierst du ohne eine einzige Übung aus dem Plan-Tag, steht im Kalender jetzt „Freies Training“ (graue Pille FT, eigener Eintrag in der Legende) statt des Plan-Tags. Die Reihenfolge deines Plans geht danach normal weiter." },
@@ -2426,8 +2430,8 @@ button, select, input { touch-action: manipulation }
   function wMeta(w) { return isFreeW(w) ? { c: 0, name: "Freies Training", ab: "FT", free: true } : dayMeta(w.dayId, w.dayName); }
   function dayMeta(dayId, fallback) {
     var idx = -1, name = fallback || "Training";
-    (S.plan && S.plan.days || []).forEach(function (d, i) { if (d.id === dayId) { idx = i; name = d.name; } });
-    return { c: idx < 0 ? 0 : idx % 6 + 1, name: name, ab: abbr(name) };
+    var col = 0; (S.plan && S.plan.days || []).forEach(function (d, i) { if (d.id === dayId) { idx = i; name = d.name; col = d.col; } });
+    return { c: idx < 0 ? 0 : col >= 1 && col <= 8 ? col : idx % 6 + 1, name: name, ab: abbr(name) }; /* v157: eigene Farbe je Trainingstag (d.col 1–8) */
   }
   function calendarBlock() {
     var t = today(); if (!S.calMonth) S.calMonth = t.slice(0, 7);
@@ -3656,7 +3660,8 @@ button, select, input { touch-action: manipulation }
       if (!open) { h += (cnt ? '<p class="small muted clip">' + esc(d.exercises.map(function (e) { return e.name; }).join(", ")) + "</p>" : "") + "</div>"; return; }
       /* Der Name steht schon im Kopf: Namensfeld nur nach „Umbenennen“ (seit v54). */
       h += S.dayRen === d.id ? '<div class="row"><label style="flex:1 1 200px">Name des Trainingstags<input id="pd-' + d.id + '" data-day="' + di + '" data-pf="dayname" value="' + esc(d.name) + '"></label><button class="ghost" data-act="dayren" data-id="' + d.id + '">Fertig</button></div>'
-        : '<div class="row dayacts"><button class="ghost xs" data-act="dayren" data-id="' + d.id + '">Umbenennen</button><button class="ghost xs" data-act="daydup" data-id="' + di + '">Duplizieren</button><button class="ghost xs danger" data-act="deld" data-id="' + di + '">Tag löschen</button></div>';
+        : '<div class="row dayacts"><button class="ghost xs" data-act="dayren" data-id="' + d.id + '">Umbenennen</button><button class="ghost xs" data-act="daydup" data-id="' + di + '">Duplizieren</button><button class="ghost xs" data-act="daycol" data-id="' + d.id + '" aria-expanded="' + (S.dayCol === d.id) + '"><span class="pill c' + dayMeta(d.id).c + ' coldot"></span>Farbe</button><button class="ghost xs danger" data-act="deld" data-id="' + di + '">Tag löschen</button></div>' +
+          (S.dayCol === d.id ? '<div class="chips colpick" role="group" aria-label="Farbe für ' + esc(d.name) + '">' + [1, 2, 3, 4, 5, 6, 7, 8].map(function (n) { return '<button data-act="daycolset" data-id="' + d.id + ":" + n + '" aria-pressed="' + (dayMeta(d.id).c === n) + '" aria-label="Farbe ' + n + '"><span class="pill c' + n + ' colsw"></span></button>'; }).join("") + "</div>" : "");
       if (cnt) h += '<p class="small muted dmeta">≈ ' + dayMin(d.exercises) + " min · " + volChips(planVol([d]), false) + "</p>";
       d.exercises.forEach(function (e, ei) {
         var dup = dupOf(e);
@@ -3703,7 +3708,7 @@ button, select, input { touch-action: manipulation }
           .map(function (e) { return exClean(e); }),
         days: d.days.map(function (x) {
         if (!IRE.test(x.id)) throw 0;
-        return { id: x.id, name: txt80(x.name), exercises: x.exercises.map(function (e) {
+        return { id: x.id, name: txt80(x.name), col: isN(x.col) && x.col >= 1 && x.col <= 8 ? x.col : undefined, exercises: x.exercises.map(function (e) {
           if (!IRE.test(e.id) || ![e.sets, e.repMin, e.repMax, e.step].every(isN)) throw 0;
           return exClean(e);
         }) };
@@ -6181,6 +6186,8 @@ button, select, input { touch-action: manipulation }
       fd0.exercises.splice(mp[1], 1); td0.exercises.push(mex); S.exMv = null; planChanged(true); var ym2 = window.scrollY; renderPlan(); window.scrollTo(0, ym2);
     }
     else if (a === "addd") { S.plan.days.push({ id: rid("d"), name: "Neuer Tag", exercises: [] }); planChanged(true); renderPlan(); }
+    else if (a === "daycol") { S.dayCol = S.dayCol === id ? null : id; var yc = window.scrollY; renderPlan(); window.scrollTo(0, yc); }
+    else if (a === "daycolset") { var cp = id.split(":"), cd0 = S.plan.days.filter(function (d) { return d.id === cp[0]; })[0]; if (!cd0) return; cd0.col = +cp[1]; S.dayCol = null; planChanged(true); var yc2 = window.scrollY; renderPlan(); renderTrain(); window.scrollTo(0, yc2); }
     else if (a === "dayren") { S.dayRen = S.dayRen === id ? null : id; renderPlan(); var pdi = $("pd-" + id); if (pdi && S.dayRen) { pdi.focus(); pdi.select(); } }
     else if (a === "deld") { if (arm(b, "Sicher löschen?")) { S.plan.days.splice(+id, 1); planChanged(true); renderPlan(); } }
     else if (a === "plancheck") { planPatch = readPlanCode(S.planCode || ""); renderPlan(); }
