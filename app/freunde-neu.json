@@ -34,6 +34,27 @@
           "text": "Dazu viele Darstellungs- und Komfortverbesserungen."
         }
       ]
+    },
+    {
+      "v": 174,
+      "punkte": [
+        {
+          "tab": "home",
+          "text": "Neu: „Gericht berechnen“ unter Ernährung – alle Zutaten eintragen (wiegen oder scannen), wählen, wie viele Portionen es ergibt, und 1 Portion eintragen. Der Rest steht unter „Reste“ und ist an den nächsten Tagen mit einem Tippen eingetragen."
+        },
+        {
+          "tab": "data",
+          "text": "Nahrungsergänzung neu: eine Karte je Präparat (Daten → Essen), Werte so eintippen, wie sie auf der Packung stehen, dazu ein Vorratsschrank, der zeigt, wann nachgekauft werden muss."
+        },
+        {
+          "tab": "home",
+          "text": "Vitamine & Mineralstoffe: Balken in Grün, Omega-3 aufgeteilt in EPA und DHA."
+        },
+        {
+          "tab": "data",
+          "text": "Dazu viele Darstellungs- und Komfortverbesserungen."
+        }
+      ]
     }
   ]
 }
