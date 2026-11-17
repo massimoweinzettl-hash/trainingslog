@@ -149,3 +149,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v131: `nAmtHtml(name)` setzt Menge am Namensende (Zahl + g/ml/Stk./Stück) fett (`.namt2`, nowrap).
 - v132: Scan-Dialog „Gefunden“ (`scanOffShow`) zeigt Werte je 100 g/ml mit `nMac` in `.scanval`; `.nkc` jetzt global.
 - v133: Versionsnummer `#ver` in `.topr` (Spalte rechts oben: Status/Motto, darunter „Version n“), auch in den Designs sichtbar.
+- v134: `#ver` zeigt „v<Nummer>“ (Wunsch des Nutzers, üblich), Titel „Version n“.
