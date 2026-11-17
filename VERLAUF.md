@@ -147,3 +147,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v129: Essensliste `nMac(p, f, c, tail)` (Punkte `--pr`/`--m-f`/`--m-c`, „–“ ohne Wert) + kcal `.nkc` in derselben Zeile, `.ntime` 3,9em/26 px, Summenzeile `li.nsum` ab 2 Einträgen (Platzhalter-✕ für Ausrichtung). Vitamine: `.nb` als Flex, voller Teil = (Wert − Präparate)/Ziel, Rest `i.sup` schraffiert (Maske), Legende `.nutleg` nur bei Präparaten.
 - v130: `nMac` Klasse `.z` bei 0 g/fehlend → Punkt mit `opacity: var(--pg-op)` (wie „offen“).
 - v131: `nAmtHtml(name)` setzt Menge am Namensende (Zahl + g/ml/Stk./Stück) fett (`.namt2`, nowrap).
+- v132: Scan-Dialog „Gefunden“ (`scanOffShow`) zeigt Werte je 100 g/ml mit `nMac` in `.scanval`; `.nkc` jetzt global.

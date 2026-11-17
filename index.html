@@ -202,7 +202,8 @@ button.xs { min-height: 32px; padding: 2px 10px }
 .nlist .nnm { display: flex; flex-direction: column; min-width: 0 } .nlist .nnm > span:first-child { overflow-wrap: anywhere } .nlist .namt2 { font-weight: 700; white-space: nowrap }
 .nmac > span { white-space: nowrap } .nmac { display: flex; flex-wrap: wrap; column-gap: 10px; row-gap: 0; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 1px } .nmac i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: 1px }
 .nmac .z i { opacity: var(--pg-op) } .nmac .mp i { background: var(--pr) } .nmac .mf i { background: var(--m-f) } .nmac .mc i { background: var(--m-c) }
-.nlist .nkc { font-variant-numeric: tabular-nums; white-space: nowrap; margin-left: auto; color: var(--ink); font-weight: 500 } .nlist li.nsum { border-bottom: 0; font-weight: 600 } .nlist .nsl { width: 3.9em; padding: 0 5px; font-size: 13px; box-sizing: content-box } .nlist li.nsum .nmac { font-weight: 500; color: var(--ink) } .nlist li.nsum .nkc { font-weight: 700 }
+.nkc { font-variant-numeric: tabular-nums; white-space: nowrap; margin-left: auto; color: var(--ink); font-weight: 500 }
+.scanval { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; background: var(--sunken); border-radius: 10px } .scanval .nmac { font-size: 14px } .nlist li.nsum { border-bottom: 0; font-weight: 600 } .nlist .nsl { width: 3.9em; padding: 0 5px; font-size: 13px; box-sizing: content-box } .nlist li.nsum .nmac { font-weight: 500; color: var(--ink) } .nlist li.nsum .nkc { font-weight: 700 }
 .ntime::-webkit-calendar-picker-indicator { display: none }
 .ntime::-webkit-date-and-time-value { text-align: left }
 .ntime { width: 3.9em; min-height: 26px; padding: 2px 5px; font-size: 13px; font-variant-numeric: tabular-nums; -webkit-appearance: none; appearance: none; background: var(--sunken); border: 0; border-radius: 8px; color: var(--muted) }
@@ -740,8 +741,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 131;
+  var APP_VERSION = 132;
   var CHANGES = [
+    { v: 132, tab: "home", text: "Gescanntes Produkt („Gefunden“): Eiweiß, Fett, Kohlenhydrate und kcal stehen jetzt wie in der Essensliste mit Farbpunkten." },
     { v: 131, tab: "home", text: "Essensliste: Die Menge hinter dem Lebensmittel (z. B. 200 g) steht jetzt fett." },
     { v: 130, tab: "home", text: "Essensliste: Steht bei Eiweiß, Fett oder Kohlenhydraten 0 g (oder fehlt der Wert), ist der Farbpunkt blass – wie „offen“ in der Kalorienübersicht." },
     { v: 129, tab: "home", text: "Essensliste: kleineres Uhrzeitfeld, unter jedem Eintrag Eiweiß, Fett und Kohlenhydrate in den Farben der Kalorienübersicht, dazu die kcal. Ganz unten steht die Summe. Fehlen Werte, steht „–“ (sie zählen dann nicht zur Summe)." },
@@ -5133,7 +5135,8 @@ button, select, input { touch-action: manipulation }
   function scanOffShow(code, r) {
     SCAN.off = r; var box = document.querySelector("#scan .scanbox"); if (!box) return;
     var u = r.per === "ml" ? "100 ml" : "100 g";
-    box.innerHTML = '<h2>Gefunden</h2><p><b>' + esc(r.name) + '</b></p><p class="small muted">Je ' + u + ": " + fmt(r.kcal) + " kcal · Eiweiß " + fmt(r.p) + " g · Fett " + (r.f == null ? "?" : fmt(r.f)) + " g · KH " + (r.c == null ? "?" : fmt(r.c)) + " g</p>" +
+    /* v132 (Wunsch des Nutzers): Werte wie in der Essensliste – Farbpunkte, fehlend „–“, kcal rechts */
+    box.innerHTML = '<h2>Gefunden</h2><p><b>' + esc(r.name) + '</b></p><div class="scanval"><span class="small muted">Je ' + u + "</span>" + nMac(r.p, r.f, r.c, '<span class="nkc">' + fmt(r.kcal) + " kcal</span>", true) + "</div>" +
       '<p class="small muted">Quelle: Open Food Facts (von Nutzern gepflegt) – kurz mit der Packung vergleichen. <b>Schon gespeichert:</b> künftig auch ohne Internet erkannt.' + (r.f == null || r.c == null ? " Fett/KH fehlen, trag sie bei Gelegenheit unter „Werte anpassen“ nach." : "") + "</p>" +
       '<div class="row sunav"><button class="ghost" data-act="scanstop">Schließen</button><button class="ghost" data-act="scanoff" data-id="edit">Werte anpassen</button><button class="primary" data-act="scanoff" data-id="ok">Eintragen</button></div>';
   }
@@ -5330,7 +5333,7 @@ button, select, input { touch-action: manipulation }
   /* v129 (Wunsch des Nutzers): Eiweiß, Fett, KH je Eintrag mit den Farben der Kalorienübersicht; fehlende Werte als „–“. */
   /* v131 (Wunsch des Nutzers): Menge am Ende des Eintragsnamens („… 200 g“) fett */
   function nAmtHtml(n) { var m = /^(.*\S)\s+(\d+(?:[.,]\d+)?\s(?:g|ml|Stk\.|Stück)|\(1 Portion\))$/.exec(n || ""); return m ? esc(m[1]) + ' <b class="namt2">' + esc(m[2]) + "</b>" : esc(n); }
-  function nMac(p, f, c, tail) { var g = function (v) { return v == null ? "–" : fmt(Math.round(v)) + " g"; }, z = function (v) { return v == null || Math.round(v) === 0 ? " z" : ""; }; /* v130: 0 g / fehlend → blasser Punkt wie „offen“ */
+  function nMac(p, f, c, tail, dec) { var rd = function (v) { return dec ? Math.round(v * 10) / 10 : Math.round(v); }, g = function (v) { return v == null ? "–" : fmt(rd(v)) + " g"; }, z = function (v) { return v == null || rd(v) === 0 ? " z" : ""; }; /* dec: eine Nachkommastelle (Scan-Abgleich mit der Packung) */ /* v130: 0 g / fehlend → blasser Punkt wie „offen“ */
     return '<span class="nmac"><span class="mp' + z(p) + '" title="Eiweiß"><i></i>' + g(p) + '</span><span class="mf' + z(f) + '" title="Fett"><i></i>' + g(f) + '</span><span class="mc' + z(c) + '" title="Kohlenhydrate"><i></i>' + g(c) + "</span>" + (tail || "") + "</span>"; }
   function foodListHtml(fd) {
     var q = norm(S.fFilter || ""), unitTxt = function (x) { return x.per === "st" ? "je Stück" : "je " + FPER[x.per]; };
