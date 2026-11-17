@@ -201,7 +201,7 @@ button.xs { min-height: 32px; padding: 2px 10px }
 .nlist li { grid-template-columns: auto minmax(0, 1fr) auto }
 .nlist .nnm { display: flex; flex-direction: column; min-width: 0 } .nlist .nnm > span:first-child { overflow-wrap: anywhere }
 .nmac > span { white-space: nowrap } .nmac { display: flex; flex-wrap: wrap; column-gap: 10px; row-gap: 0; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 1px } .nmac i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: 1px }
-.nmac .mp i { background: var(--pr) } .nmac .mf i { background: var(--m-f) } .nmac .mc i { background: var(--m-c) }
+.nmac .z i { opacity: var(--pg-op) } .nmac .mp i { background: var(--pr) } .nmac .mf i { background: var(--m-f) } .nmac .mc i { background: var(--m-c) }
 .nlist .nkc { font-variant-numeric: tabular-nums; white-space: nowrap; margin-left: auto; color: var(--ink); font-weight: 500 } .nlist li.nsum { border-bottom: 0; font-weight: 600 } .nlist .nsl { width: 3.9em; padding: 0 5px; font-size: 13px; box-sizing: content-box } .nlist li.nsum .nmac { font-weight: 500; color: var(--ink) } .nlist li.nsum .nkc { font-weight: 700 }
 .ntime::-webkit-calendar-picker-indicator { display: none }
 .ntime::-webkit-date-and-time-value { text-align: left }
@@ -740,8 +740,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 129;
+  var APP_VERSION = 130;
   var CHANGES = [
+    { v: 130, tab: "home", text: "Essensliste: Steht bei Eiweiß, Fett oder Kohlenhydraten 0 g (oder fehlt der Wert), ist der Farbpunkt blass – wie „offen“ in der Kalorienübersicht." },
     { v: 129, tab: "home", text: "Essensliste: kleineres Uhrzeitfeld, unter jedem Eintrag Eiweiß, Fett und Kohlenhydrate in den Farben der Kalorienübersicht, dazu die kcal. Ganz unten steht die Summe. Fehlen Werte, steht „–“ (sie zählen dann nicht zur Summe)." },
     { v: 129, tab: "home", text: "Vitamine & Mineralstoffe: Der volle Teil des Balkens ist das, was dein Essen allein vom Ziel deckt, der schraffierte Teil kommt aus Präparaten (tägliche Einnahme, Supplements)." },
     { v: 128, tab: "home", text: "Trainingstage fallen unter Ernährung jetzt sofort auf: blaue Pille „Training“ neben der Phase. Der Jetzt-Punkt in der Koffeinkurve ist rot." },
@@ -5326,7 +5327,8 @@ button, select, input { touch-action: manipulation }
     return h;
   }
   /* v129 (Wunsch des Nutzers): Eiweiß, Fett, KH je Eintrag mit den Farben der Kalorienübersicht; fehlende Werte als „–“. */
-  function nMac(p, f, c, tail) { var g = function (v) { return v == null ? "–" : fmt(Math.round(v)) + " g"; }; return '<span class="nmac"><span class="mp" title="Eiweiß"><i></i>' + g(p) + '</span><span class="mf" title="Fett"><i></i>' + g(f) + '</span><span class="mc" title="Kohlenhydrate"><i></i>' + g(c) + "</span>" + (tail || "") + "</span>"; }
+  function nMac(p, f, c, tail) { var g = function (v) { return v == null ? "–" : fmt(Math.round(v)) + " g"; }, z = function (v) { return v == null || Math.round(v) === 0 ? " z" : ""; }; /* v130: 0 g / fehlend → blasser Punkt wie „offen“ */
+    return '<span class="nmac"><span class="mp' + z(p) + '" title="Eiweiß"><i></i>' + g(p) + '</span><span class="mf' + z(f) + '" title="Fett"><i></i>' + g(f) + '</span><span class="mc' + z(c) + '" title="Kohlenhydrate"><i></i>' + g(c) + "</span>" + (tail || "") + "</span>"; }
   function foodListHtml(fd) {
     var q = norm(S.fFilter || ""), unitTxt = function (x) { return x.per === "st" ? "je Stück" : "je " + FPER[x.per]; };
     var all = foodAll(fd), line = function (x) {
