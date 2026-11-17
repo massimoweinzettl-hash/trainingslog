@@ -151,3 +151,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v133: Versionsnummer `#ver` in `.topr` (Spalte rechts oben: Status/Motto, darunter „Version n“), auch in den Designs sichtbar.
 - v134: `#ver` zeigt „v<Nummer>“ (Wunsch des Nutzers, üblich), Titel „Version n“.
 - v135: Umfänge mit i (`ib("ms-<k>")`) → `itx` `.msinfo` mit `measFig(k)` (eigene SVG-Figur, Maßband-Ellipse aus `MEASH`) und Textkasten `.mstx` (Gestaltung nach Bildvorlage des Nutzers, nachgezeichnet statt Bild).
+- v136: Daten → Hilfe Knopf „Zielfeier ansehen“ (`partyprev` → `partyPreview()`, Beispielwerte, Phasentyp der aktuellen Phase), Knöpfe als `partyx` (nur schließen).

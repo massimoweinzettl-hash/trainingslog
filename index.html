@@ -744,8 +744,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 135;
+  var APP_VERSION = 136;
   var CHANGES = [
+    { v: 136, tab: "data", text: "Unter Daten → Hilfe: „Zielfeier ansehen“ zeigt die Feier mit Konfetti als Vorschau mit Beispielwerten. Es wird nichts geändert." },
     { v: 135, tab: "body", text: "Umfänge messen: Hinter dem i neben Arm, Brust, Taille, Hals, Hüfte und Oberschenkel zeigt eine Abbildung, wo das Maßband hingehört, dazu ein kurzer Hinweis." },
     { v: 134, tab: "home", text: "Die Versionsnummer oben rechts ist jetzt kurz: „v134“." },
     { v: 133, tab: "home", text: "Oben rechts steht jetzt immer die Versionsnummer, direkt unter „Auf diesem Gerät gespeichert“." },
@@ -1925,6 +1926,16 @@ button, select, input { touch-action: manipulation }
            : bt("maintain", "Halten", "primary") + bt("cut", "Cut starten") + bt("more", "Weiter aufbauen")) + bt("later", "Später entscheiden", "linkbtn") + "</div>";
   }
   var PARTY_SHOWN = false;
+  /* v136 (Wunsch des Nutzers): Vorschau der Zielfeier mit Beispielwerten. Alle Knöpfe schließen nur, nichts wird gespeichert. */
+  function partyPreview() {
+    if ($("party")) return;
+    var t = today(), ty = (phaseAt(t) || {}).type === "bulk" ? "bulk" : "cut", st = addDays(t, -84), cut = ty === "cut";
+    var L = [{ date: addDays(st, 1), fat: cut ? 24.2 : 15.1 }, { date: addDays(st, 8), fat: cut ? 23.8 : 15.3 }, { date: addDays(t, -3), fat: cut ? 19.6 : 16.4 }, { date: addDays(t, -1), fat: cut ? 19.4 : 16.6 }];
+    var pd = { ph: { start: st, type: ty }, av: cut ? 84.6 : 82.3, base: cut ? 92.1 : 78.4, list: L };
+    var d = document.createElement("div"); d.id = "party"; d.className = "overlay"; d.setAttribute("role", "dialog"); d.setAttribute("aria-modal", "true"); d.setAttribute("aria-labelledby", "party-h");
+    d.innerHTML = partyHtml(pd).replace(/data-act="pdo"/g, 'data-act="partyx"').replace('<p class="small muted">Wie geht es weiter?</p>', '<p class="small muted">Vorschau mit Beispielwerten – es wird nichts geändert.</p>');
+    document.body.appendChild(d); confetti();
+  }
   function partyCheck() {
     if (PARTY_SHOWN || !S.ready || $("party") || $("setup") || $("tour") || $("upd") || document.body.classList.contains("reporting")) return;
     var pd = partyDue(); if (!pd) return; PARTY_SHOWN = true;
@@ -3849,7 +3860,7 @@ button, select, input { touch-action: manipulation }
   function helpHtml() {
     return '<div class="block help"><h2>Hilfe</h2><p class="small muted">Abschnitt antippen zum Aufklappen.</p>' +
       HELP.map(function (x, i) { return '<details class="hsec"' + (i === 0 ? " open" : "") + "><summary>" + x[0] + "</summary>" + (i === 0 ? firstSteps() : x[1]) + "</details>"; }).join("") +
-      '<button class="ghost" data-act="tourstart">Einführung noch einmal zeigen</button></div>';
+      '<button class="ghost" data-act="tourstart">Einführung noch einmal zeigen</button><button class="ghost" data-act="partyprev">Zielfeier ansehen</button></div>';
   }
   /* ---------- Einführung für neue Nutzer (seit v58) ----------
      Kleine Karte unten, je Schritt wird der passende Reiter geöffnet. Merker je Profil in localStorage (nur Anzeige). */
@@ -5596,6 +5607,8 @@ button, select, input { touch-action: manipulation }
     else if (a === "migok") { migMsg = ""; renderHome(); renderData(); }
     else if (a === "totoday") { saveDraft(); S.lateDay = false; S.date = today(); S.dayId = null; draft = null; renderTrain(); }
     else if (a === "pdo") { partyDo(id); }
+    else if (a === "partyprev") partyPreview();
+    else if (a === "partyx") { var dp = $("party"); if (dp) dp.remove(); var cvp = document.querySelector("canvas.confetti"); if (cvp) cvp.remove(); }
     else if (a === "updlater") { var ud = $("upd"); if (ud) ud.remove(); }
     else if (a === "reload") doReload();
     else if (a === "tadd" || a === "trep") { S.tpick = a === "tadd" ? { mode: "add" } : { mode: "rep", id: id }; renderTrain(); var tq = $("tpq"); if (tq) { tq.scrollIntoView({ block: "center" }); tq.focus(); } }
