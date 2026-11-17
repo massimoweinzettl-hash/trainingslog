@@ -167,3 +167,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v148: `drinkAmt(it, amt)` beim Eintragen → `e.ml` (auch 0 = kein Getränk; Import übernimmt `ml`). Gruppe „Getränke“ zählt immer (g ≈ ml, Stück nicht), sonst Einheit ml ohne `NODRINK`. Alte Einträge ohne `ml`: Name endet auf „… ml“.
 - v148: Scan: Open Food Facts `categories_tags` mitladen; `en:beverages` (ohne alkoholische) → neues eigenes Lebensmittel in Gruppe „Getränke“.
 - v149: Ernährung-Kopf einzeilig (`.foodblk .dhead` nowrap, kompaktere Pillen 11 px), „Training geplant“ rot (`.pp-train.plan`, `--bad`); unter 420 px Breite wieder Umbruch.
+- v150: Koffein-Box: `ib("caf")` immer in der ersten Zeile rechts (`.cafh` Flex), nicht mehr hinter „Kaffee noch bis …“.

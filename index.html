@@ -655,6 +655,7 @@ button, select, input { touch-action: manipulation }
 .wgbtn { position: relative; padding: 0; border: 0; background: none; min-height: 0; display: inline-flex; border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent } .hapsw { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; appearance: none; -webkit-appearance: none } .wgbtn:active .wglass { transform: scale(.9) } .wglass { transition: transform .12s; width: 40px; height: 40px; flex: none; margin: -4px 0 } .wgg { fill: #e6f1fb } .wgw { fill: #6eaee6 } .wgs { fill: #9fd0f8 } .wgb { fill: rgba(255, 255, 255, .55) } .wgo { fill: none; stroke: var(--ink); stroke-width: 3.4; stroke-linejoin: round } .wgr { fill: #eef6fd }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
 .wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .wsub { margin: 0 } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
+.cafh { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between } .cafh > .ibtn { flex: none; margin-top: -2px }
 .ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
 .lookbtn { width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; display: grid; place-items: center }
 .lookbtn svg { width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round }
@@ -763,8 +764,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 149;
+  var APP_VERSION = 150;
   var CHANGES = [
+    { v: 150, tab: "home", text: "Koffein: Das i steht jetzt oben rechts in der Box statt in einer eigenen Zeile." },
     { v: 149, tab: "home", text: "Ernährung oben: Datum, Training und Phase stehen jetzt in einer Zeile; „Training geplant“ ist rot." },
     { v: 148, tab: "home", text: "Trinken erkennt Getränke zuverlässiger: Alles aus der Gruppe „Getränke“ zählt jetzt immer mit (auch wenn es in g angelegt ist), egal ob selbst angelegt oder gescannt. Zählt ein Getränk nicht, stell es unter „Lebensmittel bearbeiten“ auf die Gruppe „Getränke“." },
     { v: 147, tab: "home", text: "Getränke zählen jetzt automatisch beim Trinken mit: Was du in ml einträgst oder scannst (Wasser, Kaffee, Tee, Saft, Milch …), landet zusätzlich zu deinen Gläsern im Zähler. Darunter steht, wie viel Wasser und wie viel andere Getränke es waren." },
@@ -5492,14 +5494,14 @@ button, select, input { touch-action: manipulation }
     }
     /* v108 (Wunsch des Nutzers): farbige Leiste für den Rest zur Schlafenszeit, gleiche fließende Skala wie bei den Vitaminen (x = Rest / 30 mg: bis 15 mg grün, ≈ 22 mg gelb, 30 mg orange, ab 45 mg rot). Volle Breite = 60 mg, Strich bei 30 mg. */
     var xh = atBed / CAF_BED, hue = nutHue(xh), cst = "--h:" + hue + ";--lb:" + Math.max(0, Math.round(12 - Math.abs(hue - 40) / 3)) + ";";
-    return '<div class="cafl' + (warn ? " warn" : "") + (late ? " late" : "") + '" style="' + cst + '"><p><b>' + (prev && !tot ? "Koffein von gestern" : "Koffein " + (prev ? "heute " : "") + Math.round(tot) + " mg") + "</b> · jetzt ≈ " + Math.round(left) + " mg" + (gut >= 5 ? " (+" + Math.round(gut) + " kommen noch)" : " im Körper") + (until ? "" : ib("caf")) + "</p>" +
+    return '<div class="cafl' + (warn ? " warn" : "") + (late ? " late" : "") + '" style="' + cst + '"><p class="cafh"><span><b>' + (prev && !tot ? "Koffein von gestern" : "Koffein " + (prev ? "heute " : "") + Math.round(tot) + " mg") + "</b> · jetzt ≈ " + Math.round(left) + " mg" + (gut >= 5 ? " (+" + Math.round(gut) + " kommen noch)" : " im Körper") + "</span>" + ib("caf") + "</p>" + /* v150 (Wunsch des Nutzers): i oben rechts statt eigener Zeile */
       '<div class="cafbar"><span>Schlafen ' + bt.hm + '</span><span class="nb" role="img" aria-label="Zur Schlafenszeit noch etwa ' + Math.round(atBed) + ' mg"><i class="sc" style="width:' + Math.min(100, Math.max(2, atBed / (2 * CAF_BED) * 100)).toFixed(1) + '%"></i><b></b></span><span class="cbed">≈ ' + Math.round(atBed) + " mg</span></div>" +
       cafChart(cs, now, bt) + (function () { /* v127: wann ist das Koffein praktisch weg (< 5 mg)? */
         var lv = function (t) { return cs.reduce(function (s2, e) { return s2 + cafAmt(e.caf, t - cafMs(e, now)); }, 0); };
         if (lv(now) + gut < 5) return ""; var tf = now + 9e5; while (tf < now + 48 * 36e5 && (lv(tf) >= 5 || tf < now + 36e5 && lv(tf) < lv(tf + 9e5))) tf += 9e5;
         var fd2 = new Date(tf), dd = Math.round((new Date(fd2).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 864e5);
         return '<p class="small muted">Koffeinfrei (unter 5 mg) ab ≈ <b>' + String(fd2.getHours()).padStart(2, "0") + ":" + String(fd2.getMinutes()).padStart(2, "0") + "</b>" + (dd === 1 ? " (morgen)" : dd > 1 ? " (übermorgen)" : "") + "</p>"; })() +
-      (until ? '<p class="small muted">' + until + ib("caf") + "</p>" : "") + "</div>" +
+      (until ? '<p class="small muted">' + until + "</p>" : "") + "</div>" +
       itx("caf", "Bis 400 mg am Tag und 200 mg auf einmal gelten für Erwachsene als unbedenklich (EFSA)" + (warn ? " – heute liegst du darüber" : "") + ". Für den Schlaf zählt, was beim Zubettgehen noch im Körper ist: Laut einer Auswertung von 24 Studien (Gardiner u. a. 2023) sollte Kaffee mindestens etwa 9 Stunden, ein Booster etwa 13 Stunden vor dem Schlafen getrunken werden. Umgerechnet sind das jeweils noch rund 30 mg. Die Leiste zeigt, was zur Schlafenszeit noch im Körper ist: grün bis etwa 15 mg, dann gelb, orange ab 30 mg (Strich in der Mitte), rot ab 45 mg. Die App rechnet so: Koffein kommt über etwa eine Dreiviertelstunde ins Blut (Höchstwert nach ≈ 45 min, in Wirklichkeit je nach Magen 30 min bis 2 h) und wird mit einer Halbwertszeit von 5 Stunden abgebaut (je nach Mensch 3–7 h). Die Werte sind also Richtwerte. Deine Schlafenszeit stellst du in den Einstellungen (Zahnrad oben) ein. Werte der Getränke sind Durchschnitte; für eigene Produkte trag den Koffeingehalt unter Daten → Essen ein.");
   }
   function foodBlock(t, E, di, mc, head, stats) {
