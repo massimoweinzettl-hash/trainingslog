@@ -528,7 +528,7 @@ body.reporting { overflow: hidden }
 .cbrow { display: flex; align-items: center; gap: 4px } .cbrow .tpitem { flex: 1; min-width: 0 }
 .fstar { border: 0; background: none; min-height: 40px; min-width: 40px; padding: 0; font-size: 20px; color: var(--muted); line-height: 1 } .fstar[aria-pressed="true"] { color: var(--dot) }
 .cbhint { padding: 6px 10px } .fhead { display: flex; align-items: center } .fhead .fline { flex: 1; min-width: 0 } .fown { font-size: 11px; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 0 4px; margin-left: 4px }
-label.fmport { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 6px; font-size: 14px; font-weight: 400; margin: 4px 0; text-align: left } .fmport input { width: 56px; min-width: 0; flex: 0 0 56px; text-align: center } .fsp { grid-column: 1 / -1; margin: 0 }
+label.fmport { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 6px; font-size: 14px; font-weight: 400; margin: 4px 0; text-align: left } .fmport select { width: 72px; flex: none } .fmport input { width: 56px; min-width: 0; flex: 0 0 56px; text-align: center } .fsp { grid-column: 1 / -1; margin: 0 }
 .tpitem.here { background: transparent; border: 1px dashed var(--line); color: var(--muted) }
 b.hl { font-weight: 800; color: var(--ink) }
 .tpitem b.hl, .dayname b.hl { font-weight: 800 }
@@ -751,8 +751,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 138;
+  var APP_VERSION = 139;
   var CHANGES = [
+    { v: 139, tab: "data", text: "Mehr Auswahlräder statt Tippen: Sätze, Wiederholungen und Gewichtsschritt unter Daten → Übungen, Geburtsjahr und Größe (auch in der Einrichtung), „Ergibt … Portionen“ bei Mahlzeiten." },
     { v: 138, tab: "data", text: "Neu in den Einstellungen: Farben „Rot-Grün-Schwäche“. Grün wird zu Blau, Rot zu Zinnober – Vitamine, Koffein, Phasen, Körperkarte und Warnungen bleiben so unterscheidbar." },
     { v: 137, tab: "data", text: "Neu: Einstellungen über das Zahnrad oben neben „Trainingslog“ (statt Berg-Knopf): Design, Hell/Dunkel (automatisch, hell, dunkel), Krafttraining ja/nein, Schlafenszeit, dazu Version, „Was ist neu?“, Einführung und Hilfe. Unter Daten → Persönlich stehen nur noch die Angaben für die Kalorien." },
     { v: 137, tab: "body", text: "Frauen messen die Taille jetzt an der schmalsten Stelle (so rechnet die Körperfettformel); der Hinweis hinter dem i ist angepasst." },
@@ -1728,6 +1729,15 @@ button, select, input { touch-action: manipulation }
     if (fo && S.dataSec === "ex") S.dataSec = "food";
     if (fo && TABS.indexOf(S.tab) < 0) showTab("home");
   }
+  /* v139 (Wunschliste, Auswahlrad statt Tippen): <select> mit festen Stufen; der aktuelle Wert ist immer dabei. ph = Platzhalter ohne Wert. */
+  function selWheel(attrs, vals, cur, lab, ph) {
+    var has = cur != null && cur !== "" && vals.some(function (v) { return String(v) === String(cur); });
+    if (cur != null && cur !== "" && !has) { vals = vals.concat([+cur]).sort(function (a, b) { return a - b; }); }
+    return "<select " + attrs + ">" + (ph ? '<option value=""' + (cur == null || cur === "" ? " selected" : "") + ">" + ph + "</option>" : "") +
+      vals.map(function (v) { return '<option value="' + v + '"' + (String(v) === String(cur) ? " selected" : "") + ">" + (lab ? lab(v) : fmt(v)) + "</option>"; }).join("") + "</select>";
+  }
+  function rng(a, b, st) { var o = []; for (var v = a; st > 0 ? v <= b + 1e-9 : v >= b - 1e-9; v += st) o.push(Math.round(v * 100) / 100); return o; }
+  var YEARS = function () { var y = new Date().getFullYear(); return rng(y - 18, y - 100, -1); };
   function actOf(job, tdays, tmin) { var j = jobOf(job); return j ? Math.round((j[3] + 0.06 * (tdays || []).length * (tmin || 60) / 60) * 1000) / 1000 : null; }
   var ACT = [[1.2, "Kaum aktiv: Büro, kein Sport"], [1.375, "Leicht aktiv: Büro, 1–2× Training pro Woche"], [1.55, "Mäßig aktiv: Büro, 3–5× Training pro Woche"], [1.725, "Sehr aktiv: 6–7× Training oder körperliche Arbeit"], [1.9, "Extrem aktiv: körperliche Arbeit plus Training"]];
   var kc = function (n) { return Math.round(n).toLocaleString("de-DE"); }; /* seit v92 ohne 50er-Rundung (Wunsch des Nutzers) */
@@ -1911,8 +1921,8 @@ button, select, input { touch-action: manipulation }
     var P = S.person || {}, opt = function (v, l, cur) { return '<option value="' + v + '"' + (String(cur) === String(v) ? " selected" : "") + ">" + l + "</option>"; };
     return '<div class="block"><h2>Angaben für die Kalorienempfehlung' + ib("pe") + "</h2>" + itx("pe", "Daraus berechnet der Tracker Grundumsatz, Erhaltungskalorien und Makros. Trägst du dein Essen ein (an mindestens 70 % der Tage), leitet er nach zwei Wochen deinen Erhaltungsbedarf aus Gewichtsverlauf und Essenseinträgen ab; sonst aus der festen Kalorienangabe. Die Zahl deiner Trainingstage geht in den Verbrauch ein. Mehr Kalorien gibt es an Tagen mit eingetragenem oder eingeplantem Training.") + '<div class="row">' +
       '<label style="flex:1 1 130px">Geschlecht<select id="pe-sex">' + opt("", "Bitte wählen", P.sex || "") + opt("m", "Männlich", P.sex) + opt("w", "Weiblich", P.sex) + "</select></label>" +
-      '<label style="flex:1 1 110px">Geburtsjahr<input id="pe-year" inputmode="numeric" autocomplete="off" value="' + esc(P.year || "") + '"></label>' +
-      '<label style="flex:1 1 110px">Größe (cm)<input id="pe-height" inputmode="decimal" autocomplete="off" value="' + esc(P.height ? fmt(P.height) : "") + '"></label>' +
+      '<label style="flex:1 1 110px">Geburtsjahr' + selWheel('id="pe-year"', YEARS(), P.year || "", String, "Bitte wählen") + "</label>" +
+      '<label style="flex:1 1 110px">Größe (cm)' + selWheel('id="pe-height"', rng(130, 220, 1), P.height || "", null, "Bitte wählen") + "</label>" +
       '<label style="flex:1 1 100%"><span>Körperbau' + ib("build") + '</span><select id="pe-build">' + opt("", "Nicht angeben", P.build || "") + Object.keys(BUILD).map(function (k) { return opt(k, BUILD[k][0] + " – " + BUILD[k][1], P.build); }).join("") + "</select></label>" +
       itx("build", "Muskeln verbrauchen mehr Energie als Fett. Mit dem Körperbau schätzt die App deinen Körperfettanteil und rechnet den Grundumsatz über die fettfreie Masse. Genauer geht es mit einer Körperfettwaage oder mit Taille (Männer auf Bauchnabelhöhe, Frauen an der schmalsten Stelle) und Hals vom Maßband, bei Frauen zusätzlich der Hüfte (breiteste Stelle), unter „Körper“. Gibt es solche Messungen aus den letzten 60 Tagen, nutzt die App diese statt des Körperbaus.") +
       '<label style="flex:1 1 100%"><span>Alltag (ohne Training)' + ib("job") + '</span><select id="pe-job">' + opt("", "Bitte wählen", P.job || "") + JOB.map(function (j) { return opt(j[0], j[1] + " – " + j[2], P.job); }).join("") + "</select></label>" +
@@ -3241,9 +3251,9 @@ button, select, input { touch-action: manipulation }
       var head = '<button class="dayhead exhead2" data-act="exopen" data-id="' + e.id + '" aria-expanded="' + open + '"><span class="chev" aria-hidden="true">›</span>' + (rk ? '<span class="rank">' + rk + "</span>" : "") + exIcon(e, 22) + '<span class="dayname">' + hl(e.name, q) + (e.focus ? ' <span class="fbadge sm">Schwerpunkt</span>' : "") + "</span>" +
         (e.fav ? '<span class="stars" aria-label="' + FAVL[e.fav] + '">' + "★★★".slice(0, e.fav) + "</span>" : "") + '<span class="cnt">' + exSummary(e) + "</span></button>";
       if (!open) return '<div class="exrow">' + head + "</div>";
-      var f = function (k, l, mode) { return "<label>" + l + '<input id="lx-' + e.id + "-" + k + '" inputmode="' + mode + '" data-lid="' + e.id + '" data-lf="' + k + '" value="' + fmt(e[k]) + '"></label>'; };
+      var f = function (k, l) { var vs = k === "sets" ? rng(1, 10, 1) : k === "step" ? [0.5, 1, 1.25, 2, 2.5, 5, 10] : rng(1, 30, 1); return "<label>" + l + selWheel('id="lx-' + e.id + "-" + k + '" data-lid="' + e.id + '" data-lf="' + k + '"', vs, e[k]) + "</label>"; }; /* v139: Auswahlräder */
       return '<div class="exrow">' + head + '<div class="planex"><label class="name">Name<input id="lx-' + e.id + '-name" data-lid="' + e.id + '" data-lf="name" value="' + esc(e.name) + '"></label>' +
-        f("sets", "Sätze", "numeric") + f("repMin", "Wdh. von", "numeric") + f("repMax", "Wdh. bis", "numeric") + f("step", "Schritt kg", "decimal") + "<span></span></div>" +
+        f("sets", "Sätze") + f("repMin", "Wdh. von") + f("repMax", "Wdh. bis") + f("step", "Schritt kg") + "<span></span></div>" +
         '<div class="lab">Bewertung<div class="starpick" role="group" aria-label="Bewertung">' + [1, 2, 3].map(function (n) { return '<button data-act="exfav" data-id="' + e.id + '" data-n="' + n + '" aria-pressed="' + (e.fav === n) + '"><span class="st">' + "★★★".slice(0, n) + "</span>" + FAVL[n] + "</button>"; }).join("") + "</div></div>" +
         '<div class="lab"><span>Schwerpunkt' + ib("fx-" + e.id) + "</span>" + itx("fx-" + e.id, "Für Übungen, in denen du vor allem stärker werden willst: Hinweis auf die Position im Training, Krafttest einmal im Monat, eigene Auswertung oben unter „Fortschritt“.") + '<button class="fswitch" data-act="exfocus" data-id="' + e.id + '" aria-pressed="' + !!e.focus + '">' + (e.focus ? "Schwerpunktübung: an" : "Als Schwerpunktübung markieren") + "</button></div>" +
         '<label>Muskelgruppe (bestimmt das Symbol)<select id="lx-' + e.id + '-grp" data-lid="' + e.id + '" data-lf="grp"><option value="">Automatisch (' + (groupOf({ name: e.name }) || "nicht erkannt") + ")</option>" +
@@ -3953,7 +3963,7 @@ button, select, input { touch-action: manipulation }
       nav = '<button class="ghost" data-act="suskip">Alles überspringen</button><button class="primary" data-act="sunext">Los geht’s</button>';
     } else if (i <= 5) {
       if (i === 1) h = '<h2 id="su-h">Über dich</h2><div class="chips" role="group" aria-label="Geschlecht">' + chip("sex", "m", "Männlich", SU.sex === "m") + chip("sex", "w", "Weiblich", SU.sex === "w") + "</div>" +
-        '<div class="sugrid">' + inp("su-year", "Geburtsjahr", SU.year, "z. B. 1990") + inp("su-height", "Größe (cm)", SU.height, "z. B. 178") + "</div>" +
+        '<div class="sugrid">' + "<label>Geburtsjahr" + selWheel('id="su-year"', YEARS(), SU.year ? num(SU.year) : "", String, "Bitte wählen") + "</label><label>Größe (cm)" + selWheel('id="su-height"', rng(130, 220, 1), SU.height ? num(SU.height) : "", null, "Bitte wählen") + "</label>" + "</div>" +
         '<p class="small muted">Geschlecht, Alter und Größe bestimmen deinen Grundumsatz.</p>';
       if (i === 2) h = '<h2 id="su-h">Dein Körper</h2><div class="sugrid">' + inp("su-w", "Gewicht heute (kg)", SU.w, "z. B. 82,5") + inp("su-fat", "Körperfett (%, optional)", SU.fat, "nur mit Waage") + "</div>" +
         '<p class="lab">Wie würdest du dich beschreiben?</p><div class="sulist">' + Object.keys(BUILD).map(function (k) { return chip("build", k, "<b>" + BUILD[k][0] + "</b><span>" + BUILD[k][1] + "</span>", SU.build === k); }).join("") + chip("build", "", "<b>Weiß nicht</b><span>dann rechnet die App ohne Körperbau</span>", !SU.build) + "</div>";
@@ -5478,7 +5488,7 @@ button, select, input { touch-action: manipulation }
       var v = mealVal(fd, m);
       var pn = mealPortions(m), vp = mealPortion(fd, m);
       return '<div class="fmeal"><div class="fmhead"><input data-fm="name" data-id="' + m.id + '" value="' + esc(m.name) + '" aria-label="Name der Mahlzeit" autocomplete="off"><span class="muted small">' + Math.round(vp.p) + " g · " + Math.round(vp.kcal).toLocaleString("de-DE") + " kcal" + (pn > 1 ? " je Portion" : "") + '</span><button class="ghost xs" data-act="fmdel" data-id="' + m.id + '" aria-label="Mahlzeit löschen">✕</button></div>' +
-        '<label class="fmport">Ergibt<input data-fm="portions" data-id="' + m.id + '" value="' + pn + '" inputmode="numeric" aria-label="Anzahl Portionen">' + (pn === 1 ? "Portion" : "Portionen") + (pn > 1 ? '<span class="muted small"> · gesamt ' + Math.round(v.kcal).toLocaleString("de-DE") + " kcal</span>" : "") + "</label>" +
+        '<label class="fmport">Ergibt' + selWheel('data-fm="portions" data-id="' + m.id + '" aria-label="Anzahl Portionen"', rng(1, 50, 1), pn) + (pn === 1 ? "Portion" : "Portionen") + (pn > 1 ? '<span class="muted small"> · gesamt ' + Math.round(v.kcal).toLocaleString("de-DE") + " kcal</span>" : "") + "</label>" +
         m.parts.map(function (q, qi) {
           var it = foodItem(fd, q.item); if (!it) return "";
           return '<div class="fpart"><span>' + esc(it.name) + '</span><input data-fp="' + qi + '" data-id="' + m.id + '" value="' + fmt(q.amt) + '" inputmode="decimal" aria-label="Menge ' + esc(it.name) + '"><span class="muted small">' + unitOf(it) + '</span><button class="ghost xs" data-act="fpdel" data-id="' + m.id + '" data-n="' + qi + '" aria-label="' + esc(it.name) + ' entfernen">✕</button></div>';
