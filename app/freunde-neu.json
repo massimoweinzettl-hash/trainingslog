@@ -1,8 +1,39 @@
 {
   "_hinweis": "Kurze „Was ist neu?“-Liste NUR für die Freunde-Version (freunde/). Bei jedem Neuerzeugen einen Block für die neue Version anhängen: wenige zusammengefasste Punkte statt aller einzelnen Änderungen seit dem letzten Freunde-Stand. tab = home | train | prog | body | plan | data (dort erscheint der gelbe Punkt).",
   "versionen": [
-    { "v": 127, "punkte": [
-      { "tab": "home", "text": "Willkommen! Das ist deine eigene Version des Trainingslogs. Deine Daten bleiben nur auf deinem Gerät – denk ab und zu an ein Backup unter Daten → Sicherung." }
-    ] }
+    {
+      "v": 127,
+      "punkte": [
+        {
+          "tab": "home",
+          "text": "Willkommen! Das ist deine eigene Version des Trainingslogs. Deine Daten bleiben nur auf deinem Gerät – denk ab und zu an ein Backup unter Daten → Sicherung."
+        }
+      ]
+    },
+    {
+      "v": 159,
+      "punkte": [
+        {
+          "tab": "home",
+          "text": "Neue Einstellungen hinter dem Zahnrad oben rechts: Hell/Dunkel, Farbenblind-Modus und mehr. Wer nur sein Essen erfassen will, wählt dort unter Training „Gar nicht, nur Ernährung“ – dann verschwinden Training und Plan."
+        },
+        {
+          "tab": "home",
+          "text": "Trink-Zähler mit Glas: antippen für ein Glas, Getränke aus der Essensliste zählen automatisch mit."
+        },
+        {
+          "tab": "home",
+          "text": "Vitamine & Mineralstoffe: Essen und Präparate getrennt dargestellt, mit i zu Empfehlung, Obergrenze und Quelle. Präparate lassen sich auch „alle paar Tage“ eintragen."
+        },
+        {
+          "tab": "train",
+          "text": "Neben Krafttraining jetzt auch Ausdauer (Laufen, Radfahren, Schwimmen …). Eine eigene Farbe je Trainingstag ist wählbar."
+        },
+        {
+          "tab": "data",
+          "text": "Dazu viele Darstellungs- und Komfortverbesserungen."
+        }
+      ]
+    }
   ]
 }

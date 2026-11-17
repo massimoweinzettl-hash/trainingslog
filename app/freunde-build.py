@@ -36,6 +36,7 @@ STORE = {
     '"trainingslog-backup"',      # Reserve im alten Speicher
     '"trainingslog-profiles"', '"trainingslog-look"', '"trainingslog-seen"', '"trainingslog-tab"',
     '"trainingslog-planclosed"', '"trainingslog-calview"', '"trainingslog-tour-"',
+    '"trainingslog-theme"', '"trainingslog-cvd"',  # v137/v138: Hell/Dunkel, Farbenblind-Modus
 }
 # Texte, die bleiben müssen (Dateiformate und Dateinamen).
 KEEP = {
