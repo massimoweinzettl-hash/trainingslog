@@ -779,8 +779,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 172;
+  var APP_VERSION = 173;
   var CHANGES = [
+    { v: 173, tab: "home", text: "„Gericht berechnen“ öffnet sich jetzt direkt unter dem Knopf, nicht mehr unter der Essensliste." },
     { v: 172, tab: "home", text: "Vitamine & Mineralstoffe: Alle Balken sind grün statt blau, auch unter dem Ziel. Gelb bis rot nur, wenn es auf die Obergrenze zugeht." },
     { v: 171, tab: "home", text: "Neu unter Ernährung: „Gericht berechnen“ für einmal Gekochtes. Zutaten scannen oder suchen und abwiegen, einstellen, wie viele Portionen herauskommen, und 1 Portion eintragen. Der Rest steht danach unter „Reste“ – nächste Portion mit einem Tippen." },
     { v: 170, tab: "data", text: "Vorratsschrank: Neben Dosen gibt es jetzt Beutel (z. B. Creatin) und Flaschen. Bei „Form“ kannst du „Pulver (g)“ oder „Flüssig (ml)“ wählen – Pulver bekommt automatisch einen Beutel." },
@@ -5671,6 +5672,7 @@ button, select, input { touch-action: manipulation }
       '<label class="namt"' + (selIt ? "" : " hidden") + '>Menge<span class="unitin"><input id="ni-amt" inputmode="decimal" autocomplete="off" placeholder="' + (selIt ? fmt(selIt.amt) : "") + '"><span class="muted" id="ni-unit">' + (selIt ? unitOf(selIt) : "") + "</span></span></label>" +
       '<button class="primary" data-act="nadd">Eintragen</button></div>' +
       '<div class="row nlinks"><button class="ghost" data-act="nform" data-id="est" aria-expanded="' + (S.nForm === "est") + '">Schätzen</button><button class="ghost" data-act="nform" data-id="cook" aria-expanded="' + (S.nForm === "cook") + '">Gericht berechnen</button><button class="ghost" data-act="fgo">Lebensmittel</button></div>';
+    if (S.nForm === "cook") h += cookForm(fd); /* v173: direkt unter den Knöpfen statt unter der Essensliste */
     if (S.nForm === "est") h += '<div class="nform"><div class="chips">' + EST.map(function (x, i) { return '<button data-act="nest" data-id="' + i + '">' + x[0] + ' <span class="muted">≈ ' + x[1] + " g · " + x[2] + " kcal</span></button>"; }).join("") + "</div>" +
       '<div class="ngrid"><label>Bezeichnung<input id="ne-name" autocomplete="off" placeholder="z. B. Kantine"></label><label>Eiweiß (g)<input id="ne-p" inputmode="decimal" autocomplete="off"></label><label>Kalorien<input id="ne-k" inputmode="numeric" autocomplete="off"></label><label>Fett (g)<input id="ne-f" inputmode="decimal" autocomplete="off" placeholder="optional"></label><label>Kohlenh. (g)<input id="ne-c" inputmode="decimal" autocomplete="off" placeholder="optional"></label></div><button class="primary" data-act="nestc">Hinzufügen</button></div>';
     if (ent.length) h += '<ul class="nlist">' + ent.map(function (e) {
@@ -5678,7 +5680,6 @@ button, select, input { touch-action: manipulation }
     }).join("") + (ent.length > 1 ? (function () { /* v129 (Wunsch des Nutzers): Summe unter der Liste */
       var sm = { p: 0, f: 0, c: 0, k: 0, nf: 0, nc: 0 }; ent.forEach(function (e) { sm.p += e.p || 0; sm.k += e.kcal || 0; if (e.f == null) sm.nf++; else sm.f += e.f; if (e.c == null) sm.nc++; else sm.c += e.c; });
       return '<li class="nsum"><span class="nsl">Summe</span><span class="nnm">' + nMac(sm.p, sm.f, sm.c, '<span class="nkc">' + Math.round(sm.k).toLocaleString("de-DE") + " kcal</span>") + '</span><button class="ghost xs" tabindex="-1" aria-hidden="true" style="visibility:hidden">✕</button></li>'; })() : "") + "</ul>";
-    if (S.nForm === "cook") h += cookForm(fd);
     h += cookRests(fd) + dailyLine(t, fd);
     h += tip("food", "Wie genau ist das?", "Die Werte der Lebensmittel sind typische Durchschnittswerte. Gleich sie unter „Lebensmittel“ mit deinen Verpackungen ab. Schätzungen sind mit ≈ markiert und nur grob. Das Ziel kommt aus deinen Makros für heute. Die Uhrzeit setzt die App beim Eintragen, antippen zum Ändern.");
     return h;
@@ -6386,7 +6387,7 @@ button, select, input { touch-action: manipulation }
       if (!arm(b, sessions(id).length ? "Mit Verlauf löschen?" : "Sicher löschen?")) return;
       deleteExercise(id); S.exOpen = null; planChanged(true); renderAll(true); showTab("data");
     }
-    else if (a === "nform") { S.nForm = S.nForm === id ? null : id; if (S.nForm === "cook" && !cookDraft(foodDoc())) { var fdc = clone(foodDoc()); cookNew(fdc); foodSave(fdc); } renderHome(); var nf0 = document.querySelector(".nform input, .nform select"); if (nf0 && id === "item") nf0.focus(); }
+    else if (a === "nform") { S.nForm = S.nForm === id ? null : id; if (S.nForm === "cook" && !cookDraft(foodDoc())) { var fdc = clone(foodDoc()); cookNew(fdc); foodSave(fdc); } renderHome(); if (S.nForm === "cook") { var cf0 = document.querySelector(".cookf"); if (cf0) cf0.scrollIntoView({ block: "nearest", behavior: "smooth" }); } var nf0 = document.querySelector(".nform input, .nform select"); if (nf0 && id === "item") nf0.focus(); }
     else if (a === "nadd") {
       var fdn = foodDoc(), sv = niSel(fdn), ref = sv.slice(2);
       if (sv.indexOf("m:") === 0) { var mn = fdn.meals.filter(function (m) { return m.id === ref; })[0]; if (!mn) return; var vn = mealPortion(fdn, mn), mnn = mealNut(fdn, mn); nutriAdd(today(), { caf: mnn.caf, n: mnn.n, nk: mnn.nk, name: mn.name + (mealPortions(mn) > 1 ? " (1 Portion)" : ""), p: vn.p, kcal: vn.kcal, f: vn.f, c: vn.c }); }
