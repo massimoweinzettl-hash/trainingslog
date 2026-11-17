@@ -662,7 +662,9 @@ button, select, input { touch-action: manipulation }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
 .wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .wsub { margin: 0; align-self: flex-start; color: var(--muted); padding: 0 } .wlist { list-style: none; margin: 0; padding: 0; font-size: 14px } .wlist li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--line) } .wlist li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .cafh { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between } .cafh > .ibtn { flex: none; margin-top: -2px }
-.dlnx { font-weight: 400; opacity: .8 } .restc { display: inline-flex; align-items: center } .cookf .fpadd { margin: 4px 0 } .cooksum { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin: 6px 0 }
+.dlnx { font-weight: 400; opacity: .8 }
+#errtoast { position: fixed; left: 10px; right: 10px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 9999; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 12px 14px; border-radius: 14px; background: var(--ink, #151a22); color: var(--bg, #fff); box-shadow: 0 8px 30px rgba(0,0,0,.3); font-size: 14px; line-height: 1.35 }
+#errtoast span { flex: 1 1 200px } #errtoast button { min-height: 36px; padding: 6px 12px; border-radius: 10px; border: 0; font-weight: 650; background: var(--bg, #fff); color: var(--ink, #151a22) } #errtoast .et-x { background: none; color: inherit; padding: 6px 8px } .restc { display: inline-flex; align-items: center } .cookf .fpadd { margin: 4px 0 } .cooksum { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin: 6px 0 }
 .cupboard { background: var(--sunken); border-radius: 12px; padding: 8px 10px 4px; margin: 4px 0 8px } .cupboard > p { margin: 0 0 2px }
 .cbrow2 { display: flex; align-items: flex-end; gap: 10px; width: 100%; background: none; border: 0; border-bottom: 3px solid var(--line); border-radius: 0; padding: 6px 0 3px; min-height: 0; text-align: left; font-weight: 400; color: var(--ink) } .cbrow2:last-child { border-bottom-color: transparent }
 .cbn { flex: 0 0 34%; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center }
@@ -712,6 +714,38 @@ button, select, input { touch-action: manipulation }
 [data-look="hell"] .motto::after { content: "Hölle durchleben." } [data-look="winter"] .motto::after { content: "Epischer Winter Arc." }
 [data-look] .lookbtn { border-color: color-mix(in srgb, var(--ink) 30%, transparent) } [data-look] .lookbtn svg { stroke: var(--ink) }
 </style>
+<script>(function () { /* v177 (Wunsch des Nutzers): Fehlerfänger – schreibt jeden Programmfehler mit (letzte 20) und bietet „Bericht kopieren“ an.
+  Steht bewusst vor dem Hauptskript, damit er auch Fehler beim Start erwischt. Speicher: localStorage "trainingslog-errors". */
+  var K = "trainingslog-errors", acts = [], last = 0;
+  function load() { try { var l = JSON.parse(localStorage.getItem(K) || "[]"); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
+  function save(l) { try { localStorage.setItem(K, JSON.stringify(l.slice(-20))); } catch (e) {} }
+  document.addEventListener("click", function (ev) { var b = ev.target && ev.target.closest && ev.target.closest("[data-act],[data-tab]"); if (!b) return; acts.push(b.dataset.act ? b.dataset.act + (b.dataset.id ? ":" + String(b.dataset.id).slice(0, 24) : "") : "tab:" + b.dataset.tab); if (acts.length > 6) acts.shift(); }, true);
+  function tab() { var b = document.querySelector('.tabs button[aria-selected="true"]'); return b ? b.dataset.tab : "?"; }
+  function rec(msg, src, stack) {
+    msg = String(msg || "Unbekannter Fehler").slice(0, 300); if (/ResizeObserver loop|^Script error\.?$/.test(msg)) return;
+    var l = load(), p = l[l.length - 1], e = { t: new Date().toISOString(), v: window.TL_VER || "?", tab: tab(), msg: msg, src: String(src || "").replace(/^.*\//, "").slice(0, 80), st: String(stack || "").split("\n").slice(0, 6).join(" | ").replace(/https?:\/\/[^\s)]*\//g, "").slice(0, 700), acts: acts.join(" → ") };
+    if (p && p.msg === e.msg && p.src === e.src) { p.n = (p.n || 1) + 1; p.t = e.t; p.acts = e.acts; } else l.push(e);
+    save(l); toast();
+  }
+  window.addEventListener("error", function (ev) { if (ev.target && ev.target !== window && !ev.error) return; /* Bild/Skript nicht geladen: kein Programmfehler */ rec(ev.message, (ev.filename || "") + ":" + ev.lineno + ":" + ev.colno, ev.error && ev.error.stack); });
+  window.addEventListener("unhandledrejection", function (ev) { var r = ev.reason; rec(r && r.message || String(r), "promise", r && r.stack); });
+  window.TLErrList = load;
+  window.TLErrClear = function () { try { localStorage.removeItem(K); } catch (e) {} };
+  window.TLErrReport = function () { var l = load();
+    return "Trainingslog – Fehlerbericht\nGerät: " + navigator.userAgent.replace(/^Mozilla\/5\.0 /, "").slice(0, 160) + "\n" + (l.length ? l.map(function (e, i) {
+      return "\n#" + (i + 1) + " " + new Date(e.t).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) + " · v" + e.v + " · Reiter " + e.tab + (e.n > 1 ? " · " + e.n + "×" : "") + "\n" + e.msg + "\nOrt: " + e.src + (e.acts ? "\nZuletzt getippt: " + e.acts : "") + (e.st ? "\nVerlauf: " + e.st : ""); }).join("\n") : "\nKeine Fehler aufgezeichnet.");
+  };
+  window.TLCopy = function (txt, done) { var fb = function () { var ta = document.createElement("textarea"); ta.value = txt; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:0;left:0;opacity:0"; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, txt.length); var ok = false; try { ok = document.execCommand("copy"); } catch (e) {} ta.remove(); done && done(ok); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { done && done(true); }, fb); else fb(); };
+  function toast() {
+    if (Date.now() - last < 15000 || !document.body) return; last = Date.now(); var o = document.getElementById("errtoast"); if (o) o.remove();
+    var d = document.createElement("div"); d.id = "errtoast"; d.setAttribute("role", "alert");
+    d.innerHTML = '<span>Da ist etwas schiefgelaufen. Bitte den Bericht kopieren und weiterschicken, dann kann es behoben werden.</span><button type="button" class="et-copy">Bericht kopieren</button><button type="button" class="et-x" aria-label="Schließen">✕</button>';
+    d.querySelector(".et-copy").onclick = function () { var b = this; window.TLCopy(window.TLErrReport(), function (ok) { b.textContent = ok ? "Kopiert ✓" : "Kopieren ging nicht"; setTimeout(function () { d.remove(); }, 1600); }); };
+    d.querySelector(".et-x").onclick = function () { d.remove(); };
+    document.body.appendChild(d);
+  }
+})();</script>
 <script>try { var lk = localStorage.getItem("trainingslog-look"); if (lk === "hell" || lk === "winter") document.documentElement.dataset.look = lk; var th = localStorage.getItem("trainingslog-theme"); if (th === "light" || th === "dark") document.documentElement.dataset.theme = th; if (localStorage.getItem("trainingslog-cvd") === "1") document.documentElement.dataset.cvd = "1"; } catch (e) {}</script>
 </head>
 <body>
@@ -779,8 +813,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 176;
+  var APP_VERSION = 177; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 177, tab: "data", text: "Neu: ein Fehlerfänger. Läuft in der App etwas schief, erscheint unten ein Hinweis mit „Bericht kopieren“ – den Text einfach an Claude schicken. Alle aufgezeichneten Fehler findest du auch hinter dem Zahnrad unter „App“." },
     { v: 176, tab: "data", text: "Alle Knöpfe zum Löschen, Entfernen und Verwerfen sind jetzt rot und etwas kräftiger, damit man sie nicht übersieht." },
     { v: 175, tab: "data", text: "Präparate lassen sich jetzt direkt in ihrer Karte löschen („Präparat löschen“). Frühere Tage behalten dabei ihre Vitaminwerte." },
     { v: 174, tab: "data", text: "Vorratsschrank: In den Dosen sieht man jetzt den Inhalt – Kapseln, Tabletten, Pulver oder Flüssigkeit." },
@@ -1049,6 +1084,9 @@ button, select, input { touch-action: manipulation }
       (hasP ? "" : '<p class="small muted">Krafttraining und Schlafenszeit gehen, sobald deine Angaben unter Daten → Persönlich gespeichert sind.</p>') +
       '<h3>App</h3><p class="small muted">Trainingslog v' + APP_VERSION + "</p>" +
       '<div class="chips"><button data-act="setnews">Was ist neu?</button><button data-act="settour">Einführung</button><button data-act="sethelp">Hilfe</button></div>' +
+      (function () { var el = window.TLErrList ? window.TLErrList() : [], n = el.reduce(function (a, e) { return a + (e.n || 1); }, 0); /* v177 */
+        return '<p class="lab">Fehlerprotokoll</p><p class="small muted">' + (n ? n + (n === 1 ? " Fehler" : " Fehler") + " aufgezeichnet, zuletzt " + new Date(el[el.length - 1].t).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + "." : "Keine Fehler aufgezeichnet.") + "</p>" +
+          (n ? '<div class="chips"><button data-act="errcopy">Bericht kopieren</button><button class="danger" data-act="errclr">Protokoll leeren</button></div>' : ""); })() +
       '<p class="small muted" id="setmsg" aria-live="polite"></p></div></div>';
   }
   function setOpen() { var d = $("setp"); if (!d) { d = document.createElement("div"); d.id = "setp"; d.className = "overlay"; d.setAttribute("role", "dialog"); d.setAttribute("aria-modal", "true"); d.setAttribute("aria-labelledby", "set-h"); document.body.appendChild(d); } d.innerHTML = setHtml(); d.hidden = false; }
@@ -6054,6 +6092,8 @@ button, select, input { touch-action: manipulation }
     else if (a === "setclose") setClose();
     else if (a === "theme") themeSet(id);
     else if (a === "cvd") cvdSet(id === "1");
+    else if (a === "errcopy") { window.TLCopy(window.TLErrReport(), function (ok) { var m = $("setmsg"); if (m) m.textContent = ok ? "Bericht kopiert – jetzt einfach in den Chat einfügen." : "Kopieren ging nicht."; }); }
+    else if (a === "errclr") { if (!arm(b, "Wirklich leeren?")) return; window.TLErrClear(); var dp = $("setp"); if (dp) dp.innerHTML = setHtml(); }
     else if (a === "setnews") { setClose(); showNews(true); }
     else if (a === "settour") { setClose(); tourFrom = 0; tourShow(0); }
     else if (a === "sethelp") { setClose(); S.dataSec = "help"; showTab("data"); }
