@@ -169,3 +169,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v149: Ernährung-Kopf einzeilig (`.foodblk .dhead` nowrap, kompaktere Pillen 11 px), „Training geplant“ rot (`.pp-train.plan`, `--bad`); unter 420 px Breite wieder Umbruch.
 - v150: Koffein-Box: `ib("caf")` immer in der ersten Zeile rechts (`.cafh` Flex), nicht mehr hinter „Kaffee noch bis …“.
 - v151: Daten → Übungen: eigene Übungen ab 9 nach Muskelgruppe (`grp` oder `groupOf`, sonst „Sonstige“) als `details.flib.exo` (Zustand `S.exOwnOpen`; Gruppe der offenen Übung bleibt offen); Suche flach.
+- v152: Zeile „Koffeinfrei (unter 5 mg) ab …“ in `cafLine` entfernt (Wunsch des Nutzers).

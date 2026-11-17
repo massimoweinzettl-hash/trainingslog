@@ -764,8 +764,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 151;
+  var APP_VERSION = 152;
   var CHANGES = [
+    { v: 152, tab: "home", text: "Koffein: Die Zeile „Koffeinfrei ab …“ ist weg – wichtig ist der Rest zur Schlafenszeit, den Verlauf zeigt die Kurve." },
     { v: 151, tab: "data", text: "Daten → Übungen: Auch deine eigenen Übungen stehen jetzt nach Muskelgruppen zum Aufklappen statt als lange Liste (ab 9 Übungen). Bei einer Suche erscheinen alle Treffer direkt." },
     { v: 150, tab: "home", text: "Koffein: Das i steht jetzt oben rechts in der Box statt in einer eigenen Zeile." },
     { v: 149, tab: "home", text: "Ernährung oben: Datum, Training und Phase stehen jetzt in einer Zeile; „Training geplant“ ist rot." },
@@ -5505,11 +5506,8 @@ button, select, input { touch-action: manipulation }
     var xh = atBed / CAF_BED, hue = nutHue(xh), cst = "--h:" + hue + ";--lb:" + Math.max(0, Math.round(12 - Math.abs(hue - 40) / 3)) + ";";
     return '<div class="cafl' + (warn ? " warn" : "") + (late ? " late" : "") + '" style="' + cst + '"><p class="cafh"><span><b>' + (prev && !tot ? "Koffein von gestern" : "Koffein " + (prev ? "heute " : "") + Math.round(tot) + " mg") + "</b> · jetzt ≈ " + Math.round(left) + " mg" + (gut >= 5 ? " (+" + Math.round(gut) + " kommen noch)" : " im Körper") + "</span>" + ib("caf") + "</p>" + /* v150 (Wunsch des Nutzers): i oben rechts statt eigener Zeile */
       '<div class="cafbar"><span>Schlafen ' + bt.hm + '</span><span class="nb" role="img" aria-label="Zur Schlafenszeit noch etwa ' + Math.round(atBed) + ' mg"><i class="sc" style="width:' + Math.min(100, Math.max(2, atBed / (2 * CAF_BED) * 100)).toFixed(1) + '%"></i><b></b></span><span class="cbed">≈ ' + Math.round(atBed) + " mg</span></div>" +
-      cafChart(cs, now, bt) + (function () { /* v127: wann ist das Koffein praktisch weg (< 5 mg)? */
-        var lv = function (t) { return cs.reduce(function (s2, e) { return s2 + cafAmt(e.caf, t - cafMs(e, now)); }, 0); };
-        if (lv(now) + gut < 5) return ""; var tf = now + 9e5; while (tf < now + 48 * 36e5 && (lv(tf) >= 5 || tf < now + 36e5 && lv(tf) < lv(tf + 9e5))) tf += 9e5;
-        var fd2 = new Date(tf), dd = Math.round((new Date(fd2).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 864e5);
-        return '<p class="small muted">Koffeinfrei (unter 5 mg) ab ≈ <b>' + String(fd2.getHours()).padStart(2, "0") + ":" + String(fd2.getMinutes()).padStart(2, "0") + "</b>" + (dd === 1 ? " (morgen)" : dd > 1 ? " (übermorgen)" : "") + "</p>"; })() +
+      cafChart(cs, now, bt) + /* v152 (Wunsch des Nutzers): Zeile „Koffeinfrei ab …“ entfernt – relevant ist der Rest zur Schlafenszeit, den Verlauf zeigt die Kurve. */
+      
       (until ? '<p class="small muted">' + until + "</p>" : "") + "</div>" +
       itx("caf", "Bis 400 mg am Tag und 200 mg auf einmal gelten für Erwachsene als unbedenklich (EFSA)" + (warn ? " – heute liegst du darüber" : "") + ". Für den Schlaf zählt, was beim Zubettgehen noch im Körper ist: Laut einer Auswertung von 24 Studien (Gardiner u. a. 2023) sollte Kaffee mindestens etwa 9 Stunden, ein Booster etwa 13 Stunden vor dem Schlafen getrunken werden. Umgerechnet sind das jeweils noch rund 30 mg. Die Leiste zeigt, was zur Schlafenszeit noch im Körper ist: grün bis etwa 15 mg, dann gelb, orange ab 30 mg (Strich in der Mitte), rot ab 45 mg. Die App rechnet so: Koffein kommt über etwa eine Dreiviertelstunde ins Blut (Höchstwert nach ≈ 45 min, in Wirklichkeit je nach Magen 30 min bis 2 h) und wird mit einer Halbwertszeit von 5 Stunden abgebaut (je nach Mensch 3–7 h). Die Werte sind also Richtwerte. Deine Schlafenszeit stellst du in den Einstellungen (Zahnrad oben) ein. Werte der Getränke sind Durchschnitte; für eigene Produkte trag den Koffeingehalt unter Daten → Essen ein.");
   }
