@@ -764,8 +764,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 153;
+  var APP_VERSION = 154;
   var CHANGES = [
+    { v: 154, tab: "train", text: "Trainierst du ohne eine einzige Übung aus dem Plan-Tag, steht im Kalender jetzt „Freies Training“ (graue Pille FT, eigener Eintrag in der Legende) statt des Plan-Tags. Die Reihenfolge deines Plans geht danach normal weiter." },
     { v: 153, tab: "home", text: "Trinken: Unter dem Balken steht, wann du zuletzt getrunken hast. Antippen zeigt den Verlauf von heute mit Uhrzeit – jedes Glas lässt sich einzeln mit ✕ löschen. Versehentliches Doppeltippen zählt nur einmal." },
     { v: 152, tab: "home", text: "Koffein: Die Zeile „Koffeinfrei ab …“ ist weg – wichtig ist der Rest zur Schlafenszeit, den Verlauf zeigt die Kurve." },
     { v: 151, tab: "data", text: "Daten → Übungen: Auch deine eigenen Übungen stehen jetzt nach Muskelgruppen zum Aufklappen statt als lange Liste (ab 9 Übungen). Bei einer Suche erscheinen alle Treffer direkt." },
@@ -1701,7 +1702,7 @@ button, select, input { touch-action: manipulation }
   }
   function nextDayId() {
     var sd = schedDay(S.date); if (sd) return sd.id;
-    var days = S.plan.days, ws = sortedWorkouts(); if (!ws.length) return days[0].id;
+    var days = S.plan.days, ws = sortedWorkouts().filter(function (o) { return !isFreeW(o.w) || o.w.date === S.date; }); if (!ws.length) return days[0].id; /* v154 */
     var lastId = ws[ws.length - 1].w.dayId, i = -1;
     days.forEach(function (d, k) { if (d.id === lastId) i = k; });
     return days[(i + 1) % days.length].id;
@@ -2411,6 +2412,13 @@ button, select, input { touch-action: manipulation }
     return (w.length > 1 ? w.map(function (x) { return x.charAt(0); }).join("").slice(0, 3) : w[0].slice(0, 2)).toUpperCase();
   }
   /* Farbe (1–6 nach Position im Plan, 0 = nicht mehr im Plan), Name und Kürzel eines Trainingstags. */
+  /* v154 (Wunsch des Nutzers): Einheit ohne eine einzige Übung aus ihrem Plan-Tag = „Freies Training“ (eigene Pille/Legende, schiebt die Plan-Reihenfolge nicht weiter). */
+  function isFreeW(w) {
+    var pd = w && (S.plan && S.plan.days || []).filter(function (d) { return d.id === w.dayId; })[0]; if (!pd) return false;
+    var done = (w.entries || []).filter(function (e) { return e.sets && e.sets.length; }); if (!done.length) return false;
+    var ids = {}; pd.exercises.forEach(function (e) { ids[e.id] = 1; }); return !done.some(function (e) { return ids[e.exId]; });
+  }
+  function wMeta(w) { return isFreeW(w) ? { c: 0, name: "Freies Training", ab: "FT", free: true } : dayMeta(w.dayId, w.dayName); }
   function dayMeta(dayId, fallback) {
     var idx = -1, name = fallback || "Training";
     (S.plan && S.plan.days || []).forEach(function (d, i) { if (d.id === dayId) { idx = i; name = d.name; } });
@@ -2431,7 +2439,7 @@ button, select, input { touch-action: manipulation }
       (by[o.w.date] = by[o.w.date] || []).push(o.w);
       if (V === "m" ? o.w.date.slice(0, 7) === S.calMonth : V === "w" ? o.w.date >= wk0 && o.w.date <= wk6 : o.w.date === S.calRef) count++;
       if (o.w.date.slice(0, 7) !== S.calMonth) return;
-      var k = dayMeta(o.w.dayId, o.w.dayName); if (!k.c) extra[k.name] = k;
+      var k = wMeta(o.w); if (!k.c) extra[k.name] = k;
     });
     var pill = function (k) { return '<span class="pill c' + k.c + '">' + esc(k.ab) + "</span>"; };
     var E = energy(bodyList()), nf = function (n) { return n.toLocaleString("de-DE"); };
@@ -2441,7 +2449,7 @@ button, select, input { touch-action: manipulation }
     var dayStr = function (yy, mm, dd) { var x = new Date(yy, mm, dd); return x.getFullYear() + "-" + pad(x.getMonth() + 1) + "-" + pad(x.getDate()); };
     var phSeen = {}, anySched = false;
     for (var d = 1; d <= nDays; d++) {
-      var ds = S.calMonth + "-" + pad(d), ks = (by[ds] || []).map(function (w) { return dayMeta(w.dayId, w.dayName); }), info = E ? dayKcal(ds, E, ks.length > 0) : null;
+      var ds = S.calMonth + "-" + pad(d), ks = (by[ds] || []).map(function (w) { return wMeta(w); }), info = E ? dayKcal(ds, E, ks.length > 0) : null;
       /* Eingeplantes Training (ab heute, solange nichts eingetragen ist): Kürzel des Trainingstags als Umriss. */
       var sd = !ks.length && ds >= t ? schedDay(ds) : null, sk = sd ? dayMeta(sd.id) : null;
       if (sk) anySched = true;
@@ -2472,7 +2480,7 @@ button, select, input { touch-action: manipulation }
     if (V === "w") {
       h += '<div class="calweek">';
       for (var wi = 0; wi < 7; wi++) {
-        var wd = addDays(wk0, wi), wks = (by[wd] || []).map(function (w) { return dayMeta(w.dayId, w.dayName); }), wsd = !wks.length && wd >= t ? schedDay(wd) : null, wsk = wsd ? dayMeta(wsd.id) : null;
+        var wd = addDays(wk0, wi), wks = (by[wd] || []).map(function (w) { return wMeta(w); }), wsd = !wks.length && wd >= t ? schedDay(wd) : null, wsk = wsd ? dayMeta(wsd.id) : null;
         var wNT = !wks.length && !wsk && NT && NT.date === wd ? dayMeta(NT.day.id) : null, winfo = E ? dayKcal(wd, E, wks.length > 0) : null, wph = wd <= t ? phaseAt(wd) : null;
         h += '<button class="cwrow' + (wd === t ? " today" : "") + (wd === S.calSel ? " sel" : "") + (wd < t ? " past" : "") + '" data-act="calsel" data-id="' + wd + '" aria-pressed="' + (wd === S.calSel) + '">' +
           '<span class="cwd"><b>' + ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][dateOf(wd).getDay()] + "</b> " + dfmt(wd) + "</span>" +
@@ -2523,7 +2531,7 @@ button, select, input { touch-action: manipulation }
           (sd2 && !guess ? "<span>Tippe den markierten Trainingstag erneut an, um die Planung zu entfernen.</span>" : "") + "</div>";
       }
       h += '<div class="caldet' + (V === "d" ? " dview" : "") + '">' + (V === "d" ? "" : "<h3>" + WDAYS[dd.getDay()] + ", " + dlong(S.calSel) + "</h3>") + phl + kd + (sel.length ? sel.map(function (w) {
-        var k = dayMeta(w.dayId, w.dayName);
+        var k = wMeta(w);
         return '<div class="calw"><p>' + pill(k) + " <b>" + esc(k.name) + "</b></p>" + (w.entries || []).map(function (e) { return '<p class="small">' + esc(names[e.exId] || e.name) + ': <span class="muted">' + setsText(e.sets) + "</span></p>"; }).join("") +
           '<button style="align-self:flex-start" data-act="open" data-date="' + w.date + '" data-id="' + esc(w.dayId) + '">Im Training öffnen</button></div>';
       }).join("") : none) + "</div>";
@@ -4268,7 +4276,7 @@ button, select, input { touch-action: manipulation }
   function nextTraining() {
     if (!S.plan || !S.plan.days.length) return null;
     var t = today(), tdays = S.person && S.person.tdays || [], ws = sortedWorkouts();
-    var lastId = ws.length ? ws[ws.length - 1].w.dayId : null, li = -1;
+    var lastW = ws.filter(function (o) { return !isFreeW(o.w); }).pop(), lastId = lastW ? lastW.w.dayId : null /* v154: freies Training schiebt nicht weiter */, li = -1;
     S.plan.days.forEach(function (d, i) { if (d.id === lastId) li = i; });
     var seq = S.plan.days[(li + 1) % S.plan.days.length];
     for (var i = 0; i <= 21; i++) {
