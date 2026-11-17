@@ -649,8 +649,8 @@ button, select, input { touch-action: manipulation }
 .msinfo:not([hidden]) { display: flex; gap: 14px; align-items: center; grid-column: 1 / -1; margin: -2px 0 4px } .msfig { width: 96px; height: 128px; flex: none } .msbody > * { fill: var(--sunken); stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; stroke-opacity: .85 } .mstape { fill: none; stroke: var(--accent); stroke-width: 3.2 }
 .mstx { flex: 1; background: var(--accent-soft); border-radius: 14px; padding: 10px 12px; color: var(--ink); font-size: 14px; line-height: 1.4 } .mstx b { display: block; font-size: 16px; margin-bottom: 2px }
 .wline { --wc: #2f7fc6 } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wline { --wc: #6eb4f0 } } :root[data-theme="dark"] .wline, [data-look] .wline { --wc: #6eb4f0 }
-.wline { display: flex; flex-direction: column; gap: 6px; padding: 10px 0 2px; border-top: 1px solid var(--line); margin-top: 6px } .whead { display: flex; align-items: center; gap: 8px } .wtx { flex: 1; display: inline-flex; align-items: center; gap: 6px; font-size: 14px } .wtx .ic { width: 18px; height: 18px; color: var(--wc) }
-.wgbtn { padding: 0; border: 0; background: none; min-height: 0; display: inline-flex; border-radius: 8px } .wgbtn:active .wglass { transform: scale(.9) } .wglass { transition: transform .12s; width: 40px; height: 40px; flex: none; margin: -4px 0 } .wgg { fill: #e6f1fb } .wgw { fill: #6eaee6 } .wgs { fill: #9fd0f8 } .wgb { fill: rgba(255, 255, 255, .55) } .wgo { fill: none; stroke: var(--ink); stroke-width: 3.4; stroke-linejoin: round } .wgr { fill: #eef6fd }
+.wline { display: flex; flex-direction: column; gap: 6px; padding: 2px 0 10px; border-bottom: 1px solid var(--line) } .whead { display: flex; align-items: center; gap: 8px } .wtx { flex: 1; display: inline-flex; align-items: center; gap: 6px; font-size: 14px } .wtx .ic { width: 18px; height: 18px; color: var(--wc) }
+.wgbtn { position: relative; padding: 0; border: 0; background: none; min-height: 0; display: inline-flex; border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent } .hapsw { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; appearance: none; -webkit-appearance: none } .wgbtn:active .wglass { transform: scale(.9) } .wglass { transition: transform .12s; width: 40px; height: 40px; flex: none; margin: -4px 0 } .wgg { fill: #e6f1fb } .wgw { fill: #6eaee6 } .wgs { fill: #9fd0f8 } .wgb { fill: rgba(255, 255, 255, .55) } .wgo { fill: none; stroke: var(--ink); stroke-width: 3.4; stroke-linejoin: round } .wgr { fill: #eef6fd }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
 .wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
@@ -761,8 +761,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 145;
+  var APP_VERSION = 146;
   var CHANGES = [
+    { v: 146, tab: "home", text: "Der Wasser-Zähler steht jetzt oben zwischen Koffein und Kalorien. Neuer Versuch fürs Klick-Feedback beim Antippen des Glases (iPhone ab iOS 18)." },
     { v: 145, tab: "home", text: "Wasser: Das Glas selbst antippen trägt ein Glas ein, mit kurzem Klick-Feedback (auf dem iPhone ab iOS 18)." },
     { v: 144, tab: "home", text: "Wasser-Zähler mit Glas: Der Wasserstand im Glas steigt, je näher du deinem Tagesziel kommst." },
     { v: 143, tab: "data", text: "Daten → Übungen: Der Katalog steht jetzt nach Muskelgruppen sortiert zum Aufklappen (Brust, Rücken, Schultern, Arme, Beine, Bauch) statt als eine lange Liste. Bei einer Suche erscheinen die Treffer direkt." },
@@ -5410,7 +5411,7 @@ button, select, input { touch-action: manipulation }
       if (lm == null) hint = "Heute noch nichts getrunken – Zeit für ein Glas.";
       else if (nm - lm >= 150) hint = "Seit " + Math.floor((nm - lm) / 60) + " Std. kein Wasser – Zeit für ein Glas.";
     }
-    return '<div class="wline' + (hint ? " due" : "") + '"><div class="whead"><span class="wtx"><button class="wgbtn" data-act="wplus" aria-label="Ein Glas (' + gl + ' ml) eintragen">' + waterGlassSvg(sum / goal) + "</button>Wasser <b>" + lit(sum) + "</b> / " + lit(goal) + " l" + ib("wat") + "</span>" +
+    return '<div class="wline' + (hint ? " due" : "") + '"><div class="whead"><span class="wtx"><label class="wgbtn" aria-label="Ein Glas (' + gl + ' ml) eintragen"><input type="checkbox" switch class="hapsw" data-hap="wplus" tabindex="-1">' + waterGlassSvg(sum / goal) + "</label>Wasser <b>" + lit(sum) + "</b> / " + lit(goal) + " l" + ib("wat") + "</span>" +
       (w.length ? '<button class="ghost xs" data-act="wminus" aria-label="Letztes Glas entfernen">−</button>' : "") + '<button class="xs wplus" data-act="wplus">+ ' + gl + " ml</button></div>" +
       '<span class="wbar"><i style="width:' + pc.toFixed(1) + '%"></i></span>' + (hint ? '<p class="small whint">' + hint + "</p>" : "") +
       itx("wat", "Zählt, was du hier mit + einträgst. Kaffee, Tee und andere Getränke zählen nicht automatisch – trag sie bei Bedarf als Glas mit ein. Ziel " + (S.person && isN(S.person.wgoal) ? "fest eingestellt" : "nach EFSA: insgesamt etwa 2,5 l Wasser am Tag für Männer und 2,0 l für Frauen, rund 80 % davon aus Getränken, an Trainingstagen etwa 0,5 l mehr; an heißen Tagen und bei viel Schwitzen mehr") + ". Glasgröße und Ziel änderst du in den Einstellungen (Zahnrad). Die App kann nicht von selbst erinnern, solange sie geschlossen ist – beim Öffnen weist sie dich darauf hin, wenn länger nichts getrunken wurde.") + "</div>";
@@ -5494,7 +5495,7 @@ button, select, input { touch-action: manipulation }
     var sum = ent.reduce(function (a, e) { var ok = e.f != null && e.c != null; return { p: a.p + e.p, kcal: a.kcal + e.kcal, f: a.f + (ok ? e.f : 0), c: a.c + (ok ? e.c : 0), nofc: a.nofc + (ok ? 0 : 1) }; }, { p: 0, kcal: 0, f: 0, c: 0, nofc: 0 });
     var nf = function (v) { return Math.round(v).toLocaleString("de-DE"); }, kc = di ? di.kcal : 0, rest = kc - sum.kcal, pg = mc ? mc.p : 0;
     /* Kopf: was heute an Kalorien noch offen ist, Balken in Makrofarben, darunter Protein, Fett und Kohlenhydrate. */
-    var top = head + cafLine(cafEvents(t, ent)); /* v105 (Wunsch des Nutzers): Koffein ganz oben, wird sonst unterschätzt */
+    var top = head + cafLine(cafEvents(t, ent)) + waterLine(t, !!(di && di.train)); /* v146 (Wunsch des Nutzers): Wasser zwischen Koffein und kcal */ /* v105 (Wunsch des Nutzers): Koffein ganz oben, wird sonst unterschätzt */
     /* Kalorienbalken in Makrofarben: Anteile aus Eiweiß × 4, Fett × 9, Kohlenhydrate × 4. Kalorien ohne Makroangabe (ältere Einträge) grau. */
     var km = { p: sum.p * 4, f: sum.f * 9, c: sum.c * 4 }, kx = Math.max(0, sum.kcal - km.p - km.f - km.c);
     /* Rundungsreste (Packungsangaben passen selten genau zu 4/9/4 kcal je g) nicht als grauen Strich zeigen, nur echte Einträge ohne Makros (seit v74). */
@@ -5539,7 +5540,7 @@ button, select, input { touch-action: manipulation }
     }).join("") + (ent.length > 1 ? (function () { /* v129 (Wunsch des Nutzers): Summe unter der Liste */
       var sm = { p: 0, f: 0, c: 0, k: 0, nf: 0, nc: 0 }; ent.forEach(function (e) { sm.p += e.p || 0; sm.k += e.kcal || 0; if (e.f == null) sm.nf++; else sm.f += e.f; if (e.c == null) sm.nc++; else sm.c += e.c; });
       return '<li class="nsum"><span class="nsl">Summe</span><span class="nnm">' + nMac(sm.p, sm.f, sm.c, '<span class="nkc">' + Math.round(sm.k).toLocaleString("de-DE") + " kcal</span>") + '</span><button class="ghost xs" tabindex="-1" aria-hidden="true" style="visibility:hidden">✕</button></li>'; })() : "") + "</ul>";
-    h += dailyLine(t, fd) + waterLine(t, !!(di && di.train));
+    h += dailyLine(t, fd);
     h += tip("food", "Wie genau ist das?", "Die Werte der Lebensmittel sind typische Durchschnittswerte. Gleich sie unter „Lebensmittel bearbeiten“ mit deinen Verpackungen ab. Schätzungen sind mit ≈ markiert und nur grob. Das Ziel kommt aus deinen Makros für heute. Die Uhrzeit setzt die App beim Eintragen, antippen zum Ändern.");
     return h;
   }
@@ -5820,7 +5821,7 @@ button, select, input { touch-action: manipulation }
     else if (a === "calplanopen") { S.calPlanOpen = true; renderCal(); }
     else if (a === "wplus" || a === "wminus") {
       var wd = S.nutri["n_" + today()] ? clone(S.nutri["n_" + today()]) : { kind: "nutri", date: today(), entries: [] }, wl = Array.isArray(wd.water) ? wd.water.slice() : [];
-      haptic(); if (a === "wplus") { if (wl.length < 60) wl.push({ t: nowHM(), ml: waterGlass() }); } else wl.pop();
+      if (b.dataset.hap !== "1") haptic(); if (a === "wplus") { if (wl.length < 60) wl.push({ t: nowHM(), ml: waterGlass() }); } else wl.pop();
       if (wl.length) wd.water = wl; else delete wd.water;
       put("n_" + today(), wd.entries.length || wd.skip || wd.water ? wd : null); renderHome();
     }
@@ -6363,6 +6364,8 @@ button, select, input { touch-action: manipulation }
     }
   });
   document.addEventListener("change", function (ev) {
+    /* v146: Glas als verdeckter iOS-Schalter – echtes Antippen löst auf dem iPhone (ab iOS 18) das System-Klick-Feedback aus. */
+    if (ev.target && ev.target.classList && ev.target.classList.contains("hapsw")) { try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {} var hb = document.createElement("button"); hb.dataset.act = ev.target.dataset.hap; hb.dataset.hap = "1"; hb.hidden = true; document.body.appendChild(hb); hb.click(); hb.remove(); return; }
     if (!S.ready) return;
     var t = ev.target;
     if (t.id === "ph-type" || t.id === "ph-date") { /* Vorauswahl: nach einem Cut 3 Wochen Übergang, sonst ohne */
