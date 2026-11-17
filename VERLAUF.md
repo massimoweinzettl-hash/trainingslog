@@ -192,3 +192,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v172: Nährstoffbalken unter dem Ziel („min“) in der Farbe von x = 0 (`nutHue(0)`: grün, Farbenblind blau) statt `--accent`; Legende in derselben Farbe.
 - v173: `cookForm` direkt unter den Knöpfen (vor der Essensliste), beim Öffnen sanft ins Bild scrollen.
 - v174: Dosen-Inhalt sichtbar: `suppFill` (Pulver bei g, Flüssigkeit bei ml/Tropfen, Tabletten, sonst Kapseln), `jarPat` zeichnet im gefüllten Teil Kapseln (schräge Pillen), Tabletten (Kreise), Pulver (Punkte) oder eine Wasserlinie.
+- v175: „Präparat löschen“ sichtbar in der Karte (`sdel`, mit Rückfrage). Mit Einnahme vor heute → `it.gone` (aus Listen/Suche raus, `foodAll` filtert; frühere Tage behalten Werte), Einnahme endet gestern; sonst ganz entfernen. Vorlagen: „Vorlage ausblenden“. Import behält gone.

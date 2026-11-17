@@ -779,8 +779,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 174;
+  var APP_VERSION = 175;
   var CHANGES = [
+    { v: 175, tab: "data", text: "Präparate lassen sich jetzt direkt in ihrer Karte löschen („Präparat löschen“). Frühere Tage behalten dabei ihre Vitaminwerte." },
     { v: 174, tab: "data", text: "Vorratsschrank: In den Dosen sieht man jetzt den Inhalt – Kapseln, Tabletten, Pulver oder Flüssigkeit." },
     { v: 173, tab: "home", text: "„Gericht berechnen“ öffnet sich jetzt direkt unter dem Knopf, nicht mehr unter der Essensliste." },
     { v: 172, tab: "home", text: "Vitamine & Mineralstoffe: Alle Balken sind grün statt blau, auch unter dem Ziel. Gelb bis rot nur, wenn es auf die Obergrenze zugeht." },
@@ -3787,7 +3788,7 @@ button, select, input { touch-action: manipulation }
           if (typeof x.cat === "string" && FCATS.indexOf(x.cat) >= 0) ci.cat = x.cat;
           if (typeof x.code === "string" && /^\d{8,14}$/.test(x.code)) ci.code = x.code;
           if (isN(x.caf) && x.caf >= 0 && x.caf < 5000) ci.caf = x.caf;
-          if (typeof x.form === "string" && SFORMS.some(function (f) { return f[0] === x.form; })) ci.form = x.form; if (/^(dose|beutel|flasche)$/.test(x.cont || "")) ci.cont = x.cont; if (isN(x.pack) && x.pack > 0) ci.pack = x.pack; if (x.stock && DRE.test(x.stock.d) && isN(x.stock.c) && x.stock.c >= 0) { ci.stock = { d: x.stock.d, c: x.stock.c }; if (isN(x.stock.full) && x.stock.full >= 0) ci.stock.full = Math.round(x.stock.full); } /* v165 */
+          if (typeof x.form === "string" && SFORMS.some(function (f) { return f[0] === x.form; })) ci.form = x.form; if (/^(dose|beutel|flasche)$/.test(x.cont || "")) ci.cont = x.cont; if (DRE.test(x.gone || "")) ci.gone = x.gone; if (isN(x.pack) && x.pack > 0) ci.pack = x.pack; if (x.stock && DRE.test(x.stock.d) && isN(x.stock.c) && x.stock.c >= 0) { ci.stock = { d: x.stock.d, c: x.stock.c }; if (isN(x.stock.full) && x.stock.full >= 0) ci.stock.full = Math.round(x.stock.full); } /* v165 */
           if (Array.isArray(x.n) && x.n.length >= 21 && x.n.length <= NUTK.length && x.n.every(function (v) { return v === null || isN(v); })) ci.n = x.n; return ci;
         });
         return { kind: "food", v: d.v === 5 || d.v === 4 || d.v === 3 || d.v === 2 ? d.v : 0, items: items,
@@ -5072,7 +5073,7 @@ button, select, input { touch-action: manipulation }
   /* Barcode-Suche: eigene Lebensmittel mit Barcode zuerst, dann Bibliothek. */
   function byBarcode(fd, q) {
     if (!/^\d{8,14}$/.test(q)) return null;
-    var own = fd.items.filter(function (x) { return x.code === q; })[0];
+    var own = fd.items.filter(function (x) { return x.code === q && !x.gone; })[0];
     if (own) return own;
     var id = BARCODE[q] || BARCODE[q.replace(/^0+/, "")] || BARCODE["0" + q];
     return id ? foodItem(fd, id) : false;
@@ -5159,7 +5160,7 @@ button, select, input { touch-action: manipulation }
   function isFav(fd, id) { return (fd.fav || []).indexOf(id) >= 0; }
   /* Alle Lebensmittel für die Suche: eigene zuerst, dann Bibliothek (ohne Doppelte nach Kennung oder Name). */
   function foodAll(fd) {
-    var ids = {}, names = {}, out = fd.items.map(function (x) { ids[x.id] = 1; names[norm(x.name)] = 1; return x; });
+    var ids = {}, names = {}, out = fd.items.filter(function (x) { ids[x.id] = 1; names[norm(x.name)] = 1; return !x.gone; }); /* v175: gelöschte Präparate (gone) bleiben für frühere Tage erhalten, tauchen aber nirgends mehr auf */
     FOODLIB.forEach(function (x) { if (!ids[x[0]] && !names[norm(x[1])]) { ids[x[0]] = 1; var it = food0Item(x); it.lib = true; out.push(it); } });
     /* Seit v96: gescannte Markenprodukte sind immer in der Suche, auch die sonst nur per Barcode findbaren. */
     (fd.scan || []).forEach(function (id) { var x = LIBMAP[id]; if (x && !ids[id]) { ids[id] = 1; var it = food0Item(x); it.lib = true; out.push(it); } });
@@ -5826,7 +5827,7 @@ button, select, input { touch-action: manipulation }
       '<label>kcal je ' + (it.per === "st" ? suppUnit(it, 1) : "100" + u1) + '<input data-fi="kcal" data-id="' + it.id + '" value="' + fmt(it.kcal) + '" inputmode="decimal"></label><label>Eiweiß g<input data-fi="p" data-id="' + it.id + '" value="' + fmt(it.p) + '" inputmode="decimal"></label>' +
       '<label class="fsp2">Barcode<input data-fi="code" data-id="' + it.id + '" value="' + esc(it.code || "") + '" inputmode="numeric" placeholder="optional" autocomplete="off"></label>' +
       '<label class="fcatsel">Gruppe<select data-fi="cat" data-id="' + it.id + '">' + FCATS.map(function (c) { return "<option" + (c === (it.cat || "Eigene") ? " selected" : "") + ">" + c + "</option>"; }).join("") + "</select></label>" +
-      (it.lib ? "" : '<button class="ghost xs" data-act="fidel" data-id="' + it.id + '">' + (LIBMAP[it.id] ? "Auf Vorlage zurücksetzen" : "Löschen") + "</button>") + "</div></details></div>";
+      "</div></details>" + '<button class="ghost xs sdel" data-act="sdel" data-id="' + it.id + '">' + (it.lib ? "Vorlage ausblenden" : "Präparat löschen") + "</button></div>";
     return h + "</div>";
   }
   function dailyManage(fd) {
@@ -6433,6 +6434,13 @@ button, select, input { touch-action: manipulation }
     }
     else if (a === "ndel") { if (!S.nutri["n_" + today()]) { renderHome(); return; } var nd = clone(S.nutri["n_" + today()]); nd.entries = nd.entries.filter(function (e) { return e.id !== id; }); put("n_" + today(), nd.entries.length || (nd.skip && nd.skip.length) ? nd : null); renderHome(); } /* v121: skip behalten */
     else if (a === "sstp") { var fdp = clone(foodDoc()), itp = ownItem(fdp, id); if (!itp || !itp.pack) return; var lp = suppLeft(foodDoc(), foodItem(foodDoc(), id)) || 0; itp.stock = { d: today(), c: Math.round((lp + itp.pack) * 10) / 10 }; foodSave(fdp); var ysp = window.scrollY; renderData(); renderHome(); window.scrollTo(0, ysp); }
+    else if (a === "sdel") {
+      if (!arm(b, "Wirklich löschen?")) return; var fdx = clone(foodDoc()), itx2 = ownItem(fdx, id), t0 = today(); if (!itx2) return;
+      var used = (fdx.daily || []).some(function (x) { return x.item === id && x.from < t0; });
+      fdx.daily = (fdx.daily || []).filter(function (x) { return !(x.item === id && x.from >= t0); }); fdx.daily.forEach(function (x) { if (x.item === id && (!x.to || x.to >= t0)) x.to = addDays(t0, -1); });
+      if (used) itx2.gone = t0; else { fdx.items = fdx.items.filter(function (x) { return x.id !== id; }); fdx.meals.forEach(function (m) { m.parts = m.parts.filter(function (q) { return q.item !== id; }); }); }
+      if (S.fOpen === id) S.fOpen = null; foodSave(fdx); var yx = window.scrollY; renderData(); renderHome(); window.scrollTo(0, yx); /* v175: frühere Tage behalten ihre Werte */
+    }
     else if (a === "dladd") { var fdd = clone(foodDoc()), itdd = foodItem(fdd, id); if (!itdd) return; fdd.daily = (fdd.daily || []).concat([{ id: rid("dl"), item: itdd.id, amt: itdd.amt || 1, from: today() }]); foodSave(fdd); var ydd = window.scrollY; renderData(); renderHome(); window.scrollTo(0, ydd); }
     else if (/^f(madd|mdel|pdel|iadd|idel|sadd)$/.test(a)) {
       var fd = clone(foodDoc()), mm = fd.meals.filter(function (m) { return m.id === id; })[0];
