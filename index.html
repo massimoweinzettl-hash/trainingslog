@@ -654,7 +654,7 @@ button, select, input { touch-action: manipulation }
 .wline { display: flex; flex-direction: column; gap: 6px; padding: 2px 0 10px; border-bottom: 1px solid var(--line) } .whead { display: flex; align-items: center; gap: 8px } .wtx { flex: 1; display: inline-flex; align-items: center; gap: 6px; font-size: 14px } .wtx .ic { width: 18px; height: 18px; color: var(--wc) }
 .wgbtn { position: relative; padding: 0; border: 0; background: none; min-height: 0; display: inline-flex; border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent } .hapsw { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; appearance: none; -webkit-appearance: none } .wgbtn:active .wglass { transform: scale(.9) } .wglass { transition: transform .12s; width: 40px; height: 40px; flex: none; margin: -4px 0 } .wgg { fill: #e6f1fb } .wgw { fill: #6eaee6 } .wgs { fill: #9fd0f8 } .wgb { fill: rgba(255, 255, 255, .55) } .wgo { fill: none; stroke: var(--ink); stroke-width: 3.4; stroke-linejoin: round } .wgr { fill: #eef6fd }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
-.wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .wsub { margin: 0 } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
+.wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .wsub { margin: 0; align-self: flex-start; color: var(--muted); padding: 0 } .wlist { list-style: none; margin: 0; padding: 0; font-size: 14px } .wlist li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--line) } .wlist li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .cafh { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between } .cafh > .ibtn { flex: none; margin-top: -2px }
 .ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
 .lookbtn { width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; display: grid; place-items: center }
@@ -764,8 +764,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 152;
+  var APP_VERSION = 153;
   var CHANGES = [
+    { v: 153, tab: "home", text: "Trinken: Unter dem Balken steht, wann du zuletzt getrunken hast. Antippen zeigt den Verlauf von heute mit Uhrzeit – jedes Glas lässt sich einzeln mit ✕ löschen. Versehentliches Doppeltippen zählt nur einmal." },
     { v: 152, tab: "home", text: "Koffein: Die Zeile „Koffeinfrei ab …“ ist weg – wichtig ist der Rest zur Schlafenszeit, den Verlauf zeigt die Kurve." },
     { v: 151, tab: "data", text: "Daten → Übungen: Auch deine eigenen Übungen stehen jetzt nach Muskelgruppen zum Aufklappen statt als lange Liste (ab 9 Übungen). Bei einer Suche erscheinen alle Treffer direkt." },
     { v: 150, tab: "home", text: "Koffein: Das i steht jetzt oben rechts in der Box statt in einer eigenen Zeile." },
@@ -5395,7 +5396,7 @@ button, select, input { touch-action: manipulation }
   /* v140 (Wunsch des Nutzers: Trinkerinnerung): Wasser-Zähler unter Ernährung. n_<Datum>.water = [{t: "HH:MM", ml}].
      Ziel automatisch nach EFSA (Gesamtwasser 2,5 l Männer / 2,0 l Frauen, ≈ 80 % davon aus Getränken) + 0,5 l an Trainingstagen,
      oder fest (person.wgoal). Glasgröße person.glass (Standard 250 ml). Push-Erinnerungen gehen in der Web-App nicht → Hinweis beim Öffnen. */
-  var GLASSES = [150, 200, 250, 300, 330, 400, 500];
+  var GLASSES = [150, 200, 250, 300, 330, 400, 500], WLAST = 0;
   function waterGlass() { var g = S.person && S.person.glass; return GLASSES.indexOf(g) >= 0 ? g : 250; }
   function waterAuto(train) { var base = S.person && S.person.sex === "w" ? 1500 : 2000; return base + (train ? 500 : 0); }
   function waterGoal(train) { var g = S.person && S.person.wgoal; return isN(g) && g >= 500 && g <= 6000 ? g : waterAuto(train); }
@@ -5404,7 +5405,7 @@ button, select, input { touch-action: manipulation }
   /* v148: beim Eintragen fest merken (e.ml): Gruppe „Getränke“ zählt immer (in g: 1 g ≈ 1 ml; je Stück nicht), sonst Einheit ml ohne NODRINK. */
   function drinkAmt(it, amt) { if (!it || !(amt > 0)) return 0; if (it.cat === "Getränke") return it.per === "st" ? 0 : amt; return it.per === "ml" && !NODRINK.test(it.name) ? amt : 0; }
   function drinkMl(e) { if (e && isN(e.ml)) return e.ml; var m = /^(.*\S)\s+(\d+(?:[.,]\d+)?)\s+ml$/.exec(e && e.name || ""); return m && !NODRINK.test(m[1]) ? num(m[2]) || 0 : 0; }
-  function drinksOf(t) { var n = S.nutri["n_" + t]; return (n && n.entries || []).map(function (e) { return { t: e.t, ml: drinkMl(e) }; }).filter(function (x) { return x.ml > 0; }); }
+  function drinksOf(t) { var n = S.nutri["n_" + t]; return (n && n.entries || []).map(function (e) { return { t: e.t, ml: drinkMl(e), name: e.name }; }).filter(function (x) { return x.ml > 0; }); }
   function waterOf(t) { var n = S.nutri["n_" + t]; return n && Array.isArray(n.water) ? n.water : []; }
   function lit(ml) { return fmt(Math.round(ml / 50) * 50 / 1000); }
   /* v144 (Wunsch des Nutzers, Vorbild: Becher-Piktogramm): eigenes SVG-Glas, Wasserstand = Anteil am Tagesziel. */
@@ -5438,7 +5439,12 @@ button, select, input { touch-action: manipulation }
     }
     return '<div class="wline' + (hint ? " due" : "") + '"><div class="whead"><span class="wtx"><label class="wgbtn" aria-label="Ein Glas (' + gl + ' ml) eintragen"><input type="checkbox" switch class="hapsw" data-hap="wplus" tabindex="-1">' + waterGlassSvg(sum / goal) + "</label>Trinken <b>" + lit(sum) + "</b> / " + lit(goal) + " l" + ib("wat") + "</span>" +
       (w.length ? '<button class="ghost xs" data-act="wminus" aria-label="Letztes Glas entfernen">−</button>' : "") + '<button class="xs wplus" data-act="wplus">+ ' + gl + " ml</button></div>" +
-      '<span class="wbar"><i style="width:' + pc.toFixed(1) + '%"></i></span>' + (hint ? '<p class="small whint">' + hint + "</p>" : dsum ? '<p class="small muted wsub">' + lit(wsum) + " l Wasser · " + lit(dsum) + " l andere Getränke</p>" : "") +
+      '<span class="wbar"><i style="width:' + pc.toFixed(1) + '%"></i></span>' + (hint ? '<p class="small whint">' + hint + "</p>" : "") +
+      /* v153 (Wunsch des Nutzers): nachvollziehbar, wann getrunken wurde – „zuletzt …“ und aufklappbarer Verlauf mit ✕ je Glas */
+      (w.length || dsum ? '<button class="linkbtn small wsub" data-act="wlog" aria-expanded="' + !!S.wOpen + '">' + (dsum ? lit(wsum) + " l Wasser · " + lit(dsum) + " l andere · " : "") + "zuletzt " + (last || "–") + " " + (S.wOpen ? "▴" : "▾") + "</button>" : "") +
+      (S.wOpen ? '<ul class="wlist">' + w.map(function (x, i) { return { t: x.t || "", html: "<span>" + esc(x.t || "–") + "</span><span>Glas " + x.ml + ' ml</span><button class="ghost xs" data-act="wdel" data-id="' + i + '" aria-label="Glas um ' + esc(x.t || "") + ' entfernen">✕</button>' }; })
+        .concat(dr.map(function (x) { return { t: x.t || "", html: "<span>" + esc(x.t || "–") + '</span><span class="muted">' + esc(x.name) + '</span><span class="small muted">Essensliste</span>' }; }))
+        .sort(function (a, b) { return a.t < b.t ? -1 : a.t > b.t ? 1 : 0; }).map(function (r) { return "<li>" + r.html + "</li>"; }).join("") + "</ul>" : "") +
       itx("wat", "Zählt die Gläser, die du hier einträgst, und automatisch alle Getränke aus deiner Essensliste: alles aus der Gruppe „Getränke“ (auch in g, 1 g ≈ 1 ml; je Stück nicht) und sonst alles in ml (z. B. gescanntes Wasser, Saft, Milch; nicht: Sahne, Essig, Sirup, Zitronensaft, Brühe). Zählt ein Getränk nicht, stell unter „Lebensmittel bearbeiten“ die Gruppe auf „Getränke“ oder die Einheit auf ml. Kaffee und Tee zählen mit – Koffein treibt in üblichen Mengen kaum Wasser aus. Ziel " + (S.person && isN(S.person.wgoal) ? "fest eingestellt" : "nach EFSA: insgesamt etwa 2,5 l Wasser am Tag für Männer und 2,0 l für Frauen, rund 80 % davon aus Getränken, an Trainingstagen etwa 0,5 l mehr; an heißen Tagen und bei viel Schwitzen mehr") + ". Glasgröße und Ziel änderst du in den Einstellungen (Zahnrad). Die App kann nicht von selbst erinnern, solange sie geschlossen ist – beim Öffnen weist sie dich darauf hin, wenn länger nichts getrunken wurde.") + "</div>";
   }
   function shortName(s) { return s.replace(/\s*\(.*\)\s*$/, "").slice(0, 26); }
@@ -5841,9 +5847,11 @@ button, select, input { touch-action: manipulation }
     else if (a === "look") { var inPop = !!b.closest("#lookpop"); lookSet(id); if (inPop) $("lookpop").hidden = true; }
     else if (a === "nutp") { S.nutP = id; if ($("nutbox")) $("nutbox").innerHTML = nutBlock(); }
     else if (a === "calplanopen") { S.calPlanOpen = true; renderCal(); }
-    else if (a === "wplus" || a === "wminus") {
+    else if (a === "wlog") { S.wOpen = !S.wOpen; renderHome(); }
+    else if (a === "wplus" || a === "wminus" || a === "wdel") {
+      if (a === "wplus") { var nowT = Date.now(); if (WLAST && nowT - WLAST < 900) return; WLAST = nowT; } /* v153: Doppeltippen zählt einmal */
       var wd = S.nutri["n_" + today()] ? clone(S.nutri["n_" + today()]) : { kind: "nutri", date: today(), entries: [] }, wl = Array.isArray(wd.water) ? wd.water.slice() : [];
-      if (b.dataset.hap !== "1") haptic(); if (a === "wplus") { if (wl.length < 60) wl.push({ t: nowHM(), ml: waterGlass() }); } else wl.pop();
+      if (b.dataset.hap !== "1") haptic(); if (a === "wplus") { if (wl.length < 60) wl.push({ t: nowHM(), ml: waterGlass() }); } else if (a === "wdel") wl.splice(+id, 1); else wl.pop();
       if (wl.length) wd.water = wl; else delete wd.water;
       put("n_" + today(), wd.entries.length || wd.skip || wd.water ? wd : null); renderHome();
     }

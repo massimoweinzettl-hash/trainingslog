@@ -170,3 +170,4 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v150: Koffein-Box: `ib("caf")` immer in der ersten Zeile rechts (`.cafh` Flex), nicht mehr hinter „Kaffee noch bis …“.
 - v151: Daten → Übungen: eigene Übungen ab 9 nach Muskelgruppe (`grp` oder `groupOf`, sonst „Sonstige“) als `details.flib.exo` (Zustand `S.exOwnOpen`; Gruppe der offenen Übung bleibt offen); Suche flach.
 - v152: Zeile „Koffeinfrei (unter 5 mg) ab …“ in `cafLine` entfernt (Wunsch des Nutzers).
+- v153: Trinken nachvollziehbar: Zeile `.wsub` (Knopf `wlog`) „… · zuletzt HH:MM ▾“ klappt `.wlist` auf (`S.wOpen`): Gläser mit Uhrzeit + ✕ (`wdel`, Index), Getränke aus der Essensliste nur lesend, nach Uhrzeit sortiert. Doppeltippen-Sperre `WLAST` 900 ms für `wplus`.
