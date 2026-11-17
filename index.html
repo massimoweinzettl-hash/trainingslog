@@ -667,7 +667,7 @@ button, select, input { touch-action: manipulation }
 .cbrow2 { display: flex; align-items: flex-end; gap: 10px; width: 100%; background: none; border: 0; border-bottom: 3px solid var(--line); border-radius: 0; padding: 6px 0 3px; min-height: 0; text-align: left; font-weight: 400; color: var(--ink) } .cbrow2:last-child { border-bottom-color: transparent }
 .cbn { flex: 0 0 34%; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center }
 .shelf { display: flex; flex-direction: column; gap: 2px; min-width: 0 } .shelf .jars { display: flex; align-items: flex-end; gap: 3px; flex-wrap: wrap } .shelf.big { padding: 4px 0 6px; border-bottom: 3px solid var(--line); align-self: stretch }
-.jar { width: 18px; height: 26px } .shelf.big .jar { width: 24px; height: 35px } .jar .jl { fill: var(--muted); opacity: .7 } .jar .jb { fill: none; stroke: var(--muted); stroke-width: 1.3 } .jar .jf { fill: var(--accent); opacity: .75 } .jar .jz { fill: none; stroke: var(--muted); stroke-width: 1.2 } .jar.low .jf { fill: var(--warn) } .jar.open .jl { opacity: .35 }
+.jar { width: 18px; height: 26px } .shelf.big .jar { width: 24px; height: 35px } .jar .jl { fill: var(--muted); opacity: .7 } .jar .jb { fill: none; stroke: var(--muted); stroke-width: 1.3 } .jar .jf { fill: var(--accent); opacity: .75 } .jar .jz { fill: none; stroke: var(--muted); stroke-width: 1.2 } .jar .jp { fill: #fff; opacity: .6 } .jar .jw { fill: none; stroke: #fff; stroke-width: .8; opacity: .6 } .jar .jf { opacity: .55 } .jar.low .jf { opacity: .75 } .jar.low .jf { fill: var(--warn) } .jar.open .jl { opacity: .35 }
 .jmore { font-size: 12px; color: var(--muted); align-self: center } .slow { color: var(--warn); font-weight: 600 } .dchip.dno { opacity: .7; border-style: dashed }
 .scard { border-bottom: 1px solid var(--line) } .scard .shead { flex-direction: column; align-items: stretch; gap: 2px } .scard .shead .muted { white-space: normal } .scard.off .fn { color: var(--muted) }
 .sbody { display: flex; flex-direction: column; gap: 8px; padding: 2px 0 12px } .sbody > .srow { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end } .sbody .srow label { flex: 1 1 120px } .sbody .sh { margin: 8px 0 0; font-size: 14px; display: flex; align-items: center; gap: 6px } .sbody > button { align-self: flex-start } .sbody .fnutg { margin: 0 } .fsupp .fline { flex-direction: column; align-items: stretch; gap: 2px } .fsupp .fline .muted { white-space: normal } /* v163: Präparat-Name über die ganze Zeile, Inhalt darunter */ .fsupp { margin: 10px 0 8px } .fsupp + button { margin-top: 2px }
@@ -779,8 +779,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 173;
+  var APP_VERSION = 174;
   var CHANGES = [
+    { v: 174, tab: "data", text: "Vorratsschrank: In den Dosen sieht man jetzt den Inhalt – Kapseln, Tabletten, Pulver oder Flüssigkeit." },
     { v: 173, tab: "home", text: "„Gericht berechnen“ öffnet sich jetzt direkt unter dem Knopf, nicht mehr unter der Essensliste." },
     { v: 172, tab: "home", text: "Vitamine & Mineralstoffe: Alle Balken sind grün statt blau, auch unter dem Ziel. Gelb bis rot nur, wenn es auf die Obergrenze zugeht." },
     { v: 171, tab: "home", text: "Neu unter Ernährung: „Gericht berechnen“ für einmal Gekochtes. Zutaten scannen oder suchen und abwiegen, einstellen, wie viele Portionen herauskommen, und 1 Portion eintragen. Der Rest steht danach unter „Reste“ – nächste Portion mit einem Tippen." },
@@ -5775,16 +5776,27 @@ button, select, input { touch-action: manipulation }
   /* v169 (Wunsch des Nutzers): Vorratsschrank – volle Dosen plus eine offene, die mit jeder Einnahme leerer wird. */
   var CONTS = [["dose", "Dose"], ["beutel", "Beutel"], ["flasche", "Flasche"]];
   function suppCont(it) { return it.cont || (it.per === "g" ? "beutel" : it.per === "ml" ? "flasche" : "dose"); }
-  function suppJar(fr, cls, k) { var f = Math.max(0, Math.min(1, fr)), o = '<svg class="jar ' + (cls || "") + '" viewBox="0 0 22 32" aria-hidden="true">', h;
+  /* v174 (Wunsch des Nutzers): Inhalt sichtbar – Kapseln, Tabletten, Pulver oder Flüssigkeit im gefüllten Teil. */
+  function suppFill(it) { return it.per === "g" ? "powder" : it.per === "ml" || it.form === "Tropfen" ? "liquid" : it.form === "Tablette" ? "tabs" : "caps"; }
+  function jarPat(x0, x1, top, bot, pat) {
+    var o = "", r, y, x, i = 0;
+    if (pat === "liquid") return bot - top > 2 ? '<path d="M' + x0 + " " + (top + 1).toFixed(1) + " q" + ((x1 - x0) / 4).toFixed(1) + " -1.4 " + ((x1 - x0) / 2).toFixed(1) + " 0 t" + ((x1 - x0) / 2).toFixed(1) + ' 0" class="jw"/>' : "";
+    for (r = 0, y = bot - 2.2; y - 1.2 >= top; y -= pat === "powder" ? 1.9 : 3.1, r++) {
+      for (x = x0 + 1.6 + (r % 2 ? 2.2 : 0); x <= x1 - 1.6; x += pat === "powder" ? 3.1 : 4.6) { i++;
+        if (pat === "powder") o += '<circle cx="' + (x + (i * 7 % 5) / 5).toFixed(1) + '" cy="' + (y + (i * 3 % 4) / 5).toFixed(1) + '" r=".55" class="jp"/>';
+        else if (pat === "tabs") o += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="1.25" class="jp"/>';
+        else o += '<rect x="' + (x - 1.7).toFixed(1) + '" y="' + (y - 0.85).toFixed(1) + '" width="3.4" height="1.7" rx=".85" class="jp" transform="rotate(' + (i % 3 ? 25 : -30) + " " + x.toFixed(1) + " " + y.toFixed(1) + ')"/>'; } }
+    return o; }
+  function suppJar(fr, cls, k, pat) { var f = Math.max(0, Math.min(1, fr)), o = '<svg class="jar ' + (cls || "") + '" viewBox="0 0 22 32" aria-hidden="true">', h;
     if (k === "beutel") { h = f * 20; /* v170: Standbeutel mit Zipper (z. B. Creatin) */
-      return o + '<path d="M3.5 4.5h15l1.5 24.5q.1 2-2 2H4q-2.1 0-2-2z" class="jb"/><path d="M3.6 8.2h14.8" class="jz"/>' + (h > 0 ? '<rect x="3.6" y="' + (29.6 - h).toFixed(1) + '" width="14.8" height="' + h.toFixed(1) + '" rx="1.5" class="jf"/>' : "") + "</svg>"; }
+      return o + '<path d="M3.5 4.5h15l1.5 24.5q.1 2-2 2H4q-2.1 0-2-2z" class="jb"/><path d="M3.6 8.2h14.8" class="jz"/>' + (h > 0 ? '<rect x="3.6" y="' + (29.6 - h).toFixed(1) + '" width="14.8" height="' + h.toFixed(1) + '" rx="1.5" class="jf"/>' + jarPat(3.6, 18.4, 29.6 - h, 29.6, pat) : "") + "</svg>"; }
     if (k === "flasche") { h = f * 19;
-      return o + '<rect x="8" y="1" width="6" height="4" rx="1" class="jl"/><path d="M8.5 5h5v3.5q5.5 1.5 5.5 6V28q0 3-3 3H6q-3 0-3-3V14.5q0-4.5 5.5-6z" class="jb"/>' + (h > 0 ? '<rect x="4.5" y="' + (29.6 - h).toFixed(1) + '" width="13" height="' + h.toFixed(1) + '" rx="2" class="jf"/>' : "") + "</svg>"; }
-    h = f * 24; return o + '<rect x="5" y="1" width="12" height="5" rx="1.5" class="jl"/><rect x="2" y="6" width="18" height="25" rx="4" class="jb"/>' + (h > 0 ? '<rect x="3.5" y="' + (30 - h).toFixed(1) + '" width="15" height="' + h.toFixed(1) + '" rx="2.5" class="jf"/>' : "") + "</svg>"; }
+      return o + '<rect x="8" y="1" width="6" height="4" rx="1" class="jl"/><path d="M8.5 5h5v3.5q5.5 1.5 5.5 6V28q0 3-3 3H6q-3 0-3-3V14.5q0-4.5 5.5-6z" class="jb"/>' + (h > 0 ? '<rect x="4.5" y="' + (29.6 - h).toFixed(1) + '" width="13" height="' + h.toFixed(1) + '" rx="2" class="jf"/>' + jarPat(4.5, 17.5, 29.6 - h, 29.6, pat) : "") + "</svg>"; }
+    h = f * 24; return o + '<rect x="5" y="1" width="12" height="5" rx="1.5" class="jl"/><rect x="2" y="6" width="18" height="25" rx="4" class="jb"/>' + (h > 0 ? '<rect x="3.5" y="' + (30 - h).toFixed(1) + '" width="15" height="' + h.toFixed(1) + '" rx="2.5" class="jf"/>' + jarPat(3.5, 18.5, 30 - h, 30, pat) : "") + "</svg>"; }
   function suppShelf(fd, it, big) {
     if (!it.pack || !it.stock) return ""; var tot = suppLeft(fd, it); if (tot == null) return ""; var sp = suppSplit(it, tot), r = suppRange(fd, it), low = r && r.days <= 7 ? " low" : "", n = Math.min(sp[1], big ? 12 : 6);
     var ck = suppCont(it), un = it.per === "st" ? "" : " " + it.per;
-    var jars = (sp[0] > 0 || !sp[1] ? suppJar(sp[0] / it.pack, "open" + low, ck) : "") + new Array(n + 1).join(suppJar(1, "full" + low, ck)) + (sp[1] > n ? '<span class="jmore">+' + (sp[1] - n) + "</span>" : "");
+    var jars = (sp[0] > 0 || !sp[1] ? suppJar(sp[0] / it.pack, "open" + low, ck, suppFill(it)) : "") + new Array(n + 1).join(suppJar(1, "full" + low, ck, suppFill(it))) + (sp[1] > n ? '<span class="jmore">+' + (sp[1] - n) + "</span>" : "");
     return '<div class="shelf' + (big ? " big" : "") + '"><div class="jars">' + jars + '</div><span class="small muted">' + (sp[0] > 0 ? "offen " + fmt(sp[0]) + "/" + fmt(it.pack) + un : "keine offen") + (sp[1] ? " · " + sp[1] + " voll" : "") + "</span></div>";
   }
   function suppCard(fd, it) {
