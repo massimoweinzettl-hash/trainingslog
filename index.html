@@ -662,7 +662,9 @@ button, select, input { touch-action: manipulation }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
 .wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .wsub { margin: 0; align-self: flex-start; color: var(--muted); padding: 0 } .wlist { list-style: none; margin: 0; padding: 0; font-size: 14px } .wlist li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--line) } .wlist li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .cafh { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between } .cafh > .ibtn { flex: none; margin-top: -2px }
-.dlnx { font-weight: 400; opacity: .8 } .fsupp .fline { flex-direction: column; align-items: stretch; gap: 2px } .fsupp .fline .muted { white-space: normal } /* v163: Präparat-Name über die ganze Zeile, Inhalt darunter */ .fsupp { margin: 10px 0 8px } .fsupp + button { margin-top: 2px }
+.dlnx { font-weight: 400; opacity: .8 } .slow { color: var(--warn); font-weight: 600 } .dchip.dno { opacity: .7; border-style: dashed }
+.scard { border-bottom: 1px solid var(--line) } .scard .shead { flex-direction: column; align-items: stretch; gap: 2px } .scard .shead .muted { white-space: normal } .scard.off .fn { color: var(--muted) }
+.sbody { display: flex; flex-direction: column; gap: 8px; padding: 2px 0 12px } .sbody > .srow { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end } .sbody .srow label { flex: 1 1 120px } .sbody .sh { margin: 8px 0 0; font-size: 14px; display: flex; align-items: center; gap: 6px } .sbody > button { align-self: flex-start } .sbody .fnutg { margin: 0 } .fsupp .fline { flex-direction: column; align-items: stretch; gap: 2px } .fsupp .fline .muted { white-space: normal } /* v163: Präparat-Name über die ganze Zeile, Inhalt darunter */ .fsupp { margin: 10px 0 8px } .fsupp + button { margin-top: 2px }
 .ver { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums } [data-look] .ver { color: color-mix(in srgb, var(--ink) 70%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
 .lookbtn { width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; display: grid; place-items: center }
 .lookbtn svg { width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round }
@@ -771,8 +773,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 164;
+  var APP_VERSION = 165;
   var CHANGES = [
+    { v: 165, tab: "data", text: "Nahrungsergänzung neu: eine Karte je Präparat (Daten → Essen). Antippen und alles so eintragen, wie es auf der Packung steht – Inhalt pro Portion, Kapseln pro Portion, wie oft, seit wann. Neu: Vorrat mit „+ 1 Packung“; die App zeigt, wie lange er reicht, und warnt unter „Ernährung“, wenn nur noch 7 Tage übrig sind." },
     { v: 164, tab: "data", text: "Scan: „Werte anpassen“ springt jetzt direkt zum geöffneten Produkt mit den Eingabefeldern, statt nur oben in der Lebensmittelliste zu landen." },
     { v: 163, tab: "data", text: "Meine Präparate: Der Name nutzt die ganze Zeile, der Inhalt steht darunter." },
     { v: 162, tab: "data", text: "Korrektur: Präparate unter „Meine Präparate“ lassen sich wieder antippen und bearbeiten." },
@@ -3769,6 +3772,7 @@ button, select, input { touch-action: manipulation }
           if (typeof x.cat === "string" && FCATS.indexOf(x.cat) >= 0) ci.cat = x.cat;
           if (typeof x.code === "string" && /^\d{8,14}$/.test(x.code)) ci.code = x.code;
           if (isN(x.caf) && x.caf >= 0 && x.caf < 5000) ci.caf = x.caf;
+          if (typeof x.form === "string" && SFORMS.some(function (f) { return f[0] === x.form; })) ci.form = x.form; if (isN(x.pack) && x.pack > 0) ci.pack = x.pack; if (x.stock && DRE.test(x.stock.d) && isN(x.stock.c) && x.stock.c >= 0) ci.stock = { d: x.stock.d, c: x.stock.c }; /* v165 */
           if (Array.isArray(x.n) && x.n.length >= 21 && x.n.length <= NUTK.length && x.n.every(function (v) { return v === null || isN(v); })) ci.n = x.n; return ci;
         });
         return { kind: "food", v: d.v === 5 || d.v === 4 || d.v === 3 || d.v === 2 ? d.v : 0, items: items,
@@ -5455,8 +5459,10 @@ button, select, input { touch-action: manipulation }
   function dailyLine(t, fd) {
     var all = dailyAll(t, fd); if (!all.length) return "";
     var nd = S.nutri["n_" + t], sk = nd && nd.skip || [];
-    return '<div class="dlyline"><span class="small muted">Einnahme:</span>' + all.map(function (x) { var it = foodItem(fd, x.item), on = sk.indexOf(x.id) < 0;
-      return '<button class="dchip" data-act="dskip" data-id="' + x.id + '" aria-pressed="' + on + '" aria-label="' + esc(it ? it.name : "?") + (on ? " genommen, antippen zum Auslassen" : " ausgelassen") + '">' + (on ? "✓ " : "") + esc(shortName(it ? it.name : "?")) + (dlEvery(x) > 1 ? '<span class="dlnx">' + (dlDue(x, t) ? " · heute dran" : " · " + WDAYS[dateOf(dlNext(x, t)).getDay()].slice(0, 2) + ".") + "</span>" : "") + "</button>"; }).join("") + "</div>";
+    return '<div class="dlyline"><span class="small muted">Einnahme:</span>' + all.map(function (x) { var it = foodItem(fd, x.item), on = sk.indexOf(x.id) < 0, rg = it ? suppRange(fd, it) : null,
+        low = rg && t === today() && rg.days <= 7 ? '<span class="slow"> · ' + (rg.days ? "noch " + rg.days + " T." : "leer") + "</span>" : ""; /* v165: Nachkauf-Hinweis */
+      if (!dlDue(x, t)) return '<span class="dchip dno">' + esc(shortName(it ? it.name : "?")) + '<span class="dlnx"> · ' + WDAYS[dateOf(dlNext(x, t)).getDay()].slice(0, 2) + ".</span>" + low + "</span>"; /* v165: an Tagen ohne Einnahme nichts abzuhaken */
+      return '<button class="dchip" data-act="dskip" data-id="' + x.id + '" aria-pressed="' + on + '" aria-label="' + esc(it ? it.name : "?") + (on ? " genommen, antippen zum Auslassen" : " ausgelassen") + '">' + (on ? "✓ " : "") + esc(shortName(it ? it.name : "?")) + (dlEvery(x) > 1 ? '<span class="dlnx"> · heute dran</span>' : "") + low + "</button>"; }).join("") + "</div>";
   }
   /* v140 (Wunsch des Nutzers: Trinkerinnerung): Wasser-Zähler unter Ernährung. n_<Datum>.water = [{t: "HH:MM", ml}].
      Ziel automatisch nach EFSA (Gesamtwasser 2,5 l Männer / 2,0 l Frauen, ≈ 80 % davon aus Getränken) + 0,5 l an Trainingstagen,
@@ -5697,15 +5703,69 @@ button, select, input { touch-action: manipulation }
     var u = st ? "" : " " + it.per;
     return v.map(function (x) { return '<option value="' + x + '"' + (x === cur ? " selected" : "") + ">" + fmt(x) + u + "</option>"; }).join("");
   }
+  /* v165 (Wunsch des Nutzers: „so unübersichtlich“): Nahrungsergänzung als eine Karte je Präparat – Werte so eintippen, wie sie auf dem Etikett stehen
+     (pro Portion), Portion, Rhythmus, Beginn und Vorrat an einer Stelle. Intern bleiben die Werte je Stück bzw. je 100 g/ml, die Einnahme in food.daily. */
+  var SFORMS = [["Kapsel", "Kapseln"], ["Tablette", "Tabletten"], ["Tropfen", "Tropfen"], ["Softgel", "Softgels"], ["Messlöffel", "Messlöffel"], ["Stück", "Stück"]];
+  function suppUnit(it, n) { if (it.per !== "st") return it.per; var f = SFORMS.filter(function (x) { return x[0] === it.form; })[0] || SFORMS[0]; return n === 1 ? f[0] : f[1]; }
+  function suppAct(fd, id) { var t = today(), l = (fd.daily || []).filter(function (x) { return x.item === id && (!x.to || x.to >= t); }); return l.filter(function (x) { return x.from <= t; })[0] || l[0] || null; }
+  function suppPortion(fd, it) { var a = suppAct(fd, it.id); return a ? a.amt : it.amt || 1; }
+  function suppFac(it, amt) { return it.per === "st" ? amt : amt / 100; }
+  /* Vorrat: it.stock = {d, c} (Stand am Tag d nach der Einnahme); verbraucht wird an jedem fälligen, nicht ausgelassenen Tag danach. */
+  function suppLeft(fd, it) {
+    if (!it.stock || !isN(it.stock.c)) return null; var c = it.stock.c, t = today(), d = addDays(it.stock.d, 1), n = 0;
+    while (d <= t && n++ < 800) { var nd = S.nutri["n_" + d], sk = nd && nd.skip || [];
+      (fd.daily || []).forEach(function (x) { if (x.item === it.id && x.from <= d && (!x.to || x.to >= d) && sk.indexOf(x.id) < 0 && dlDue(x, d)) c -= x.amt; }); d = addDays(d, 1); }
+    return Math.max(0, Math.round(c * 10) / 10);
+  }
+  /* Wie lange reicht der Vorrat? Letzter Tag mit voller Portion (ab morgen gezählt), dazu die Tage bis dahin. */
+  function suppRange(fd, it) {
+    var c = suppLeft(fd, it), a = suppAct(fd, it.id); if (c == null || !a) return null; var doses = Math.floor(c / a.amt + 1e-9), t = today(), d = t, k = 0;
+    if (doses <= 0) return { left: c, days: 0, last: null };
+    for (var i = 1; i < 2000 && k < doses; i++) { d = addDays(t, i); if (dlDue(a, d)) k++; }
+    return { left: c, days: Math.round((dateOf(d) - dateOf(t)) / 864e5) + dlEvery(a) - 1, last: d };
+  }
+  function suppStatus(fd, it, short) {
+    var a = suppAct(fd, it.id); if (!a) return "pausiert";
+    var r = suppRange(fd, it), p = fmt(a.amt) + " " + suppUnit(it, a.amt) + " " + everyLab(dlEvery(a)) + (a.from > today() ? " ab " + dfmt(a.from) : "");
+    if (!r) return p; if (!r.days) return p + ' · <b class="slow">Vorrat leer</b>';
+    return p + " · " + (r.days <= 7 ? '<b class="slow">nur noch ' + r.days + (r.days === 1 ? " Tag" : " Tage") + "</b>" : "reicht bis " + dfmt(addDays(r.last, dlEvery(a) - 1)));
+  }
+  function suppCard(fd, it) {
+    var open = S.fOpen === it.id, a = suppAct(fd, it.id), pa = suppPortion(fd, it), f = suppFac(it, pa), raw = nutRaw(it), bb = nutBase(it), r = suppRange(fd, it), left = suppLeft(fd, it);
+    var h = '<div class="scard' + (open ? " open" : "") + (a ? "" : " off") + '"><button class="fline shead" data-act="fiopen" data-id="' + it.id + '" aria-expanded="' + open + '"><span class="fn">' + esc(it.name) + (it.lib ? "" : ' <span class="fown">eigen</span>') + '</span><span class="muted">' + suppStatus(fd, it) + "</span></button>";
+    if (!open) return h + "</div>";
+    var u1 = it.per === "st" ? "" : " " + it.per;
+    h += '<div class="sbody">' + (it.lib ? '<p class="small muted">Vorlage aus der Bibliothek – änderst du etwas, wird es dein eigener Eintrag.</p>' : "") +
+      '<label>Name<input class="fname" data-fi="name" data-id="' + it.id + '" value="' + esc(it.name) + '" autocomplete="off"></label>' +
+      '<div class="srow"><label>Portion<select data-spa="' + it.id + '" aria-label="Portion">' + amtOpts(it, pa) + "</select></label>" +
+      (it.per === "st" ? '<label>Form<select data-fi="form" data-id="' + it.id + '">' + SFORMS.map(function (x) { return '<option value="' + x[0] + '"' + ((it.form || "Kapsel") === x[0] ? " selected" : "") + ">" + x[1] + "</option>"; }).join("") + "</select></label>" : "") + "</div>" +
+      (a ? '<div class="srow"><label>Einnahme' + selWheel('data-dle="' + a.id + '" aria-label="Rhythmus"', rng(1, 14, 1), dlEvery(a), everyLab) + '</label><label>seit<input type="date" class="dlfrom" data-dlf="' + a.id + '" value="' + a.from + '" max="' + today() + '"></label></div>' +
+        '<button class="ghost xs" data-act="dldel" data-id="' + a.id + '">Pausieren</button>'
+        : '<button class="primary xs" data-act="dladd" data-id="' + it.id + '">Ab heute einnehmen</button>') +
+      '<h4 class="sh">Vorrat' + ib("svr") + "</h4>" + itx("svr", "Trag ein, wie viel du gerade noch hast (nach der heutigen Einnahme), z. B. Kapseln in der offenen Packung. Mit „+ 1 Packung“ kommen weitere volle Packungen dazu. Die App zieht an jedem Einnahmetag die Portion ab und warnt unter „Ernährung“, wenn nur noch 7 Tage übrig sind. Leer lassen, wenn du das nicht brauchst.") +
+      '<div class="srow"><label>Packung' + '<span class="unitin"><input data-fi="pack" data-id="' + it.id + '" value="' + (it.pack ? fmt(it.pack) : "") + '" inputmode="numeric" placeholder="z. B. 210"><span class="muted">' + (it.per === "st" ? suppUnit(it, 2) : it.per) + "</span></span></label>" +
+      '<label>Noch da<span class="unitin"><input data-sst="' + it.id + '" value="' + (left != null ? fmt(left) : "") + '" inputmode="decimal" placeholder="–"><span class="muted">' + (it.per === "st" ? suppUnit(it, 2) : it.per) + "</span></span></label></div>" +
+      (it.pack ? '<button class="xs" data-act="sstp" data-id="' + it.id + '">+ 1 Packung (' + fmt(it.pack) + ")</button>" : "") +
+      (r ? '<p class="small' + (r.days <= 7 ? " slow" : " muted") + '">' + (r.days ? "Reicht für " + r.days + " Tage, bis " + WDAYS[dateOf(addDays(r.last, dlEvery(a) - 1)).getDay()].slice(0, 2) + ". " + dfmt(addDays(r.last, dlEvery(a) - 1)) : "Vorrat leer – Zeit nachzukaufen.") + "</p>" : "") +
+      '<h4 class="sh">Inhalt pro Portion (' + fmt(pa) + " " + suppUnit(it, pa) + ")" + ib("sinh") + "</h4>" + itx("sinh", "So, wie es auf dem Etikett steht: meist „pro Tagesportion“. Ändert sich die Portion, rechnet die App den Inhalt mit. Bei Omega-3 EPA und DHA getrennt eintragen, Omega-3 gesamt ergibt sich dann von selbst. Leer = nicht enthalten.") +
+      '<div class="fnutg">' + NUTK.map(function (k, i) { if (i < 4 && !(raw && raw[i] != null)) return ""; var v = raw && raw[i] != null ? nutRound(raw[i] * f) : null;
+        return "<label>" + k[1] + " " + k[2] + '<input data-fnp="' + i + '" data-id="' + it.id + '" value="' + (v != null ? fmt(v) : "") + '" inputmode="decimal" placeholder="' + (i === IO3 && bb && bb[IO3] && (!raw || raw[IO3] == null) ? "= " + fmt(nutRound(bb[IO3] * f)) : "–") + '"></label>'; }).join("") + "</div>" +
+      '<details class="fnut"><summary class="small">Mehr: Kalorien, Barcode, Gruppe</summary><div class="fitem">' +
+      '<label>kcal je ' + (it.per === "st" ? suppUnit(it, 1) : "100" + u1) + '<input data-fi="kcal" data-id="' + it.id + '" value="' + fmt(it.kcal) + '" inputmode="decimal"></label><label>Eiweiß g<input data-fi="p" data-id="' + it.id + '" value="' + fmt(it.p) + '" inputmode="decimal"></label>' +
+      '<label class="fsp2">Barcode<input data-fi="code" data-id="' + it.id + '" value="' + esc(it.code || "") + '" inputmode="numeric" placeholder="optional" autocomplete="off"></label>' +
+      '<label class="fcatsel">Gruppe<select data-fi="cat" data-id="' + it.id + '">' + FCATS.map(function (c) { return "<option" + (c === (it.cat || "Eigene") ? " selected" : "") + ">" + c + "</option>"; }).join("") + "</select></label>" +
+      (it.lib ? "" : '<button class="ghost xs" data-act="fidel" data-id="' + it.id + '">' + (LIBMAP[it.id] ? "Auf Vorlage zurücksetzen" : "Löschen") + "</button>") + "</div></details></div>";
+    return h + "</div>";
+  }
   function dailyManage(fd) {
-    var t = today(), act = (fd.daily || []).filter(function (x) { return !x.to || x.to >= t; });
-    var h = "<h2>Nahrungsergänzung" + ib("dly") + "</h2>" + itx("dly", "Vitamine, Mineralstoffe, Omega-3 und Co. – getrennt von den Lebensmitteln, weil du hier meist mehr selbst einträgst (Inhalt je Kapsel laut Packung, bei Omega-3 EPA und DHA getrennt). Oben steht, was du regelmäßig nimmst (z. B. Vitamine, Omega-3), täglich oder alle paar Tage. Zählt automatisch bei Vitamine &amp; Mineralstoffe mit, ohne Kalorien. Bei „alle n Tage“ verteilt die App die Dosis gleichmäßig auf die Tage (Dosis ÷ n) – das passt für Stoffe, die der Körper speichert (Vitamin D, A, E, K, B12, Eisen). Wasserlösliche wie Vitamin C scheidet er schneller aus, dort ist die Rechnung geschönt. Den Tag beginnt der Rhythmus mit „seit“. Einen Tag auslassen: unter „Ernährung“ antippen.");
-    h += act.map(function (x) { var it = foodItem(fd, x.item);
-      return '<div class="dlrow"><span>' + esc(it ? it.name : "?") + '</span><label class="dlamt"><select data-dl="' + x.id + '" aria-label="Menge ' + esc(it ? it.name : "") + '">' + amtOpts(it, x.amt) + "</select>" + (it && it.per === "st" ? "×" : "") + '</label><label class="dlamt">' + selWheel('data-dle="' + x.id + '" aria-label="Rhythmus ' + esc(it ? it.name : "") + '"', rng(1, 14, 1), dlEvery(x), everyLab) + '</label><label class="dlamt">seit<input type="date" class="dlfrom" data-dlf="' + x.id + '" value="' + x.from + '" max="' + t + '" aria-label="' + esc(it ? it.name : "") + ' täglich seit"></label><button class="ghost xs" data-act="dldel" data-id="' + x.id + '" aria-label="' + esc(it ? it.name : "") + ' nicht mehr täglich">✕</button></div>'; }).join("");
-    return h + '<div class="fpadd"><input autocorrect="off" class="cbq" data-cb="dl" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="+ regelmäßig einnehmen …" aria-label="Einnahme hinzufügen"><div class="cbres tpres" id="cbr-dl" hidden></div></div>' +
-      (function () { var sp = foodAll(fd).filter(function (x) { return isSupp(fd, x); }).sort(function (a, b) { return (a.lib ? 1 : 0) - (b.lib ? 1 : 0) || a.name.localeCompare(b.name, "de"); });
-        return '<details class="flib fsupp"' + (S.fsOpen || sp.some(function (x) { return x.id === S.fOpen; }) ? " open" : "") + '><summary>Meine Präparate <span class="muted">(' + sp.length + ")</span></summary>" + sp.map(function (x) { return foodLine(fd, x, "", true); }).join("") + "</details>"; })() +
-      '<button data-act="fsadd">+ Präparat</button>';
+    var sp = foodAll(fd).filter(function (x) { return isSupp(fd, x); }), on = sp.filter(function (x) { return suppAct(fd, x.id); }),
+      off = sp.filter(function (x) { return !suppAct(fd, x.id) && !x.lib; }), tpl = sp.filter(function (x) { return !suppAct(fd, x.id) && x.lib; }), byN = function (a, b) { return a.name.localeCompare(b.name, "de"); };
+    var h = "<h2>Nahrungsergänzung" + ib("dly") + "</h2>" + itx("dly", "Je Präparat eine Karte: antippen und alles eintragen, wie es auf der Packung steht – Inhalt pro Portion, wie viele Kapseln eine Portion sind, wie oft du sie nimmst und auf Wunsch deinen Vorrat. Zählt automatisch bei Vitamine &amp; Mineralstoffe mit. Bei „alle n Tage“ verteilt die App die Portion gleichmäßig auf die Tage (Portion ÷ n) – passt für Stoffe, die der Körper speichert (Vitamin D, A, E, K, B12, Eisen). Einen Tag auslassen: unter „Ernährung“ antippen.");
+    h += on.sort(byN).map(function (x) { return suppCard(fd, x); }).join("") + off.sort(byN).map(function (x) { return suppCard(fd, x); }).join("");
+    if (!sp.length || !on.length && !off.length) h += '<p class="small muted">Noch nichts eingetragen.</p>';
+    h += '<button data-act="fsadd">+ Präparat</button>';
+    if (tpl.length) h += '<details class="flib fsupp"' + (tpl.some(function (x) { return x.id === S.fOpen; }) || S.fsOpen ? " open" : "") + '><summary>Vorlagen <span class="muted">(' + tpl.length + ")</span></summary>" + tpl.sort(byN).map(function (x) { return suppCard(fd, x); }).join("") + "</details>";
+    return h;
   }
   function foodManage(fd) {
     /* v124 (Wunsch des Nutzers): Tägliche Einnahme, Mahlzeiten und Lebensmittel als getrennte Blöcke. */
@@ -6237,7 +6297,7 @@ button, select, input { touch-action: manipulation }
       S.dataSec = "ex"; S.exOpen = id; S.exFilter = ""; showTab("data");
       var xb = document.querySelector('[data-act="exopen"][data-id="' + id + '"]'); if (xb) { xb.scrollIntoView({ block: "start" }); window.scrollBy(0, -70); xb.focus({ preventScroll: true }); }
     }
-    else if (a === "fiopen" && b.closest(".fsupp")) { S.fOpen = S.fOpen === id ? null : id; S.fsOpen = true; var yso = window.scrollY; renderData(); window.scrollTo(0, yso); var fo3 = document.querySelector('.fsupp [data-act="fiopen"][data-id="' + id + '"]'); if (fo3) fo3.focus({ preventScroll: true }); } /* v162: Präparate stehen außerhalb von #flist */
+    else if (a === "fiopen" && (b.closest(".fsupp") || b.closest(".scard"))) { S.fOpen = S.fOpen === id ? null : id; S.fsOpen = true; var yso = window.scrollY; renderData(); window.scrollTo(0, yso); var fo3 = document.querySelector('[data-act="fiopen"][data-id="' + id + '"]'); if (fo3) fo3.focus({ preventScroll: true }); } /* v162: Präparate stehen außerhalb von #flist */
     else if (a === "fiopen") { S.fOpen = S.fOpen === id ? null : id; $("flist").innerHTML = foodListHtml(foodDoc()); var fo2 = document.querySelector('[data-act="fiopen"][data-id="' + id + '"]'); if (fo2) fo2.focus(); }
     else if (a === "fclear") { S.fFilter = ""; var ff = $("ffilter"); ff.value = ""; b.hidden = true; $("flist").innerHTML = foodListHtml(foodDoc()); ff.focus(); }
     else if (a === "fgo") { S.dataSec = "food"; showTab("data"); window.scrollTo(0, 0); }
@@ -6284,13 +6344,14 @@ button, select, input { touch-action: manipulation }
       nutriAdd(today(), { name: $("ne-name").value.trim().slice(0, 60) || "Schätzung", p: ep, kcal: ek, f: Math.max(0, ef), c: Math.max(0, ec), est: true }); S.nForm = null; renderHome();
     }
     else if (a === "ndel") { if (!S.nutri["n_" + today()]) { renderHome(); return; } var nd = clone(S.nutri["n_" + today()]); nd.entries = nd.entries.filter(function (e) { return e.id !== id; }); put("n_" + today(), nd.entries.length || (nd.skip && nd.skip.length) ? nd : null); renderHome(); } /* v121: skip behalten */
+    else if (a === "sstp") { var fdp = clone(foodDoc()), itp = ownItem(fdp, id); if (!itp || !itp.pack) return; var lp = suppLeft(foodDoc(), foodItem(foodDoc(), id)) || 0; itp.stock = { d: today(), c: Math.round((lp + itp.pack) * 10) / 10 }; foodSave(fdp); var ysp = window.scrollY; renderData(); renderHome(); window.scrollTo(0, ysp); }
     else if (a === "dladd") { var fdd = clone(foodDoc()), itdd = foodItem(fdd, id); if (!itdd) return; fdd.daily = (fdd.daily || []).concat([{ id: rid("dl"), item: itdd.id, amt: itdd.amt || 1, from: today() }]); foodSave(fdd); var ydd = window.scrollY; renderData(); renderHome(); window.scrollTo(0, ydd); }
     else if (/^f(madd|mdel|pdel|iadd|idel|sadd)$/.test(a)) {
       var fd = clone(foodDoc()), mm = fd.meals.filter(function (m) { return m.id === id; })[0];
       if (a === "fmadd") fd.meals.push({ id: rid("fm"), name: fd.meals.length ? "Mahlzeit " + (fd.meals.length + 1) : "Frühstück", parts: [] });
       else if (a === "fmdel") { if (!arm(b, "Mahlzeit löschen?")) return; fd.meals = fd.meals.filter(function (m) { return m.id !== id; }); }
       else if (a === "fpdel") { if (mm) mm.parts.splice(+b.dataset.n, 1); }
-      else if (a === "fsadd") { var nfs = { id: rid("fd"), name: "Neues Präparat", per: "st", p: 0, f: 0, c: 0, kcal: 0, amt: 1, cat: "Nahrungsergänzung" }; fd.items.push(nfs); S.fOpen = nfs.id; S.fsOpen = 1; }
+      else if (a === "fsadd") { var nfs = { id: rid("fd"), name: "Neues Präparat", per: "st", p: 0, f: 0, c: 0, kcal: 0, amt: 1, cat: "Nahrungsergänzung", form: "Kapsel" }; fd.items.push(nfs); fd.daily = (fd.daily || []).concat([{ id: rid("dl"), item: nfs.id, amt: 1, from: today() }]); S.fOpen = nfs.id; foodFocus(nfs.id); }
       else if (a === "fiadd") { var nfi = { id: rid("fd"), name: "Neues Lebensmittel", per: "g", p: 0, f: 0, c: 0, kcal: 0, amt: 100, cat: "Eigene" }; fd.items.push(nfi); S.fOpen = nfi.id; S.fFilter = ""; }
       else if (a === "fidel" && LIBMAP[id]) { if (!arm(b, "Zurücksetzen?")) return; fd.items = fd.items.filter(function (x) { return x.id !== id; }); }
       else if (a === "fidel") {
@@ -6501,6 +6562,22 @@ button, select, input { touch-action: manipulation }
     else if (t.id === "rep-from" || t.id === "rep-to") { if (DRE.test(t.value)) S[t.id === "rep-from" ? "repFrom" : "repTo"] = t.value; }
     else if (t.id === "set-glass" || t.id === "set-wgoal") { if (S.person) { var pw = clone(S.person); if (t.id === "set-glass") pw.glass = +t.value; else pw.wgoal = t.value ? +t.value : null; saveSettings(null, pw); renderHome(); if ($("setmsg")) $("setmsg").textContent = "Gespeichert."; } }
     else if (t.id === "pe-bed") { if (S.person) { var pb2 = Object.assign({}, S.person, { bed: t.value !== "23:00" ? t.value : null }); saveSettings(null, pb2); renderHome(); if ($("setmsg")) $("setmsg").textContent = "Schlafenszeit gespeichert."; } }
+    else if (t.dataset.spa) {
+      var fds = clone(foodDoc()), its = ownItem(fds, t.dataset.spa), vs = num(t.value); if (!its || vs == null || vs <= 0) return; its.amt = vs;
+      var ds = suppAct(fds, its.id); if (ds && ds.amt !== vs) { if (ds.from < today()) { ds.to = addDays(today(), -1); var ns = { id: rid("dl"), item: ds.item, amt: vs, from: today() }; if (ds.every) ns.every = ds.every; fds.daily.push(ns); } else ds.amt = vs; } /* frühere Tage behalten die alte Portion */
+      var yspa = window.scrollY; foodSave(fds); renderData(); renderHome(); window.scrollTo(0, yspa);
+    }
+    else if (t.dataset.sst) {
+      var fdt = clone(foodDoc()), itt = ownItem(fdt, t.dataset.sst); if (!itt) return; var vt = num(t.value);
+      if (t.value.trim() === "") delete itt.stock; else if (vt != null && vt >= 0 && vt < 1e6) itt.stock = { d: today(), c: vt }; else return;
+      var yst = window.scrollY; foodSave(fdt); renderData(); renderHome(); window.scrollTo(0, yst);
+    }
+    else if (t.dataset.fnp != null) {
+      var fdn4 = clone(foodDoc()), itn4 = ownItem(fdn4, t.dataset.id); if (!itn4) return;
+      var vn4 = t.value.trim() === "" ? null : num(t.value); if (vn4 != null && (vn4 < 0 || vn4 > 1e7)) return; var fc4 = suppFac(itn4, suppPortion(fdn4, itn4));
+      var arr4 = nutPad(nutRaw(itn4) || NUTK.map(function () { return null; })).slice(); arr4[+t.dataset.fnp] = vn4 == null ? null : vn4 / fc4; itn4.n = arr4; /* intern je Stück bzw. je 100 g/ml */
+      var ysn = window.scrollY; foodSave(fdn4); renderData(); renderHome(); window.scrollTo(0, ysn);
+    }
     else if (t.dataset.dle) {
       var fde = clone(foodDoc()), de = (fde.daily || []).filter(function (x) { return x.id === t.dataset.dle; })[0], ve = +t.value; if (!de || !(ve >= 1 && ve <= 14) || de.to && de.to < today()) return;
       if (de.from < today()) { de.to = addDays(today(), -1); var ne = { id: rid("dl"), item: de.item, amt: de.amt, from: today() }; if (ve > 1) ne.every = ve; fde.daily.push(ne); } else { if (ve > 1) de.every = ve; else delete de.every; } /* frühere Tage behalten den alten Rhythmus */
@@ -6528,6 +6605,8 @@ button, select, input { touch-action: manipulation }
         var it3 = ownItem(fd3, t.dataset.id); if (!it3) return; var f3 = t.dataset.fi;
         if (f3 === "name") it3.name = t.value.trim().slice(0, 80) || it3.name;
         else if (f3 === "code") { var cd = t.value.replace(/\D/g, ""); if (cd && (cd.length < 8 || cd.length > 14)) return; if (cd) it3.code = cd; else delete it3.code; }
+        else if (f3 === "form") it3.form = SFORMS.some(function (x) { return x[0] === t.value; }) ? t.value : "Kapsel";
+        else if (f3 === "pack") { var vpk = num(t.value); if (t.value.trim() === "" || !vpk) delete it3.pack; else if (vpk > 0 && vpk < 1e5) it3.pack = vpk; else return; }
         else if (f3 === "per") it3.per = FPER[t.value] ? t.value : "g";
         else if (f3 === "cat") it3.cat = FCATS.indexOf(t.value) >= 0 ? t.value : "Eigene";
         else if (f3 === "caf") { var vc = num(t.value); if (t.value.trim() === "") delete it3.caf; else if (vc != null && vc >= 0 && vc < 5000) it3.caf = vc; else return; }
