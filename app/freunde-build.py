@@ -15,10 +15,14 @@ Getrennt von der Haupt-App (gleiche Adresse = gleicher Browser-Speicher):
 Gleich bleiben mit Absicht: Backup-Format (app: "trainingslog"), Plan-Code, Health-Format, Dateinamen –
 Backups lassen sich also zwischen beiden Fassungen austauschen.
 
+„Was ist neu?“: Die Freunde bekommen nicht die lange Einzelliste der Haupt-App, sondern eine kurze
+Zusammenfassung aus app/freunde-neu.json (Wunsch des Nutzers, 17.11.). Für die Version, die gerade
+eingefroren wird, muss dort ein Block stehen – sonst bricht das Skript ab.
+
 Das Skript bricht ab, sobald im Code ein „trainingslog…“-Text auftaucht, den es nicht kennt
 (z. B. ein neuer Speicherschlüssel) – dann unten in STORE oder KEEP eintragen.
 """
-import re, shutil, sys
+import json, re, shutil, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -46,11 +50,34 @@ def die(msg):
     sys.exit("freunde-build: " + msg)
 
 
+def news_js(version):
+    data = json.loads((ROOT / "app" / "freunde-neu.json").read_text(encoding="utf-8"))
+    tabs = {"home", "train", "prog", "body", "plan", "data"}
+    rows, have = [], False
+    for blk in data["versionen"]:
+        v = int(blk["v"])
+        if v > version:
+            continue
+        have = have or v == version
+        for pt in blk["punkte"]:
+            if pt["tab"] not in tabs or not pt["text"].strip():
+                die("freunde-neu.json: ungültiger Punkt bei v%d" % v)
+            rows.append("    { v: %d, tab: %s, text: %s }" % (v, json.dumps(pt["tab"]), json.dumps(pt["text"], ensure_ascii=False)))
+    if not have:
+        die("freunde-neu.json: bitte erst einen kurzen Block für v%d eintragen (Zusammenfassung für die Freunde)" % version)
+    return ",\n".join(rows)
+
+
 def build_index(src):
     m = re.search(r"var APP_VERSION = (\d+);", src)
     if not m:
         die("APP_VERSION nicht gefunden")
     version = int(m.group(1))
+    a = src.find("var CHANGES = [\n")
+    b = src.find("\n  ];", a)
+    if a < 0 or b < 0:
+        die("CHANGES-Liste nicht gefunden")
+    src = src[:a] + "var CHANGES = [ /* Freunde-Version: kurze Liste aus app/freunde-neu.json */\n" + news_js(version) + src[b:]
     cache = "%s-v%d" % (NEW, version)
 
     # Offline-Cache: Name muss zu sw.js passen.

@@ -1,0 +1,8 @@
+{
+  "_hinweis": "Kurze „Was ist neu?“-Liste NUR für die Freunde-Version (freunde/). Bei jedem Neuerzeugen einen Block für die neue Version anhängen: wenige zusammengefasste Punkte statt aller einzelnen Änderungen seit dem letzten Freunde-Stand. tab = home | train | prog | body | plan | data (dort erscheint der gelbe Punkt).",
+  "versionen": [
+    { "v": 127, "punkte": [
+      { "tab": "home", "text": "Willkommen! Das ist deine eigene Version des Trainingslogs. Deine Daten bleiben nur auf deinem Gerät – denk ab und zu an ein Backup unter Daten → Sicherung." }
+    ] }
+  ]
+}
