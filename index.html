@@ -761,8 +761,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 147;
+  var APP_VERSION = 148;
   var CHANGES = [
+    { v: 148, tab: "home", text: "Trinken erkennt Getränke zuverlässiger: Alles aus der Gruppe „Getränke“ zählt jetzt immer mit (auch wenn es in g angelegt ist), egal ob selbst angelegt oder gescannt. Zählt ein Getränk nicht, stell es unter „Lebensmittel bearbeiten“ auf die Gruppe „Getränke“." },
     { v: 147, tab: "home", text: "Getränke zählen jetzt automatisch beim Trinken mit: Was du in ml einträgst oder scannst (Wasser, Kaffee, Tee, Saft, Milch …), landet zusätzlich zu deinen Gläsern im Zähler. Darunter steht, wie viel Wasser und wie viel andere Getränke es waren." },
     { v: 146, tab: "home", text: "Der Wasser-Zähler steht jetzt oben zwischen Koffein und Kalorien. Neuer Versuch fürs Klick-Feedback beim Antippen des Glases (iPhone ab iOS 18)." },
     { v: 145, tab: "home", text: "Wasser: Das Glas selbst antippen trägt ein Glas ein, mit kurzem Klick-Feedback (auf dem iPhone ab iOS 18)." },
@@ -3727,7 +3728,7 @@ button, select, input { touch-action: manipulation }
         if (!DRE.test(d.date) || k !== "n_" + d.date) throw 0;
         var cn = { kind: "nutri", date: d.date, entries: (d.entries || []).slice(0, 60).map(function (e) {
           if (!isN(e.p) || !isN(e.kcal)) throw 0;
-          var ce = { id: IRE.test(e.id) ? e.id : rid("n"), name: String(e.name == null ? "" : e.name).slice(0, 100), p: e.p, kcal: e.kcal }; if (e.est === true) ce.est = true; if (Array.isArray(e.n) && e.n.length >= 21 && e.n.length <= NUTK.length && e.n.every(function (v) { return v === null || isN(v); })) { ce.n = e.n; if (isN(e.nk)) ce.nk = e.nk; } if (isN(e.caf) && e.caf > 0 && e.caf < 5000) ce.caf = e.caf; if (typeof e.t === "string" && /^\d{2}:\d{2}$/.test(e.t)) ce.t = e.t; if (HMRE.test(e.t)) ce.t = e.t; if (isN(e.f) && isN(e.c)) { ce.f = e.f; ce.c = e.c; } return ce;
+          var ce = { id: IRE.test(e.id) ? e.id : rid("n"), name: String(e.name == null ? "" : e.name).slice(0, 100), p: e.p, kcal: e.kcal }; if (e.est === true) ce.est = true; if (Array.isArray(e.n) && e.n.length >= 21 && e.n.length <= NUTK.length && e.n.every(function (v) { return v === null || isN(v); })) { ce.n = e.n; if (isN(e.nk)) ce.nk = e.nk; } if (isN(e.caf) && e.caf > 0 && e.caf < 5000) ce.caf = e.caf; if (isN(e.ml) && e.ml >= 0 && e.ml <= 10000) ce.ml = Math.round(e.ml); if (typeof e.t === "string" && /^\d{2}:\d{2}$/.test(e.t)) ce.t = e.t; if (HMRE.test(e.t)) ce.t = e.t; if (isN(e.f) && isN(e.c)) { ce.f = e.f; ce.c = e.c; } return ce;
         }) };
         if (Array.isArray(d.water)) { var wq = d.water.filter(function (x) { return x && HMRE.test(x.t) && isN(x.ml) && x.ml > 0 && x.ml <= 2000; }).slice(0, 60).map(function (x) { return { t: x.t, ml: Math.round(x.ml) }; }); if (wq.length) cn.water = wq; }
         if (Array.isArray(d.skip)) { var sk = d.skip.filter(function (x) { return typeof x === "string" && IRE.test(x); }).slice(0, 30); if (sk.length) cn.skip = sk; }
@@ -5278,7 +5279,7 @@ button, select, input { touch-action: manipulation }
   }
   function offLookup(code) {
     var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 7000);
-    return fetch("https://world.openfoodfacts.org/api/v2/product/" + code + ".json?fields=product_name,product_name_de,brands,nutriments,quantity,serving_quantity", ctl ? { signal: ctl.signal } : {})
+    return fetch("https://world.openfoodfacts.org/api/v2/product/" + code + ".json?fields=product_name,product_name_de,brands,nutriments,quantity,serving_quantity,categories_tags", ctl ? { signal: ctl.signal } : {})
       .then(function (res) { return res.ok ? res.json() : null; }).then(function (j) {
         clearTimeout(tm); if (!j || j.status !== 1 || !j.product) return null;
         var x = j.product, n = x.nutriments || {}, nm = String(x.product_name_de || x.product_name || "").replace(/\s+/g, " ").trim().slice(0, 60);
@@ -5294,6 +5295,7 @@ button, select, input { touch-action: manipulation }
         var nv = OFFN.map(function (o) { var y = v(o[0]); return y == null ? null : nutRound(y * o[1]); });
         if (nv.some(function (y) { return y != null; })) r.n = nv;
         var cfo = v("caffeine_100g"); if (cfo != null && cfo > 0 && cfo < 2) r.caf = Math.round(cfo * 1000); /* g je 100 g → mg */
+        var ct = Array.isArray(x.categories_tags) ? x.categories_tags : []; if (ct.indexOf("en:beverages") >= 0 && ct.indexOf("en:alcoholic-beverages") < 0) r.drink = true; /* v148: Getränk → Gruppe „Getränke“ */
         r.ok = !!nm && r.p != null && r.kcal != null && r.f != null && r.c != null && r.kcal <= 950;
         r.save = !!nm && r.p != null && r.kcal != null && r.kcal <= 950; /* seit v96 auch ohne Fett/KH speichern (dann „fehlt“) */
         return r;
@@ -5301,7 +5303,7 @@ button, select, input { touch-action: manipulation }
   }
   function scanSaveOff(code, r) {
     var fd = clone(foodDoc()), o = fd.items.filter(function (x) { return x.code === code; })[0];
-    if (!o) { o = { id: rid("fd"), name: r.name, per: r.per, p: Math.round(r.p * 10) / 10, kcal: r.kcal, amt: r.amt, cat: "Markenprodukte", code: code }; if (r.f != null && r.c != null) { o.f = Math.round(r.f * 10) / 10; o.c = Math.round(r.c * 10) / 10; } if (r.n) o.n = r.n; if (r.caf) o.caf = r.caf; fd.items.push(o); }
+    if (!o) { o = { id: rid("fd"), name: r.name, per: r.per, p: Math.round(r.p * 10) / 10, kcal: r.kcal, amt: r.amt, cat: r.drink ? "Getränke" : "Markenprodukte", code: code }; if (r.f != null && r.c != null) { o.f = Math.round(r.f * 10) / 10; o.c = Math.round(r.c * 10) / 10; } if (r.n) o.n = r.n; if (r.caf) o.caf = r.caf; fd.items.push(o); }
     scanRemember(fd, o.id); foodSave(fd); return o.id;
   }
   function scanOffShow(code, r) {
@@ -5384,7 +5386,9 @@ button, select, input { touch-action: manipulation }
   function waterGoal(train) { var g = S.person && S.person.wgoal; return isN(g) && g >= 500 && g <= 6000 ? g : waterAuto(train); }
   /* v147 (Wunsch des Nutzers): Getränke aus der Essensliste zählen mit – jeder Eintrag „… <Menge> ml“, außer Dingen, die man nicht trinkt. */
   var NODRINK = /sahne|essig|sirup|zitronensaft|brühe|öl\b|dressing|soße|sauce/i;
-  function drinkMl(e) { var m = /^(.*\S)\s+(\d+(?:[.,]\d+)?)\s+ml$/.exec(e && e.name || ""); return m && !NODRINK.test(m[1]) ? num(m[2]) || 0 : 0; }
+  /* v148: beim Eintragen fest merken (e.ml): Gruppe „Getränke“ zählt immer (in g: 1 g ≈ 1 ml; je Stück nicht), sonst Einheit ml ohne NODRINK. */
+  function drinkAmt(it, amt) { if (!it || !(amt > 0)) return 0; if (it.cat === "Getränke") return it.per === "st" ? 0 : amt; return it.per === "ml" && !NODRINK.test(it.name) ? amt : 0; }
+  function drinkMl(e) { if (e && isN(e.ml)) return e.ml; var m = /^(.*\S)\s+(\d+(?:[.,]\d+)?)\s+ml$/.exec(e && e.name || ""); return m && !NODRINK.test(m[1]) ? num(m[2]) || 0 : 0; }
   function drinksOf(t) { var n = S.nutri["n_" + t]; return (n && n.entries || []).map(function (e) { return { t: e.t, ml: drinkMl(e) }; }).filter(function (x) { return x.ml > 0; }); }
   function waterOf(t) { var n = S.nutri["n_" + t]; return n && Array.isArray(n.water) ? n.water : []; }
   function lit(ml) { return fmt(Math.round(ml / 50) * 50 / 1000); }
@@ -5420,7 +5424,7 @@ button, select, input { touch-action: manipulation }
     return '<div class="wline' + (hint ? " due" : "") + '"><div class="whead"><span class="wtx"><label class="wgbtn" aria-label="Ein Glas (' + gl + ' ml) eintragen"><input type="checkbox" switch class="hapsw" data-hap="wplus" tabindex="-1">' + waterGlassSvg(sum / goal) + "</label>Trinken <b>" + lit(sum) + "</b> / " + lit(goal) + " l" + ib("wat") + "</span>" +
       (w.length ? '<button class="ghost xs" data-act="wminus" aria-label="Letztes Glas entfernen">−</button>' : "") + '<button class="xs wplus" data-act="wplus">+ ' + gl + " ml</button></div>" +
       '<span class="wbar"><i style="width:' + pc.toFixed(1) + '%"></i></span>' + (hint ? '<p class="small whint">' + hint + "</p>" : dsum ? '<p class="small muted wsub">' + lit(wsum) + " l Wasser · " + lit(dsum) + " l andere Getränke</p>" : "") +
-      itx("wat", "Zählt die Gläser, die du hier einträgst, und automatisch alle Getränke aus deiner Essensliste (Einträge in ml, z. B. gescanntes Wasser, Kaffee, Tee, Saft, Milch; nicht: Sahne, Essig, Sirup, Zitronensaft, Brühe). Kaffee und Tee zählen mit – Koffein treibt in üblichen Mengen kaum Wasser aus. Ziel " + (S.person && isN(S.person.wgoal) ? "fest eingestellt" : "nach EFSA: insgesamt etwa 2,5 l Wasser am Tag für Männer und 2,0 l für Frauen, rund 80 % davon aus Getränken, an Trainingstagen etwa 0,5 l mehr; an heißen Tagen und bei viel Schwitzen mehr") + ". Glasgröße und Ziel änderst du in den Einstellungen (Zahnrad). Die App kann nicht von selbst erinnern, solange sie geschlossen ist – beim Öffnen weist sie dich darauf hin, wenn länger nichts getrunken wurde.") + "</div>";
+      itx("wat", "Zählt die Gläser, die du hier einträgst, und automatisch alle Getränke aus deiner Essensliste: alles aus der Gruppe „Getränke“ (auch in g, 1 g ≈ 1 ml; je Stück nicht) und sonst alles in ml (z. B. gescanntes Wasser, Saft, Milch; nicht: Sahne, Essig, Sirup, Zitronensaft, Brühe). Zählt ein Getränk nicht, stell unter „Lebensmittel bearbeiten“ die Gruppe auf „Getränke“ oder die Einheit auf ml. Kaffee und Tee zählen mit – Koffein treibt in üblichen Mengen kaum Wasser aus. Ziel " + (S.person && isN(S.person.wgoal) ? "fest eingestellt" : "nach EFSA: insgesamt etwa 2,5 l Wasser am Tag für Männer und 2,0 l für Frauen, rund 80 % davon aus Getränken, an Trainingstagen etwa 0,5 l mehr; an heißen Tagen und bei viel Schwitzen mehr") + ". Glasgröße und Ziel änderst du in den Einstellungen (Zahnrad). Die App kann nicht von selbst erinnern, solange sie geschlossen ist – beim Öffnen weist sie dich darauf hin, wenn länger nichts getrunken wurde.") + "</div>";
   }
   function shortName(s) { return s.replace(/\s*\(.*\)\s*$/, "").slice(0, 26); }
   /* Koffein heute: Summe, Rest im Körper (Halbwertszeit 5 h), Hinweis um 23 Uhr; EFSA: bis 400 mg/Tag, 200 mg auf einmal unbedenklich. */
@@ -6166,7 +6170,7 @@ button, select, input { touch-action: manipulation }
       else {
         var itn = foodItem(fdn, ref), amn = num($("ni-amt").value); if (!itn) return; if (amn == null) amn = itn.amt;
         if (!(amn > 0)) { $("ni-amt").focus(); return; }
-        var vi = partVal(itn, amn); nutriAdd(today(), { caf: Math.round(cafOf(itn, amn)), n: nutPack(nutOf(itn, amn)), nk: nutPart(itn) ? 0 : undefined, name: itn.name + " " + fmt(amn) + " " + unitOf(itn), p: vi.p, kcal: vi.kcal, f: vi.f, c: vi.c });
+        var vi = partVal(itn, amn); nutriAdd(today(), { ml: Math.round(drinkAmt(itn, amn)), caf: Math.round(cafOf(itn, amn)), n: nutPack(nutOf(itn, amn)), nk: nutPart(itn) ? 0 : undefined, name: itn.name + " " + fmt(amn) + " " + unitOf(itn), p: vi.p, kcal: vi.kcal, f: vi.f, c: vi.c });
       }
       S.nSel = sv; renderHome();
     }
