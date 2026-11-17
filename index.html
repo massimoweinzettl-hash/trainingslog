@@ -764,8 +764,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 150;
+  var APP_VERSION = 151;
   var CHANGES = [
+    { v: 151, tab: "data", text: "Daten → Übungen: Auch deine eigenen Übungen stehen jetzt nach Muskelgruppen zum Aufklappen statt als lange Liste (ab 9 Übungen). Bei einer Suche erscheinen alle Treffer direkt." },
     { v: 150, tab: "home", text: "Koffein: Das i steht jetzt oben rechts in der Box statt in einer eigenen Zeile." },
     { v: 149, tab: "home", text: "Ernährung oben: Datum, Training und Phase stehen jetzt in einer Zeile; „Training geplant“ ist rot." },
     { v: 148, tab: "home", text: "Trinken erkennt Getränke zuverlässiger: Alles aus der Gruppe „Getränke“ zählt jetzt immer mit (auch wenn es in g angelegt ist), egal ob selbst angelegt oder gescannt. Zählt ein Getränk nicht, stell es unter „Lebensmittel bearbeiten“ auf die Gruppe „Getränke“." },
@@ -3321,7 +3322,7 @@ button, select, input { touch-action: manipulation }
         return '<button data-act="exday" data-id="' + d.id + '" data-ex="' + xid + '" aria-pressed="' + d.exercises.some(function (e) { return e.id === xid; }) + '">' + esc(d.name) + "</button>";
       }).join("") + "</div></div>";
     };
-    var h = items.map(function (x) {
+    var ownRow = function (x) {
       var e = x.ex, open = S.exOpen === e.id;
       var rk = byFav && e.fav ? ++rank : 0;
       var head = '<button class="dayhead exhead2" data-act="exopen" data-id="' + e.id + '" aria-expanded="' + open + '"><span class="chev" aria-hidden="true">›</span>' + (rk ? '<span class="rank">' + rk + "</span>" : "") + exIcon(e, 22) + '<span class="dayname">' + hl(e.name, q) + (e.focus ? ' <span class="fbadge sm">Schwerpunkt</span>' : "") + "</span>" +
@@ -3337,7 +3338,15 @@ button, select, input { touch-action: manipulation }
         dayChips(e.id, true) +
         '<p class="small muted">' + (x.days.length ? "Änderungen gelten für alle Trainingstage." : "Steht gerade in keinem Trainingstag. Die Einstellungen bleiben gespeichert.") + "</p>" +
         (dupOf(e) ? '<p class="dupwarn">Eine andere Übung heißt ebenfalls „' + esc(e.name) + "“. Die beiden haben getrennte Verläufe. Führ sie unten zusammen, dann bleibt eine Übung mit dem ganzen Verlauf.</p>" : "") + manageHtml(e) + "</div>";
-    }).join("");
+    };
+    /* v151 (Wunsch des Nutzers: nicht so viele Übungen auf einmal): eigene Übungen nach Muskelgruppen zum Aufklappen (S.exOwnOpen);
+       die Gruppe mit der gerade geöffneten Übung bleibt offen. Bei einer Suche flach. */
+    var h = "";
+    if (q || items.length <= 8) h = items.map(ownRow).join("");
+    else { var eoo = S.exOwnOpen || {}, gOf = function (x) { var g = x.ex.grp || groupOf(x.ex); return CGROUPS.indexOf(g) >= 0 ? g : "Sonstige"; };
+      h = '<p class="exsep">Meine Übungen (' + items.length + ")</p>" + CGROUPS.concat(["Sonstige"]).map(function (g) { var it = items.filter(function (x) { return gOf(x) === g; }); if (!it.length) return "";
+        var op = eoo[g] || it.some(function (x) { return x.ex.id === S.exOpen; });
+        return '<details class="flib exo" data-g="' + esc(g) + '"' + (op ? " open" : "") + "><summary>" + esc(g) + ' <span class="muted">(' + it.length + ")</span></summary>" + it.map(ownRow).join("") + "</details>"; }).join(""); }
     var catRow = function (x, grouped) {
       var cid = "cat-" + x.i, open = S.exOpen === cid;
       return '<div class="exrow"><button class="dayhead exhead2" data-act="exopen" data-id="' + cid + '" aria-expanded="' + open + '"><span class="chev" aria-hidden="true">›</span>' + exIcon({ name: x.c[0] }, 22) + '<span class="dayname">' + hl(x.c[0], q) + "</span>" + (grouped === true ? "" : '<span class="cnt">' + x.c[1] + "</span>") + "</button>" +
@@ -6450,7 +6459,7 @@ button, select, input { touch-action: manipulation }
   });
   document.addEventListener("toggle", function (ev) {
     if (ev.target && ev.target.classList && ev.target.classList.contains("nutdet")) { S.nutOpen = ev.target.open; if (S.nutOpen && $("nutbox") && !$("nutbox").innerHTML) $("nutbox").innerHTML = nutBlock(); return; }
-    if (ev.target && ev.target.classList && ev.target.classList.contains("eatdet")) { S.eatOpen = ev.target.open; if (S.eatOpen && $("eatbox") && !$("eatbox").innerHTML) $("eatbox").innerHTML = eatBlock(); return; } var t = ev.target; if (t && t.classList && t.classList.contains("exg")) { S.exCatOpen = S.exCatOpen || {}; S.exCatOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("tpg")) { S.tpOpen = S.tpOpen || {}; S.tpOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("warm") && t.dataset.wu) WOPEN[t.dataset.wu] = t.open; if (t && t.classList && t.classList.contains("flib")) { S.fLibOpen = S.fLibOpen || {}; S.fLibOpen[t.dataset.g] = t.open; } }, true);
+    if (ev.target && ev.target.classList && ev.target.classList.contains("eatdet")) { S.eatOpen = ev.target.open; if (S.eatOpen && $("eatbox") && !$("eatbox").innerHTML) $("eatbox").innerHTML = eatBlock(); return; } var t = ev.target; if (t && t.classList && t.classList.contains("exo")) { S.exOwnOpen = S.exOwnOpen || {}; S.exOwnOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("exg")) { S.exCatOpen = S.exCatOpen || {}; S.exCatOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("tpg")) { S.tpOpen = S.tpOpen || {}; S.tpOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("warm") && t.dataset.wu) WOPEN[t.dataset.wu] = t.open; if (t && t.classList && t.classList.contains("flib")) { S.fLibOpen = S.fLibOpen || {}; S.fLibOpen[t.dataset.g] = t.open; } }, true);
   window.addEventListener("pagehide", function () { saveDraft(); if (planTimer) planChanged(true); });
   /* Tageswechsel (v121 zusammengefasst): beim Zurückkehren in die App und, falls sie über Mitternacht sichtbar offen bleibt
      (z. B. am PC), alle 30 s. Lief gerade ein Training (in den letzten 3 Stunden geändert), bleibt es offen; sonst springt alles
