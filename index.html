@@ -662,7 +662,7 @@ button, select, input { touch-action: manipulation }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wgg { fill: #1d2a38 } :root:not([data-theme="light"]) .wgr { fill: #23384d } } :root[data-theme="dark"] .wgg, [data-look] .wgg { fill: #1d2a38 } :root[data-theme="dark"] .wgr, [data-look] .wgr { fill: #23384d }
 .wbar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden } .wbar i { display: block; height: 100%; background: var(--wc); border-radius: 3px } .wplus { color: var(--wc); border-color: color-mix(in srgb, var(--wc) 50%, transparent) } .wsub { margin: 0; align-self: flex-start; color: var(--muted); padding: 0 } .wlist { list-style: none; margin: 0; padding: 0; font-size: 14px } .wlist li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--line) } .wlist li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .whint { margin: 0; color: var(--wc); font-weight: 600 } .wline.due .wplus { background: var(--wc); color: var(--surface); border-color: var(--wc) }
 .cafh { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between } .cafh > .ibtn { flex: none; margin-top: -2px }
-.dlnx { font-weight: 400; opacity: .8 } .plausw { color: var(--bad); font-weight: 600 } /* v180 (Wunsch des Nutzers): auffällige Werte rot */ details.flib.plaus > summary { color: var(--bad); font-size: 14px } .plausl { color: var(--bad) !important; opacity: .85 } .plausl { margin: -4px 0 6px } .calpa { gap: 4px 12px; margin: 2px 0 4px }
+.dlnx { font-weight: 400; opacity: .8 } .fupd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; border-radius: 10px; background: var(--sunken) } .fupd .row { gap: 6px } .fupdok { color: var(--good); font-weight: 600 } .plausw { color: var(--bad); font-weight: 600 } /* v180 (Wunsch des Nutzers): auffällige Werte rot */ details.flib.plaus > summary { color: var(--bad); font-size: 14px } .plausl { color: var(--bad) !important; opacity: .85 } .plausl { margin: -4px 0 6px } .calpa { gap: 4px 12px; margin: 2px 0 4px }
 #errtoast { position: fixed; left: 10px; right: 10px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 9999; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 12px 14px; border-radius: 14px; background: var(--ink, #151a22); color: var(--bg, #fff); box-shadow: 0 8px 30px rgba(0,0,0,.3); font-size: 14px; line-height: 1.35 }
 #errtoast span { flex: 1 1 200px } #errtoast button { min-height: 36px; padding: 6px 12px; border-radius: 10px; border: 0; font-weight: 650; background: var(--bg, #fff); color: var(--ink, #151a22) } #errtoast .et-x { background: none; color: inherit; padding: 6px 8px } .restc { display: inline-flex; align-items: center } .cookf .fpadd { margin: 4px 0 } .cooksum { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin: 6px 0 }
 .cupboard { background: var(--sunken); border-radius: 12px; padding: 8px 10px 4px; margin: 4px 0 8px } .cupboard > p { margin: 0 0 2px }
@@ -813,8 +813,9 @@ button, select, input { touch-action: manipulation }
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 180; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 181; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 181, tab: "data", text: "Änderst du die Werte eines Lebensmittels, fragt die App: „Auch in bisherigen Einträgen übernehmen?“ – dann werden die schon eingetragenen Tage mit den neuen Werten neu berechnet." },
     { v: 180, tab: "data", text: "Hinweise auf auffällige Werte bei Lebensmitteln sind jetzt rot." },
     { v: 179, tab: "data", text: "Plausibilitätsprüfung: Hat ein eigenes oder gescanntes Lebensmittel ungewöhnliche Werte (z. B. Mineralwasser mit 10-fach zu viel Calcium aus Open Food Facts), steht oben bei den Lebensmitteln ein Hinweis, ebenso beim Scannen. Geändert wird nichts automatisch. Außerdem zwei Bibliothekswerte korrigiert (Vitamin A in Magermilch, Eisen in Backkakao)." },
     { v: 178, tab: "train", text: "Kalender: Beim eingeplanten Training stehen jetzt direkt „Anderen Trainingstag“ und „Planung entfernen“ – falsch geplant ist so schnell korrigiert." },
@@ -3850,7 +3851,7 @@ button, select, input { touch-action: manipulation }
         if (!DRE.test(d.date) || k !== "n_" + d.date) throw 0;
         var cn = { kind: "nutri", date: d.date, entries: (d.entries || []).slice(0, 60).map(function (e) {
           if (!isN(e.p) || !isN(e.kcal)) throw 0;
-          var ce = { id: IRE.test(e.id) ? e.id : rid("n"), name: String(e.name == null ? "" : e.name).slice(0, 100), p: e.p, kcal: e.kcal }; if (e.est === true) ce.est = true; if (Array.isArray(e.n) && e.n.length >= 21 && e.n.length <= NUTK.length && e.n.every(function (v) { return v === null || isN(v); })) { ce.n = e.n; if (isN(e.nk)) ce.nk = e.nk; } if (isN(e.caf) && e.caf > 0 && e.caf < 5000) ce.caf = e.caf; if (isN(e.ml) && e.ml >= 0 && e.ml <= 10000) ce.ml = Math.round(e.ml); if (typeof e.t === "string" && /^\d{2}:\d{2}$/.test(e.t)) ce.t = e.t; if (HMRE.test(e.t)) ce.t = e.t; if (isN(e.f) && isN(e.c)) { ce.f = e.f; ce.c = e.c; } return ce;
+          var ce = { id: IRE.test(e.id) ? e.id : rid("n"), name: String(e.name == null ? "" : e.name).slice(0, 100), p: e.p, kcal: e.kcal }; if (typeof e.it === "string" && IRE.test(e.it) && isN(e.amt) && e.amt > 0) { ce.it = e.it; ce.amt = e.amt; } if (e.est === true) ce.est = true; if (Array.isArray(e.n) && e.n.length >= 21 && e.n.length <= NUTK.length && e.n.every(function (v) { return v === null || isN(v); })) { ce.n = e.n; if (isN(e.nk)) ce.nk = e.nk; } if (isN(e.caf) && e.caf > 0 && e.caf < 5000) ce.caf = e.caf; if (isN(e.ml) && e.ml >= 0 && e.ml <= 10000) ce.ml = Math.round(e.ml); if (typeof e.t === "string" && /^\d{2}:\d{2}$/.test(e.t)) ce.t = e.t; if (HMRE.test(e.t)) ce.t = e.t; if (isN(e.f) && isN(e.c)) { ce.f = e.f; ce.c = e.c; } return ce;
         }) };
         if (Array.isArray(d.water)) { var wq = d.water.filter(function (x) { return x && HMRE.test(x.t) && isN(x.ml) && x.ml > 0 && x.ml <= 2000; }).slice(0, 60).map(function (x) { return { t: x.t, ml: Math.round(x.ml) }; }); if (wq.length) cn.water = wq; }
         if (Array.isArray(d.skip)) { var sk = d.skip.filter(function (x) { return typeof x === "string" && IRE.test(x); }).slice(0, 30); if (sk.length) cn.skip = sk; }
@@ -5758,6 +5759,30 @@ button, select, input { touch-action: manipulation }
     return o;
   }
   function plausNote(o) { return o.length ? '<p class="small plausw">⚠ Bitte mit der Packung vergleichen: ' + o.map(esc).join(" · ") + "</p>" : ""; }
+  /* v181 (Wunsch des Nutzers): Änderst du die Werte eines Produkts, lassen sich bisherige Einträge davon neu berechnen.
+     Einträge seit v181 kennen Produkt und Menge (e.it, e.amt); ältere erkennt die App am Namen „<Produkt> <Menge> <Einheit>“. */
+  function entriesOf(it) {
+    var o = [], esc2 = it.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), re = new RegExp("^" + esc2 + " ([0-9]+(?:,[0-9]+)?) " + unitOf(it).replace(".", "\\.") + "$");
+    Object.keys(S.nutri).forEach(function (k) { var d = S.nutri[k]; (d.entries || []).forEach(function (e) { if (e.est) return; var a = null;
+      if (e.it) { if (e.it === it.id && isN(e.amt)) a = e.amt; } else { var m = re.exec(e.name || ""); if (m) a = parseFloat(m[1].replace(",", ".")); }
+      if (a > 0) o.push({ k: k, date: d.date, id: e.id, amt: a }); }); });
+    return o.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+  }
+  function entriesUpdate(it) {
+    var l = entriesOf(it), by = {}; l.forEach(function (x) { (by[x.k] = by[x.k] || {})[x.id] = x.amt; });
+    Object.keys(by).forEach(function (k) { var d = clone(S.nutri[k]); d.entries = d.entries.map(function (e) { var a = by[k][e.id]; if (!a) return e;
+      var v = partVal(it, a), n2 = Object.assign({}, e, { it: it.id, amt: a, p: Math.round(v.p * 10) / 10, kcal: Math.round(v.kcal) }), mlv = Math.round(drinkAmt(it, a)), cf = Math.round(cafOf(it, a)), nn = nutPack(nutOf(it, a));
+      if (v.f != null && v.c != null) { n2.f = Math.round(v.f * 10) / 10; n2.c = Math.round(v.c * 10) / 10; } else { delete n2.f; delete n2.c; }
+      if (mlv > 0) n2.ml = mlv; else delete n2.ml; if (cf > 0) n2.caf = cf; else delete n2.caf;
+      if (nn) { n2.n = nn; if (nutPart(it)) n2.nk = 0; else delete n2.nk; } else { delete n2.n; delete n2.nk; }
+      return n2; }); put(k, d); });
+    return l.length;
+  }
+  function entriesBar(x) {
+    if (S.fUpdDone && S.fUpdDone.id === x.id) return '<p class="small fsp fupdok">✓ ' + S.fUpdDone.n + (S.fUpdDone.n === 1 ? " Eintrag" : " Einträge") + " neu berechnet.</p>";
+    if (S.fUpd !== x.id) return ""; var l = entriesOf(x); if (!l.length) return "";
+    return '<div class="fupd fsp"><span class="small">Auch in bisherigen Einträgen übernehmen? <span class="muted">(' + l.length + (l.length === 1 ? " Eintrag" : " Einträge") + ", seit " + dfmt(l[0].date) + ')</span></span><span class="row"><button class="primary xs" data-act="fupdgo" data-id="' + x.id + '">Übernehmen</button><button class="ghost xs" data-act="fupdx">Nein</button></span></div>';
+  }
   function foodFocus(id) { setTimeout(function () { var r = document.querySelector('.frow.open [data-act="fiopen"][data-id="' + id + '"]'), f = document.querySelector('input[data-fi="name"][data-id="' + id + '"]');
     if (r) r.scrollIntoView({ block: "center" }); if (f && !r) f.scrollIntoView({ block: "center" }); }, 80); }
   function foodLine(fd, x, q, sup) {
@@ -5766,7 +5791,7 @@ button, select, input { touch-action: manipulation }
       var open = S.fOpen === x.id, fv = isFav(fd, x.id);
       return '<div class="frow' + (open ? " open" : "") + '"><div class="fhead"><button class="fline" data-act="fiopen" data-id="' + x.id + '" aria-expanded="' + open + '"><span class="fn">' + hl(x.name, q) + (x.lib ? "" : ' <span class="fown">eigen</span>') + '</span><span class="muted">' + (sup ? suppSum(x) : (x.f == null || x.c == null ? '<span class="fmiss">Fett/KH fehlt</span> · ' : "") + fmt(x.p) + " g · " + fmt(x.kcal) + " kcal " + unitTxt(x)) + "</span></button>" +
         '<button class="fstar" data-act="fstar" data-id="' + x.id + '" aria-pressed="' + fv + '" aria-label="Favorit">' + (fv ? "★" : "☆") + "</button></div>" +
-        (open ? '<div class="fitem">' + (x.lib ? '<p class="small muted fsp">Aus der Bibliothek. Änderst du etwas, wird es zu deinem eigenen Eintrag.</p>' : "") + (pw ? pw.replace('class="small plausw"', 'class="small plausw fsp"') : "") + '<input class="fname" data-fi="name" data-id="' + x.id + '" value="' + esc(x.name) + '" aria-label="Name" autocomplete="off">' +
+        (open ? '<div class="fitem">' + (x.lib ? '<p class="small muted fsp">Aus der Bibliothek. Änderst du etwas, wird es zu deinem eigenen Eintrag.</p>' : "") + (pw ? pw.replace('class="small plausw"', 'class="small plausw fsp"') : "") + entriesBar(x) + '<input class="fname" data-fi="name" data-id="' + x.id + '" value="' + esc(x.name) + '" aria-label="Name" autocomplete="off">' +
           '<label class="fsp2">je<select data-fi="per" data-id="' + x.id + '">' + Object.keys(FPER).map(function (k) { return '<option value="' + k + '"' + (x.per === k ? " selected" : "") + ">" + FPER[k] + "</option>"; }).join("") + "</select></label>" +
           '<label class="fsp2">Menge<input data-fi="amt" data-id="' + x.id + '" value="' + fmt(x.amt) + '" inputmode="decimal"></label>' +
           (sup ? '<details class="fnut fsp2"><summary class="small">Kalorien, Makros, Koffein (meist 0)</summary><div class="fnutg">' : "") + '<label>Eiweiß g<input data-fi="p" data-id="' + x.id + '" value="' + fmt(x.p) + '" inputmode="decimal"></label><label>Fett g<input data-fi="f" data-id="' + x.id + '" value="' + (x.f == null ? "" : fmt(x.f)) + '" inputmode="decimal"></label>' +
@@ -6476,7 +6501,7 @@ button, select, input { touch-action: manipulation }
       else {
         var itn = foodItem(fdn, ref), amn = num($("ni-amt").value); if (!itn) return; if (amn == null) amn = itn.amt;
         if (!(amn > 0)) { $("ni-amt").focus(); return; }
-        var vi = partVal(itn, amn); nutriAdd(today(), { ml: Math.round(drinkAmt(itn, amn)), caf: Math.round(cafOf(itn, amn)), n: nutPack(nutOf(itn, amn)), nk: nutPart(itn) ? 0 : undefined, name: itn.name + " " + fmt(amn) + " " + unitOf(itn), p: vi.p, kcal: vi.kcal, f: vi.f, c: vi.c });
+        var vi = partVal(itn, amn); nutriAdd(today(), { it: itn.id, amt: amn, ml: Math.round(drinkAmt(itn, amn)), caf: Math.round(cafOf(itn, amn)), n: nutPack(nutOf(itn, amn)), nk: nutPart(itn) ? 0 : undefined, name: itn.name + " " + fmt(amn) + " " + unitOf(itn), p: vi.p, kcal: vi.kcal, f: vi.f, c: vi.c }); /* v181: Produkt + Menge merken */
       }
       S.nSel = sv; renderHome();
     }
@@ -6503,6 +6528,8 @@ button, select, input { touch-action: manipulation }
     }
     else if (a === "ndel") { if (!S.nutri["n_" + today()]) { renderHome(); return; } var nd = clone(S.nutri["n_" + today()]); nd.entries = nd.entries.filter(function (e) { return e.id !== id; }); put("n_" + today(), nd.entries.length || (nd.skip && nd.skip.length) ? nd : null); renderHome(); } /* v121: skip behalten */
     else if (a === "sstp") { var fdp = clone(foodDoc()), itp = ownItem(fdp, id); if (!itp || !itp.pack) return; var lp = suppLeft(foodDoc(), foodItem(foodDoc(), id)) || 0; itp.stock = { d: today(), c: Math.round((lp + itp.pack) * 10) / 10 }; foodSave(fdp); var ysp = window.scrollY; renderData(); renderHome(); window.scrollTo(0, ysp); }
+    else if (a === "fupdgo") { var itu = foodItem(foodDoc(), id); if (!itu) return; var nu = entriesUpdate(itu); S.fUpd = null; S.fUpdDone = { id: id, n: nu }; var yu = window.scrollY; renderData(); renderHome(); window.scrollTo(0, yu); }
+    else if (a === "fupdx") { S.fUpd = null; var yux = window.scrollY; renderData(); window.scrollTo(0, yux); }
     else if (a === "sdel") {
       if (!arm(b, "Wirklich löschen?")) return; var fdx = clone(foodDoc()), itx2 = ownItem(fdx, id), t0 = today(); if (!itx2) return;
       var used = (fdx.daily || []).some(function (x) { return x.item === id && x.from < t0; });
@@ -6702,6 +6729,7 @@ button, select, input { touch-action: manipulation }
     }
   });
   document.addEventListener("change", function (ev) {
+    var tg = ev.target; if (tg && tg.dataset && tg.dataset.id && (/^(p|f|c|kcal|caf|per)$/.test(tg.dataset.fi || "") || tg.dataset.fn != null)) { S.fUpd = tg.dataset.id; S.fUpdDone = null; } /* v181 */
     /* v146: Glas als verdeckter iOS-Schalter – echtes Antippen löst auf dem iPhone (ab iOS 18) das System-Klick-Feedback aus. */
     if (ev.target && ev.target.classList && ev.target.classList.contains("hapsw")) { try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {} var hb = document.createElement("button"); hb.dataset.act = ev.target.dataset.hap; hb.dataset.hap = "1"; hb.hidden = true; document.body.appendChild(hb); hb.click(); hb.remove(); return; }
     if (!S.ready) return;
