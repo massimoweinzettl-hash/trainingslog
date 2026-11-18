@@ -1,0 +1,7 @@
+{
+  "name": "trainingslog-ki",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lokale KI für den Trainingslog: Apples On-Device-Modell (Foundation Models, iOS 26) als Capacitor-Plugin.",
+  "capacitor": { "ios": { "src": "ios" } }
+}
