@@ -31,3 +31,13 @@ Dann in Xcode ▶ drücken. Die Daten in der App bleiben erhalten.
 ## Daten umziehen
 Web-App: Daten → Sicherung → „Backup speichern“. iPhone-App: Daten → Sicherung → „Backup einspielen“.
 Beide Apps speichern getrennt; nach dem Umzug nur noch in einer eintragen.
+
+## Frag die App (lokale KI, ab v182)
+Nutzt Apples Sprachmodell auf dem iPhone (offline, kostenlos). Voraussetzungen: iOS 26, Apple Intelligence eingeschaltet (Einstellungen → Apple Intelligence & Siri), Xcode 26 auf dem Mac.
+Das Plugin liegt in `app/ki-plugin` und wird über `npm install` eingebunden (steckt seit v182 in `npm run ios`):
+```
+cd ~/trainingslog
+git pull
+npm run ios
+```
+Dann in Xcode ▶ drücken. Oben neben dem Zahnrad erscheint die Sprechblase. Fehlt sie, ist Apple Intelligence aus, das Modell lädt noch oder das Plugin wurde nicht eingebunden (dann bitte Screenshot vom Terminal schicken).
