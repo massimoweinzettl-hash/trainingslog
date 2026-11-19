@@ -250,7 +250,7 @@ button.xs { min-height: 32px; padding: 2px 10px }
 .chart .wsell { stroke: var(--ink); stroke-width: 1; opacity: .55 } .chart .wselc { fill: none; stroke: var(--ink); stroke-width: 2 } .wleg b { color: var(--ink) } .wleg .wk { color: var(--s3); font-weight: 600 }
 #tour .row { justify-content: flex-end; gap: 6px }
 body.touring { padding-bottom: 230px }
-body.tfocusing .tab > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing .tab .block:has(.tfocus):not(.tfocus) > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing #notice {
+body.tfocusing .tab > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing .tab .block:has(.tfocus):not(.tfocus) > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing .dsec:has(.tfocus) > *:not(.tfocus), body.tfocusing #notice {
   filter: blur(2px) grayscale(.7); opacity: .3; pointer-events: none; transition: opacity .25s, filter .25s }
 @keyframes tzoom { 0% { transform: scale(.92); opacity: .4 } 60% { transform: scale(1.025); opacity: 1 } 100% { transform: scale(1) } }
 body.tfocusing .tfocus.tzoom { animation: tzoom .55s cubic-bezier(.2, .8, .3, 1) both }
@@ -819,8 +819,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 188; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 189; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 189, tab: "data", text: "Rundgang: Unter „Daten“ führt er jetzt durch alle Bereiche – Essen, Übungen, Persönlich, Sicherung und Hilfe. Die jeweilige Pille bleibt dabei gut lesbar." },
     { v: 188, tab: "plan", text: "„Sätze pro Muskelgruppe“ steht jetzt ganz oben im Plan: Der Balken zeigt, was du trainiert hast, der Strich, was dein Plan pro Woche vorsieht." },
     { v: 188, tab: "data", text: "Übungen: eigene Übungen und Katalog stehen jetzt zusammen in einer Liste, alphabetisch nach Muskelgruppen." },
     { v: 187, tab: "plan", text: "Trainingstage: 12 kräftige Farben zur Auswahl, gleich im hellen und dunklen Design." },
@@ -4122,7 +4123,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   ];
   /* Erste Schritte als Liste zum Abhaken (v115): gleiche Prüfungen wie im Rundgang, Antippen öffnet die Station. */
   function firstSteps() {
-    var L = [[1, "Deine Angaben eintragen"], [2, "Trainingsplan anlegen"], [3, "Erstes Training eintragen"], [4, "Essen eintragen"], [5, "Gewicht eintragen"], [6, "Backup speichern"]].filter(function (x) { return (!foodOnly() || (x[0] !== 2 && x[0] !== 3)) && (!cardioOnly() || x[0] !== 2); }), n = 0;
+    var L = [[tourIdx("Deine Angaben"), "Deine Angaben eintragen"], [tourIdx("Dein Plan"), "Trainingsplan anlegen"], [tourIdx("Training eintragen"), "Erstes Training eintragen"], [tourIdx("Essen eintragen"), "Essen eintragen"], [tourIdx("Gewicht eintragen"), "Gewicht eintragen"], [tourIdx("Backup"), "Backup speichern"]].filter(function (x) { return tourList().indexOf(x[0]) >= 0; }), n = 0; /* v189: Stationen über den Titel, Reihenfolge des Rundgangs geändert */
     var rows = L.map(function (x) { var d = TOUR[x[0]][4](), ok = d[0]; if (ok) n++; return '<button type="button" class="fstep' + (ok ? "" : " todo") + '" data-act="tourgo" data-id="' + x[0] + '"><span class="ck">' + (ok ? "✓" : "○") + "</span><span>" + x[1] + "</span></button>"; }).join("");
     return "<p>" + (n === L.length ? "Alles erledigt, die App ist eingerichtet." : n + " von " + L.length + " erledigt. Tippe auf einen Punkt, die App zeigt dir die Stelle.") + '</p><div class="fsteps">' + rows + "</div>" +
       "<p><b>Ein normaler Tag:</b> morgens wiegen und unter „Körper“ eintragen. Essen unter „Ernährung“ eintragen, sobald du isst. " + (foodOnly() ? "" : "Im Studio unter „Training“ die Einheit starten, Sätze eintragen, am Ende „Training beenden“. ") + "Mehr braucht es nicht.</p>" +
@@ -4200,17 +4201,16 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       var E = energy(bodyList()), di = E ? dayKcal(today(), E, false) : null, mc = di ? macros(di.kcal, di.mtype, E.pw) : null;
       h = '<h2 id="su-h">Alles eingerichtet</h2>' + (mc ? '<p>Deine Empfehlung für heute' + (E.n ? " (" + (di.train ? "Trainingstag" : "Ruhetag") + ")" : "") + ':</p><p class="sures"><b>' + di.kcal.toLocaleString("de-DE") + " kcal</b> · <b>" + Math.round(mc.p) + " g</b> Eiweiß</p><p class=\"small muted\">Das ist ein Startwert. Trägst du Gewicht und Essen ein, passt die App ihn nach zwei Wochen an deinen echten Verbrauch an.</p>"
         : '<p>Für eine Kalorienempfehlung fehlen noch Angaben (Geschlecht, Geburtsjahr, Größe, Gewicht oder Alltag). Du kannst sie jederzeit unter Daten → Persönlich und Körper nachtragen.</p>') +
-        (SU.tt === "cardio" ? '<p class="small muted">Jetzt nimmt dich ein kurzer Rundgang an die Hand: fünf Stationen, an jeder richtest du gleich das Wichtigste ein (erste Ausdauer-Einheit, erstes Essen, Backup). Dauert etwa zwei Minuten.</p>' : SU.notrain ? '<p class="small muted">Jetzt nimmt dich ein kurzer Rundgang an die Hand: vier Stationen, an jeder richtest du gleich das Wichtigste ein (erstes Essen, Gewicht, Backup). Dauert etwa zwei Minuten.</p>' : '<p class="small muted">Jetzt nimmt dich ein kurzer Rundgang an die Hand: sechs Stationen, an jeder richtest du gleich das Wichtigste ein (Plan, erstes Essen, Backup). Dauert etwa drei Minuten.</p>');
+        (SU.tt === "cardio" ? '<p class="small muted">Jetzt führt dich ein kurzer Rundgang durch alle Bereiche. Wo nötig, richtest du gleich das Wichtigste ein (erste Ausdauer-Einheit, erstes Essen, Backup). Dauert etwa drei Minuten.</p>' : SU.notrain ? '<p class="small muted">Jetzt führt dich ein kurzer Rundgang durch alle Bereiche. Wo nötig, richtest du gleich das Wichtigste ein (erstes Essen, Gewicht, Backup). Dauert etwa drei Minuten.</p>' : '<p class="small muted">Jetzt führt dich ein kurzer Rundgang durch alle Bereiche. Wo nötig, richtest du gleich das Wichtigste ein (Plan, erstes Essen, Backup). Dauert etwa drei Minuten.</p>');
       nav = '<button class="ghost" data-act="suskip">Ohne Rundgang starten</button><button class="primary" data-act="sutour">Rundgang starten</button>';
     }
     el.innerHTML = '<div class="sheet sushe">' + h + '<div class="row sunav">' + nav + "</div></div>";
     var f = el.querySelector("input"); if (f && i > 0 && !matchMedia("(pointer:coarse)").matches) f.focus();
   }
   /* Rundgang (v115: jede Station ist eine Aufgabe). [Titel, Text, Reiter, Ziel, Prüfung → [erledigt?, Statuszeile]] */
+  /* v189 (Wunsch des Nutzers): unter „Daten“ wandert der Rundgang durch alle Pillen – Essen, Übungen, Persönlich, Sicherung, Hilfe; die jeweilige Pille bleibt scharf. */
   var TOUR = [
-    ["Willkommen", "Der Trainingslog hält Training, Essen und Gewicht fest und schlägt dir vor, wie es weitergeht. Der Rundgang führt dich durch sechs Stationen. An jeder richtest du gleich das Wichtigste ein.", "home", null, null],
-    ["Deine Angaben", "Aus diesen Angaben berechnet die App deine Kalorien und Makros. Prüfe sie kurz und tippe nach Änderungen auf „Speichern“. Ändert sich später dein Alltag oder Training, passt du es hier an.", "me", function () { var x = $("pe-sex"); return x ? [x.closest(".block")] : []; },
-      function () { var P = S.person || {}, m = [], w = false; Object.keys(S.body).forEach(function (k) { if (S.body[k] && S.body[k].weight != null) w = true; }); if (!P.sex) m.push("Geschlecht"); if (!isN(P.year)) m.push("Geburtsjahr"); if (!isN(P.height)) m.push("Größe"); if (!isN(P.act)) m.push("Alltag"); if (!w) m.push("Gewicht (kommt in Station 5)"); return m.length ? [0, "Fehlt noch: " + m.join(", ")] : [1, "Vollständig, deine Kalorien werden berechnet"]; }],
+    ["Willkommen", "Der Trainingslog hält Training, Essen und Gewicht fest und schlägt dir vor, wie es weitergeht. Der Rundgang führt dich durch alle Reiter. Wo es nötig ist, richtest du gleich das Wichtigste ein.", "home", null, null],
     ["Dein Plan", "Wähle Tage pro Woche, Dauer und Geräte. Der Assistent baut den Plan, mit ↻ tauschst du Übungen. Tippe dann auf „Plan übernehmen“. Übungen kannst du später jederzeit tauschen.", "plan", function () { return [document.querySelector(".wiz") || document.querySelector("[data-act=wizopen]")]; },
       function () { var n = S.plan && S.plan.days ? S.plan.days.length : 0; return n ? [1, "Plan steht: " + n + (n === 1 ? " Trainingstag" : " Trainingstage")] : [0, "Noch kein Plan. Ohne Plan gibt es keine Vorschläge im Training"]; }],
     ["Training eintragen", "Im Studio: oben im Kalender den Tag antippen, „Training starten“, dann je Satz Gewicht und Wiederholungen eintragen. Gespeichert wird automatisch. Am Ende „Training beenden“. Ab der zweiten Einheit schlägt die App dir das Gewicht vor.", "train", function () { return [$("calwrap")]; },
@@ -4219,8 +4219,13 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       function () { var ok = Object.keys(S.nutri).some(function (k) { var n = S.nutri[k]; return n && n.entries && n.entries.length; }); return ok ? [1, "Dein erster Eintrag ist drin"] : [0, "Noch nichts eingetragen"]; }],
     ["Gewicht eintragen", "Trag dein Gewicht regelmäßig ein, am besten morgens nach dem Aufstehen. Einzelne Werte schwanken, die App achtet auf den Verlauf. Nach zwei Wochen mit Gewicht und Essen kennt sie deinen echten Verbrauch.", "body", function () { return [$("bform")]; },
       function () { var ok = Object.keys(S.body).some(function (k) { return S.body[k] && S.body[k].weight != null; }); return ok ? [1, "Dein Gewicht ist eingetragen"] : [0, "Noch kein Gewicht. Ohne Gewicht keine Kalorien"]; }],
-    ["Backup", "Deine Daten liegen nur auf diesem Gerät. Tippe auf „Backup speichern“ und leg die Datei zum Beispiel in iCloud Drive ab. Die App erinnert dich alle zwei Wochen daran. Alles Weitere steht nebenan unter „Hilfe“.", "save", function () { var x = document.querySelector("[data-act=backup]"); return x ? [x.closest(".block")] : []; },
-      function () { return lastBackup() ? [1, "Backup ist gespeichert"] : [0, "Noch kein Backup"]; }]
+    ["Daten: Essen", "Unter „Daten“ liegt alles, was du einmal einrichtest. Bei „Essen“: deine Nahrungsergänzung im Vorratsschrank, eigene Mahlzeiten und die Lebensmittelliste. Lebensmittel antippen, um Werte von der Verpackung zu übernehmen.", "food", function () { return [document.querySelector('.dsec [data-id="food"]')].concat([].slice.call(document.querySelectorAll("#tab-data .fmanage"))); }, null],
+    ["Daten: Übungen", "Alle Übungen nach Muskelgruppen, deine und die aus dem Katalog. Antippen, um Sätze, Wiederholungen, Schritt, Sterne und Schwerpunkt einzustellen oder sie einem Trainingstag zuzuordnen.", "ex", function () { var f = $("exfilter"); return [document.querySelector('.dsec [data-id="ex"]'), f && f.closest(".searchbox"), $("exlist")]; }, null],
+    ["Deine Angaben", "Aus diesen Angaben berechnet die App deine Kalorien und Makros. Prüfe sie kurz und tippe nach Änderungen auf „Speichern“. Ändert sich später dein Alltag oder Training, passt du es hier an.", "me", function () { var x = $("pe-sex"); return [document.querySelector('.dsec [data-id="me"]'), x && x.closest(".block")]; },
+      function () { var P = S.person || {}, m = [], w = false; Object.keys(S.body).forEach(function (k) { if (S.body[k] && S.body[k].weight != null) w = true; }); if (!P.sex) m.push("Geschlecht"); if (!isN(P.year)) m.push("Geburtsjahr"); if (!isN(P.height)) m.push("Größe"); if (!isN(P.act)) m.push("Alltag"); if (!w) m.push("Gewicht (Reiter Körper)"); return m.length ? [0, "Fehlt noch: " + m.join(", ")] : [1, "Vollständig, deine Kalorien werden berechnet"]; }],
+    ["Backup", "Deine Daten liegen nur auf diesem Gerät. Tippe auf „Backup speichern“ und leg die Datei zum Beispiel in iCloud Drive ab. Die App erinnert dich alle zwei Wochen daran.", "save", function () { var x = document.querySelector("[data-act=pick]"); return [document.querySelector('.dsec [data-id="save"]'), x && x.closest(".block")]; },
+      function () { return lastBackup() ? [1, "Backup ist gespeichert"] : [0, "Noch kein Backup"]; }],
+    ["Hilfe", "Hier steht das Handbuch zu allen Reitern, Abschnitt antippen zum Aufklappen. Den Rundgang kannst du hier jederzeit noch einmal starten.", "help", function () { return [document.querySelector('.dsec [data-id="help"]'), document.querySelector("#tab-data .help")]; }, null]
   ];
   function tourStat() {
     var el = $("tour"), st = tourStep >= 0 && TOUR[tourStep], p = el && el.querySelector(".tst"); if (!p || !st || !st[4]) return;
@@ -4251,7 +4256,8 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     } else if (!on && tourObs) { tourObs.disconnect(); tourObs = null; }
   }
   /* v128: im Modus „Nur Ernährung“ ohne die Stationen Plan und Training */
-  function tourList() { var l = []; TOUR.forEach(function (st, i) { if (!(foodOnly() && (st[2] === "plan" || st[2] === "train")) && !(cardioOnly() && st[2] === "plan")) l.push(i); }); return l; }
+  function tourIdx(t) { for (var i = 0; i < TOUR.length; i++) if (TOUR[i][0] === t) return i; return -1; }
+  function tourList() { var l = []; TOUR.forEach(function (st, i) { if (!(foodOnly() && (st[2] === "plan" || st[2] === "train")) && !(cardioOnly() && st[2] === "plan")) { if (!((foodOnly() || cardioOnly()) && st[2] === "ex")) l.push(i); } }); return l; }
   var tourStep = -1, tourFrom = 0; /* tourFrom = 1: nach der Einrichtung ohne „Willkommen“ */
   function tourKey() { return "trainingslog-tour-" + PROF.active; }
   function tourDue() {
@@ -4262,12 +4268,12 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   function tourEnd() { tourStep = -1; try { localStorage.setItem(tourKey(), "1"); } catch (e) {} var el = $("tour"); if (el) el.remove(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
   /* v116 (Nutzer: Übergänge zu hart, Reiter nicht erkennbar): Ort in der Karte, Seite gleitet in Richtung des neuen Reiters,
      Reiter pulsiert, Hervorhebung erst nach dem Gleiten (tourHold bremst solange den MutationObserver). */
-  var TOURLOC = { home: "Reiter Ernährung", train: "Reiter Training", body: "Reiter Körper", plan: "Reiter Plan", me: "Daten → Persönlich", save: "Daten → Sicherung" }, tourHold = 0;
+  var TOURLOC = { home: "Reiter Ernährung", train: "Reiter Training", body: "Reiter Körper", plan: "Reiter Plan", food: "Daten → Essen", ex: "Daten → Übungen", me: "Daten → Persönlich", save: "Daten → Sicherung", help: "Daten → Hilfe" }, tourHold = 0;
   function tourShow(i) {
     var from = S.tab === "data" ? "data:" + S.dataSec : S.tab, fromI = TABS.indexOf(S.tab), firstCard = !$("tour");
     document.querySelectorAll(".tfocus").forEach(function (x) { x.classList.remove("tfocus"); }); document.body.classList.remove("tfocusing");
     tourStep = i; var st = TOUR[i], tab = st[2];
-    if (tab === "me" || tab === "save") { S.dataSec = tab; showTab("data"); }
+    if (DSEC.some(function (x) { return x[0] === tab; })) { S.dataSec = tab; showTab("data"); }
     else if (tab === "plan") {
       if (!S.plan) { S.plan = { kind: "plan", fav3: 1, m58: 1, days: [] }; planChanged(true); }
       if (!S.plan.days.length && !S.wiz) wizStart();
@@ -6471,7 +6477,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     }
     else if (a === "suprev") { setupRead(); setupShow(Math.max(0, setupStep - 1)); }
     else if (a === "suskip") { if (setupStep >= 1 && setupStep <= 5) { setupRead(); if (!setupCheck() && (SU.sex || SU.year || SU.w || SU.job || SU.ph)) setupSave(); } setupHide(); tourEnd(); }
-    else if (a === "sutour") { setupHide(); tourFrom = 1; tourShow(1); }
+    else if (a === "sutour") { setupHide(); tourFrom = 1; tourShow(tourList().filter(function (k) { return k >= 1; })[0]); }
     else if (a === "tourstart") { tourFrom = 0; tourShow(0); }
     else if (a === "tourgo") { tourFrom = 1; tourShow(+id); }
     else if (a === "wizstart") { if (!S.plan) { S.plan = { kind: "plan", fav3: 1, m58: 1, days: [] }; planChanged(true); } wizStart(); showTab("plan"); }
