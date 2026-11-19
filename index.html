@@ -591,7 +591,7 @@ table.strength .exico, table.recs .exico, .testlist .exico, .focusrow .exico { v
 .serch .lg { margin: 0 5px 0 0 }
 .strdet summary { font-weight: 600; cursor: pointer; padding: 4px 0 }
 .vrow { display: grid; grid-template-columns: 80px minmax(0, 1fr) 2.6em; align-items: center; gap: 10px; font-size: 14px }
-.vbar { position: relative; height: 14px; border-radius: 7px; background: var(--sunken); overflow: hidden } .vbar.vbp { overflow: visible } .vplan { position: absolute; top: -3px; bottom: -3px; width: 3px; border-radius: 2px; background: var(--ink) } .vpn { color: var(--muted); font-weight: 400 } .vbp ~ .vnum { min-width: 3.6em; text-align: right }
+.vbar { position: relative; height: 14px; border-radius: 7px; background: var(--sunken); overflow: hidden } .vbar.vbp { overflow: visible } .vplan { position: absolute; top: -3px; bottom: -3px; width: 3px; border-radius: 2px; background: var(--ink) } .vpn { color: var(--muted); font-weight: 400 } .vrow:has(.vbp) { grid-template-columns: 80px minmax(0, 1fr) 4.9em } .vbp ~ .vnum { white-space: nowrap } /* v189: Zahl ragte bis an den Rand (Spalte war 2,6em) */
 .vzone { position: absolute; top: 0; bottom: 0; background: var(--good-soft); opacity: .9 }
 .vfill { position: absolute; left: 0; top: 3px; bottom: 3px; border-radius: 4px; background: var(--accent) }
 .vfill.low { background: var(--muted) } .vfill.high { background: var(--warn) }
