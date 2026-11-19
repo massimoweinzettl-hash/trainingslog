@@ -3549,8 +3549,10 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   function pickResults(di, q) {
     var d = S.plan.days[di]; if (!d) return "";
     var n = norm(q || ""), key = "px:" + di, gs = pickGroups(d, di), h = "";
-    var row = function (x, info) { return x[3] ? '<div class="cbrow"><span class="tpitem dis"><span>' + hl(x[1], n) + '</span><span class="small muted">schon an diesem Tag</span></span></div>'
-      : '<div class="cbrow"><button class="tpitem" data-act="cbpick" data-cb="' + key + '" data-id="' + esc(x[0]) + '"><span>' + hl(x[1], n) + '</span><span class="small muted">' + esc(info || "") + "</span></button></div>"; };
+    /* v191 (Wunsch des Nutzers): Piktogramm vor jeder Übung in der Suche */
+    var exs = planExercises().concat(oldExercises()), ico = function (x) { var m = /^cat:(\d+)$/.exec(x[0]), c = m && CATALOG[+m[1]], id = x[0].replace(/^(id|old):/, ""), e = !c && exs.filter(function (y) { return y.id === id; })[0]; return exIcon(c ? { name: c[0], grp: c[1] } : e || { name: x[1] }, 22); };
+    var row = function (x, info) { return x[3] ? '<div class="cbrow"><span class="tpitem dis">' + ico(x) + '<span>' + hl(x[1], n) + '</span><span class="small muted">schon an diesem Tag</span></span></div>'
+      : '<div class="cbrow"><button class="tpitem" data-act="cbpick" data-cb="' + key + '" data-id="' + esc(x[0]) + '">' + ico(x) + '<span>' + hl(x[1], n) + '</span><span class="small muted">' + esc(info || "") + "</span></button></div>"; };
     if (!n) {
       gs.forEach(function (g) { h += '<p class="fcat">' + esc(g[0]) + "</p>" + g[1].map(function (x) { return row(x, g[0].indexOf("Vorschläge") === 0 ? x[2] : x[2] && x[2] !== g[0] ? x[2] : ""); }).join(""); });
       return h + '<p class="fcat">Nicht dabei?</p><div class="cbrow"><button class="tpitem" data-act="cbpick" data-cb="' + key + '" data-id="own:"><span>Eigene Übung anlegen …</span></button></div>';
