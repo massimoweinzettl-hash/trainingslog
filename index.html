@@ -252,6 +252,7 @@ button.xs { min-height: 32px; padding: 2px 10px }
 body.touring { padding-bottom: 230px }
 body.tfocusing .tab > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing .tab .block:has(.tfocus):not(.tfocus) > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing .dsec:has(.tfocus) > *:not(.tfocus), body.tfocusing #notice {
   filter: blur(2px) grayscale(.7); opacity: .3; pointer-events: none; transition: opacity .25s, filter .25s }
+body.touring #tab-data { min-height: 100vh } /* v190: Pillenleiste bleibt beim Wechsel innerhalb von Daten an derselben Stelle */
 @keyframes tzoom { 0% { transform: scale(.92); opacity: .4 } 60% { transform: scale(1.025); opacity: 1 } 100% { transform: scale(1) } }
 body.tfocusing .tfocus.tzoom { animation: tzoom .55s cubic-bezier(.2, .8, .3, 1) both }
 @media (prefers-reduced-motion: reduce) { body.tfocusing .tfocus.tzoom { animation: none } }
@@ -819,8 +820,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 189; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 190; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 190, tab: "data", text: "Rundgang: Innerhalb von „Daten“ wandert nur noch die Markierung von Pille zu Pille, ohne Gleiten und Zoom." },
     { v: 189, tab: "data", text: "Rundgang: Unter „Daten“ führt er jetzt durch alle Bereiche – Essen, Übungen, Persönlich, Sicherung und Hilfe. Die jeweilige Pille bleibt dabei gut lesbar." },
     { v: 188, tab: "plan", text: "„Sätze pro Muskelgruppe“ steht jetzt ganz oben im Plan: Der Balken zeigt, was du trainiert hast, der Strich, was dein Plan pro Woche vorsieht." },
     { v: 188, tab: "data", text: "Übungen: eigene Übungen und Katalog stehen jetzt zusammen in einer Liste, alphabetisch nach Muskelgruppen." },
@@ -4235,15 +4237,15 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Hervorheben: der beschriebene Bereich bleibt scharf (.tfocus), alles andere wird grau und unscharf (CSS über :has).
      Nach jedem Neuzeichnen wird die Markierung wieder gesetzt (MutationObserver). */
   var tourObs = null, tourRaf = 0;
-  function tourMark(scroll) {
+  function tourMark(scroll, noZoom) {
     document.querySelectorAll(".tfocus").forEach(function (x) { x.classList.remove("tfocus"); });
     var f = tourStep >= 0 && TOUR[tourStep][3], els = f ? f().filter(Boolean) : [];
     els.forEach(function (x) { x.classList.add("tfocus"); });
     document.body.classList.toggle("tfocusing", els.length > 0);
     if (scroll && els[0]) {
-      els[0].scrollIntoView({ block: "start", behavior: "smooth" });
+      els[0].scrollIntoView({ block: "start", behavior: noZoom ? "auto" : "smooth" });
       /* Kurzer Zoom beim Schrittwechsel (nicht beim Neuzeichnen, sonst springt es bei jeder Eingabe). */
-      els.forEach(function (x) { x.classList.remove("tzoom"); void x.offsetWidth; x.classList.add("tzoom"); x.addEventListener("animationend", function () { x.classList.remove("tzoom"); }, { once: true }); });
+      if (!noZoom) els.forEach(function (x) { x.classList.remove("tzoom"); void x.offsetWidth; x.classList.add("tzoom"); x.addEventListener("animationend", function () { x.classList.remove("tzoom"); }, { once: true }); });
     }
   }
   function tourWatch(on) {
@@ -4279,10 +4281,10 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       if (!S.plan.days.length && !S.wiz) wizStart();
       showTab("plan");
     } else showTab(tab);
-    window.scrollTo(0, 0);
+    if (!(from.indexOf("data:") === 0 && S.tab === "data")) window.scrollTo(0, 0);
     var el = $("tour"); if (!el) { el = document.createElement("div"); el.id = "tour"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Einführung"); document.body.appendChild(el); }
     document.body.classList.add("touring");
-    var to = S.tab === "data" ? "data:" + S.dataSec : S.tab, moved = to !== from && !firstCard && i > 0, rm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var to = S.tab === "data" ? "data:" + S.dataSec : S.tab, hop = from.indexOf("data:") === 0 && to.indexOf("data:") === 0, moved = to !== from && !firstCard && i > 0 && !hop, rm = /* v190 (Wunsch des Nutzers): innerhalb von „Daten“ wandert nur die Pille, ohne Gleiten und Zoom */ window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (moved && !rm) {
       var pane = $("tab-" + S.tab), tb = document.querySelector('.tabs button[data-tab="' + S.tab + '"]'), cls = TABS.indexOf(S.tab) < fromI ? "tslL" : "tslR";
       pane.classList.remove("tslL", "tslR"); void pane.offsetWidth; pane.classList.add(cls); pane.addEventListener("animationend", function () { pane.classList.remove(cls); }, { once: true });
@@ -4292,7 +4294,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     el.innerHTML = '<p class="small muted tnum">Rundgang · ' + (tl.indexOf(i) + 1) + " von " + tl.length + (i > 0 && TOURLOC[tab] ? " · <b>" + TOURLOC[tab] + "</b>" : "") + "</p><h3>" + st[0] + "</h3><p>" + (st[2] === "train" && cardioOnly() ? "Unter dem Kalender trägst du Ausdauer ein: Sportart, Dauer und auf Wunsch die Strecke, dann „Eintragen“. Den Tag wählst du oben im Kalender, auch rückwirkend. Tage mit Ausdauer bekommen mehr Kalorien." : st[2] === "train" && ttype() === "both" ? st[1] + " Ausdauer (Laufen, Rad …) trägst du direkt unter dem Kalender ein." : i === 0 && foodOnly() ? "Der Trainingslog hält dein Essen und Gewicht fest und rechnet dir aus, wie viel heute noch drin ist. Der Rundgang führt dich durch vier Stationen. An jeder richtest du gleich das Wichtigste ein." : st[1]) + "</p>" + (st[4] ? '<p class="tst"></p>' : "") + '<div class="row">' +
       (i > tourFrom ? '<button class="ghost" data-act="tourprev">Zurück</button>' : "") + '<button class="ghost" data-act="tourskip">' + (i === last ? "Schließen" : "Überspringen") + "</button>" +
       '<button class="primary" data-act="tournext">' + (i === last ? "Fertig" : "Weiter") + "</button></div>";
-    tourStat(); tourWatch(true); var hold = ++tourHold; setTimeout(function () { if (hold !== tourHold) return; tourHold = 0; if (tourStep === i) tourMark(true); }, moved && !rm ? 420 : 60);
+    tourStat(); tourWatch(true); var hold = ++tourHold; setTimeout(function () { if (hold !== tourHold) return; tourHold = 0; if (tourStep === i) tourMark(true, hop && !firstCard); }, moved && !rm ? 420 : 60);
   }
   function exViewHtml() {
     return tip("allex", "Wofür ist diese Ansicht?", "Hier änderst du Sätze, Wiederholungsbereich, Schritt, Bewertung und Schwerpunkt jeder Übung an einer Stelle, egal in welchem Trainingstag sie steht. Außerdem kannst du Übungen zusammenführen oder löschen und den Katalog verschlanken.") +
