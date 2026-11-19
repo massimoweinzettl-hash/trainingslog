@@ -820,8 +820,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 191; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 192; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 192, tab: "plan", text: "Neu im Katalog: „Brustpresse liegend“ (Maschine, 5–8 Wdh.) mit eigenem Piktogramm." },
     { v: 191, tab: "plan", text: "Übung hinzufügen: In der Suche steht jetzt vor jeder Übung ihr Piktogramm." },
     { v: 190, tab: "data", text: "Rundgang: Innerhalb von „Daten“ wandert nur noch die Markierung von Pille zu Pille, ohne Gleiten und Zoom." },
     { v: 189, tab: "data", text: "Rundgang: Unter „Daten“ führt er jetzt durch alle Bereiche – Essen, Übungen, Persönlich, Sicherung und Hilfe. Die jeweilige Pille bleibt dabei gut lesbar." },
@@ -3175,7 +3176,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   }
   /* Maschinenübungen: Vorgabe 5–8 Wdh. (Wunsch des Nutzers, seit v53). */
   var MACH = {};
-  ["Brustpresse Maschine", "Schrägbankpresse Maschine", "Bankdrücken Multipresse", "Schrägbankdrücken Multipresse", "Rudern Maschine", "Hohes Rudern Maschine", "Latzug Maschine",
+  ["Brustpresse Maschine", "Brustpresse liegend", "Schrägbankpresse Maschine", "Bankdrücken Multipresse", "Schrägbankdrücken Multipresse", "Rudern Maschine", "Hohes Rudern Maschine", "Latzug Maschine",
     "Schulterpresse Maschine", "Seitheben Maschine", "Bizepsmaschine", "Trizepsmaschine", "Kniebeuge Multipresse", "Hackenschmidt", "Pendulum Squat", "Belt Squat", "Beinpresse",
     "Beinpresse einbeinig", "Beinstrecker", "Beinbeuger liegend", "Beinbeuger sitzend", "Beinbeuger stehend", "Adduktoren Maschine", "Abduktoren Maschine", "Wadenheben sitzend",
     "Wadenheben stehend Maschine", "Wadenheben an der Beinpresse", "Crunch Maschine"].forEach(function (n) { MACH[n.toLowerCase()] = 1; });
@@ -3222,7 +3223,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
      Ein Name, den es schon gibt, wird nie doppelt angelegt. Katalog: [Name, Gruppe, Wdh. von, Wdh. bis, Schritt kg]. */
   var CATALOG = [
     ["Bankdrücken", "Brust", 6, 10, 2.5], ["Schrägbankdrücken Langhantel", "Brust", 6, 10, 2.5], ["Schrägbankdrücken Kurzhantel", "Brust", 8, 12, 2.5], ["Kurzhantel-Bankdrücken", "Brust", 8, 12, 2.5],
-    ["Butterfly", "Brust", 12, 15, 2.5], ["Kabelzug-Flys", "Brust", 12, 15, 2.5], ["Dips", "Brust", 8, 12, 2.5], ["Brustpresse Maschine", "Brust", 5, 8, 5],
+    ["Butterfly", "Brust", 12, 15, 2.5], ["Kabelzug-Flys", "Brust", 12, 15, 2.5], ["Dips", "Brust", 8, 12, 2.5], ["Brustpresse Maschine", "Brust", 5, 8, 5], ["Brustpresse liegend", "Brust", 5, 8, 5],
     ["Klimmzüge", "Rücken", 6, 10, 2.5], ["Latzug", "Rücken", 8, 12, 2.5], ["Langhantelrudern", "Rücken", 8, 12, 2.5], ["Kurzhantelrudern einarmig", "Rücken", 8, 12, 2.5],
     ["Rudern am Kabel", "Rücken", 10, 12, 2.5], ["T-Bar-Rudern", "Rücken", 8, 12, 2.5], ["Rudern Maschine", "Rücken", 5, 8, 5], ["Latzug Maschine", "Rücken", 5, 8, 5], ["Hohes Rudern Maschine", "Rücken", 5, 8, 5], ["Face Pulls", "Rücken", 12, 15, 2.5], ["Hyperextensions", "Rücken", 10, 15, 2.5],
     ["Schulterdrücken Langhantel", "Schultern", 6, 10, 2.5], ["Schulterdrücken Kurzhantel", "Schultern", 8, 12, 2.5], ["Schulterpresse Maschine", "Schultern", 5, 8, 5],
@@ -3345,6 +3346,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var bar = function (y) { return Q("7," + y + " 41," + y) + R(7, y - 5, 3.4, 10) + R(37.6, y - 5, 3.4, 10); };
     var stand = function () { return F("19,42 24,28 29,42") + F("24,28 24,16") + F("19,17 29,17") + H(24, 11); };
     return {
+      pressflat: X("6,31 35,31") + X("10,31 10,41") + X("31,31 31,41") + F("8,41 11,26 19,27 33,27") + H(36.5, 25.5) + X("42.5,37 42.5,11") + Q("42.5,11 29,13.5") + R(40.5, 25, 4, 11) + F("29,27 29,13.5") + D(29, 13.5), /* v192 Brustpresse liegend, Hebel neben dem Kopf, Gewichtsblock (vom Nutzer gewählt) */
       bench: X("7,31 39,31") + X("11,31 11,41") + X("35,31 35,41") + F("9,41 12,26 20,27 34,27") + H(37.5, 25.5) + F("31,27 31,14") + P(31, 10),
       incline: X("12,38 31,19") + X("16,34 16,41") + X("8,41 40,41") + F("9,41 8,31 17,33 27,22") + H(30, 18) + F("26,23 24,10") + P(24, 7),
       fly: X("7,31 39,31") + X("11,31 11,41") + X("35,31 35,41") + F("9,41 12,26 20,27 34,27") + H(37.5, 25.5) + F("23,17 30,27 37,17") + D(22, 16) + D(38, 16),
@@ -3395,6 +3397,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     };
   })();
   var PIC_RULES = [
+    ["pressflat", /brustpresse liegend|lying chest press|liegende brustpresse/],
     ["inclinecurl", /schrägbank.*curl|curl.*schrägbank|incline.*curl|curls? sitzend/],
     ["pendulum", /pendulum|pendel/], ["sissy", /sissy/],
     ["legcurlseat", /beinbeuger sitzend|seated leg curl/], ["legcurlstand", /beinbeuger stehend|standing leg curl/], ["nordic", /nordic/], ["calfseat", /wadenheben sitzend|seated calf/], ["curlseat", /scott|konzentration|bizepsmaschine|preacher/],
