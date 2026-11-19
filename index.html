@@ -820,8 +820,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 190; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 191; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 191, tab: "plan", text: "Übung hinzufügen: In der Suche steht jetzt vor jeder Übung ihr Piktogramm." },
     { v: 190, tab: "data", text: "Rundgang: Innerhalb von „Daten“ wandert nur noch die Markierung von Pille zu Pille, ohne Gleiten und Zoom." },
     { v: 189, tab: "data", text: "Rundgang: Unter „Daten“ führt er jetzt durch alle Bereiche – Essen, Übungen, Persönlich, Sicherung und Hilfe. Die jeweilige Pille bleibt dabei gut lesbar." },
     { v: 188, tab: "plan", text: "„Sätze pro Muskelgruppe“ steht jetzt ganz oben im Plan: Der Balken zeigt, was du trainiert hast, der Strich, was dein Plan pro Woche vorsieht." },
