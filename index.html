@@ -713,6 +713,12 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 [data-look] .motto { display: inline; color: color-mix(in srgb, var(--ink) 85%, transparent); text-shadow: 0 1px 6px rgba(0, 0, 0, .6) }
 [data-look="hell"] .motto::after { content: "Hölle durchleben." } [data-look="winter"] .motto::after { content: "Epischer Winter Arc." }
 [data-look] .lookbtn { border-color: color-mix(in srgb, var(--ink) 30%, transparent) } [data-look] .lookbtn svg { stroke: var(--ink) }
+/* v187 (Wunsch des Nutzers): 12 satte Trainingstag-Farben, gleich in Hell und Dunkel; Schrift je Farbe (weiß oder dunkel, was besser lesbar ist); umrandet = Rand in der Farbe, Schrift normal */
+:root { --d1: #2f6bff; --d2: #ff7a00; --d3: #12b84a; --d4: #8b45ff; --d5: #ff2d87; --d6: #00b4d8; --d7: #f02d2d; --d8: #ffc400; --d9: #7ed321; --d10: #5b4dff; --d11: #00a99d; --d12: #d63af0; }
+.pill.c1 { background: var(--d1); color: #fff } .pill.c2 { background: var(--d2); color: #0e1116 } .pill.c3 { background: var(--d3); color: #0e1116 } .pill.c4 { background: var(--d4); color: #fff } .pill.c5 { background: var(--d5); color: #0e1116 } .pill.c6 { background: var(--d6); color: #0e1116 } .pill.c7 { background: var(--d7); color: #fff } .pill.c8 { background: var(--d8); color: #0e1116 } .pill.c9 { background: var(--d9); color: #0e1116 } .pill.c10 { background: var(--d10); color: #fff } .pill.c11 { background: var(--d11); color: #0e1116 } .pill.c12 { background: var(--d12); color: #0e1116 }
+.pill.o.c1, .pill.o.c2, .pill.o.c3, .pill.o.c4, .pill.o.c5, .pill.o.c6, .pill.o.c7, .pill.o.c8, .pill.o.c9, .pill.o.c10, .pill.o.c11, .pill.o.c12 { background: none; color: var(--ink) }
+.pill.o.c1 { box-shadow: inset 0 0 0 1.5px var(--d1) } .pill.o.c2 { box-shadow: inset 0 0 0 1.5px var(--d2) } .pill.o.c3 { box-shadow: inset 0 0 0 1.5px var(--d3) } .pill.o.c4 { box-shadow: inset 0 0 0 1.5px var(--d4) } .pill.o.c5 { box-shadow: inset 0 0 0 1.5px var(--d5) } .pill.o.c6 { box-shadow: inset 0 0 0 1.5px var(--d6) } .pill.o.c7 { box-shadow: inset 0 0 0 1.5px var(--d7) } .pill.o.c8 { box-shadow: inset 0 0 0 1.5px var(--d8) } .pill.o.c9 { box-shadow: inset 0 0 0 1.5px var(--d9) } .pill.o.c10 { box-shadow: inset 0 0 0 1.5px var(--d10) } .pill.o.c11 { box-shadow: inset 0 0 0 1.5px var(--d11) } .pill.o.c12 { box-shadow: inset 0 0 0 1.5px var(--d12) }
+.chips.colpick { display: grid; grid-template-columns: repeat(6, 36px); justify-content: space-between; gap: 6px 4px }
 </style>
 <script>(function () { /* v177 (Wunsch des Nutzers): Fehlerfänger – schreibt jeden Programmfehler mit (letzte 20) und bietet „Bericht kopieren“ an.
   Steht bewusst vor dem Hauptskript, damit er auch Fehler beim Start erwischt. Speicher: localStorage "trainingslog-errors". */
@@ -813,8 +819,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 186; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 187; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 187, tab: "plan", text: "Trainingstage: 12 kräftige Farben zur Auswahl, gleich im hellen und dunklen Design." },
     { v: 186, tab: "home", text: "Zoomen mit zwei Fingern ist ausgeschaltet (außer im Arzt-Bericht)." },
     { v: 185, tab: "data", text: "Nahrungsergänzung läuft jetzt komplett über den Vorratsschrank: Präparat antippen, darunter klappen alle Einstellungen auf. Die zweite Liste darunter entfällt." },
     { v: 184, tab: "data", text: "Im Vorratsschrank steht jetzt direkt, bis wann der Vorrat reicht." },
@@ -2509,7 +2516,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   function dayMeta(dayId, fallback) {
     var idx = -1, name = fallback || "Training";
     var col = 0; (S.plan && S.plan.days || []).forEach(function (d, i) { if (d.id === dayId) { idx = i; name = d.name; col = d.col; } });
-    return { c: idx < 0 ? 0 : col >= 1 && col <= 8 ? col : idx % 6 + 1, name: name, ab: abbr(name) }; /* v157: eigene Farbe je Trainingstag (d.col 1–8) */
+    return { c: idx < 0 ? 0 : col >= 1 && col <= 12 ? col : idx % 6 + 1, name: name, ab: abbr(name) }; /* v157: eigene Farbe je Trainingstag (d.col 1–8) */
   }
   function calendarBlock() {
     var t = today(); if (!S.calMonth) S.calMonth = t.slice(0, 7);
@@ -3747,7 +3754,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       /* Der Name steht schon im Kopf: Namensfeld nur nach „Umbenennen“ (seit v54). */
       h += S.dayRen === d.id ? '<div class="row"><label style="flex:1 1 200px">Name des Trainingstags<input id="pd-' + d.id + '" data-day="' + di + '" data-pf="dayname" value="' + esc(d.name) + '"></label><button class="ghost" data-act="dayren" data-id="' + d.id + '">Fertig</button></div>'
         : '<div class="row dayacts"><button class="ghost xs" data-act="dayren" data-id="' + d.id + '">Umbenennen</button><button class="ghost xs" data-act="daydup" data-id="' + di + '">Duplizieren</button><button class="ghost xs" data-act="daycol" data-id="' + d.id + '" aria-expanded="' + (S.dayCol === d.id) + '"><span class="pill c' + dayMeta(d.id).c + ' coldot"></span>Farbe</button><button class="ghost xs danger" data-act="deld" data-id="' + di + '">Tag löschen</button></div>' +
-          (S.dayCol === d.id ? '<div class="chips colpick" role="group" aria-label="Farbe für ' + esc(d.name) + '">' + [1, 2, 3, 4, 5, 6, 7, 8].map(function (n) { return '<button data-act="daycolset" data-id="' + d.id + ":" + n + '" aria-pressed="' + (dayMeta(d.id).c === n) + '" aria-label="Farbe ' + n + '"><span class="pill c' + n + ' colsw"></span></button>'; }).join("") + "</div>" : "");
+          (S.dayCol === d.id ? '<div class="chips colpick" role="group" aria-label="Farbe für ' + esc(d.name) + '">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (n) { return '<button data-act="daycolset" data-id="' + d.id + ":" + n + '" aria-pressed="' + (dayMeta(d.id).c === n) + '" aria-label="Farbe ' + n + '"><span class="pill c' + n + ' colsw"></span></button>'; }).join("") + "</div>" : "");
       if (cnt) h += '<p class="small muted dmeta">≈ ' + dayMin(d.exercises) + " min · " + volChips(planVol([d]), false) + "</p>";
       d.exercises.forEach(function (e, ei) {
         var dup = dupOf(e);
@@ -3794,7 +3801,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
           .map(function (e) { return exClean(e); }),
         days: d.days.map(function (x) {
         if (!IRE.test(x.id)) throw 0;
-        return { id: x.id, name: txt80(x.name), col: isN(x.col) && x.col >= 1 && x.col <= 8 ? x.col : undefined, exercises: x.exercises.map(function (e) {
+        return { id: x.id, name: txt80(x.name), col: isN(x.col) && x.col >= 1 && x.col <= 12 ? x.col : undefined, exercises: x.exercises.map(function (e) {
           if (!IRE.test(e.id) || ![e.sets, e.repMin, e.repMax, e.step].every(isN)) throw 0;
           return exClean(e);
         }) };
