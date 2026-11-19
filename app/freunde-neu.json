@@ -55,6 +55,31 @@
           "text": "Dazu viele Darstellungs- und Komfortverbesserungen."
         }
       ]
+    },
+    {
+      "v": 189,
+      "punkte": [
+        {
+          "tab": "home",
+          "text": "Selbst gekochte Gerichte: Ein eingetragenes Gericht antippen zeigt seine Zutaten. Mit „Zutaten ändern“ passt du Zutaten, Mengen und Portionen nachträglich an – auch die schon eingetragenen Portionen rechnen sich neu."
+        },
+        {
+          "tab": "data",
+          "text": "Lebensmittel: Änderst du Werte eines Produkts, kannst du sie auch in früheren Einträgen übernehmen. Auffällige Werte (z. B. falsch gescannt) werden rot markiert."
+        },
+        {
+          "tab": "data",
+          "text": "Nahrungsergänzung läuft komplett über den Vorratsschrank, mit Datum, bis wann der Vorrat reicht."
+        },
+        {
+          "tab": "plan",
+          "text": "Training: „Sätze pro Muskelgruppe“ steht oben im Plan (Balken = trainiert, Strich = laut Plan), 12 kräftige Farben für die Trainingstage, Übungen in einer Liste."
+        },
+        {
+          "tab": "data",
+          "text": "Dazu viele Darstellungs- und Komfortverbesserungen, u. a. ein überarbeiteter Rundgang und kein versehentliches Zoomen mehr."
+        }
+      ]
     }
   ]
 }
