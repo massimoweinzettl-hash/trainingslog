@@ -896,8 +896,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 224; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 225; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 225, tab: "plan", text: "Kein falscher Hinweis mehr, wenn dein Plan weniger Tage hat, als du pro Woche trainierst – die Tage wechseln sich einfach ab. Hinweis nur noch, wenn der Plan mehr Tage hat als Trainings pro Woche." },
     { v: 224, tab: "home", text: "Probe-Design „Neon“ wieder entfernt – die klassische Darstellung bleibt." },
     { v: 221, tab: "home", text: "Neues Design „Magerquark“: hell und bläulich, weiße Karten, kräftiges Blau. Einstellungen → Design." },
     { v: 220, tab: "data", text: "Vorrat hat jetzt einen eigenen Bereich unter Daten → Essen, direkt unter Nahrungsergänzung: „+ Lebensmittel suchen“, z. B. Whey, dann Packungen eintragen." },
@@ -4175,7 +4176,10 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var h = "";
     h += tip("prog", "Wie steigert der Tracker?", "Schaffst du in allen Sätzen die obere Wdh.-Grenze, schlägt der Tracker beim nächsten Mal das Gewicht plus „Schritt“ vor. Namen, Bewertung, Muskelgruppe und weitere Einstellungen findest du über „Einstellungen“ bei jeder Übung (Reiter „Daten“ → „Übungen“).");
     var tdn = ((S.person || {}).tdays || []).length;
-    if (!S.wiz && tdn >= 2 && tdn !== S.plan.days.length) h += '<p class="small fmiss">Du trainierst laut Angaben ' + tdn + "× pro Woche, dein Plan hat " + S.plan.days.length + (S.plan.days.length === 1 ? " Tag" : " Tage") + ". „Plan neu erstellen“ passt ihn an.</p>";
+    /* v225 (Hinweis des Nutzers): Weniger Plan-Tage als Trainings pro Woche ist kein Widerspruch – die Tage wechseln sich ab (A/B/A/B).
+       Hinweis nur noch, wenn der Plan mehr Tage hat, als du pro Woche trainierst: Dann kommt jeder Tag seltener als einmal pro Woche dran. */
+    var pdn = S.plan.days.length;
+    if (!S.wiz && tdn >= 1 && pdn > tdn) h += '<p class="small fmiss">Dein Plan hat ' + pdn + " Tage, du trainierst laut Angaben " + tdn + "× pro Woche. Die Tage kommen der Reihe nach dran, jeder also seltener als einmal pro Woche. Soll jeder Tag jede Woche drankommen: „Plan neu erstellen“.</p>";
     h += '<div class="row plantop"><button class="ghost" data-act="wizopen" aria-expanded="' + !!S.wiz + '">' + (S.plan.days.length ? "Plan neu erstellen" : "Plan erstellen") + "</button>" + (S.plan.days.some(function (d) { return d.exercises.length; }) ? '<button class="ghost" data-act="planshare">Plan teilen</button>' : "") + (S.plan.days.length > 1 ? '<button class="ghost" data-act="dayall">' + (S.plan.days.some(function (d) { return !planClosed[d.id]; }) ? "Alle einklappen" : "Alle ausklappen") + "</button>" : "") + "</div>";
     if (planShareMsg) h += '<p class="small okmsg" role="status">' + esc(planShareMsg) + "</p>"; /* v214 */
     if (S.wiz) h += wizHtml();
