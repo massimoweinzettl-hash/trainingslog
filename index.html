@@ -911,8 +911,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 234; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 235; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 235, tab: "data", text: "Vorratsschrank: neuer Behälter „Riegel-Karton“ – der Thekenkarton mit offenem Deckel, die Riegel liegen darin. Riegel kommen beim Hinzufügen automatisch hinein." },
     { v: 234, tab: "data", text: "Vorratsschrank: neues Symbol für die „Dose“ – mit geriffeltem Deckel und Etikett. Damit haben alle fünf Behälter neue Symbole." },
     { v: 233, tab: "data", text: "Vorratsschrank: neues Symbol für den „Karton“ – offener Karton mit vier Klappen." },
     { v: 232, tab: "data", text: "Vorratsschrank: neues Symbol für den „Beutel“ – Standbeutel mit Zipper." },
@@ -4316,7 +4317,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
           if (typeof x.cat === "string" && FCATS.indexOf(x.cat) >= 0) ci.cat = x.cat;
           if (typeof x.code === "string" && /^\d{8,14}$/.test(x.code)) ci.code = x.code;
           if (isN(x.caf) && x.caf >= 0 && x.caf < 5000) ci.caf = x.caf;
-          if (typeof x.form === "string" && SFORMS.some(function (f) { return f[0] === x.form; })) ci.form = x.form; if (/^(dose|beutel|flasche|karton|riegel)$/.test(x.cont || "")) ci.cont = x.cont; if (DRE.test(x.gone || "")) ci.gone = x.gone; if (isN(x.pack) && x.pack > 0) ci.pack = x.pack; if (x.stock && DRE.test(x.stock.d) && isN(x.stock.c) && x.stock.c >= 0) { ci.stock = { d: x.stock.d, c: x.stock.c }; if (isN(x.stock.full) && x.stock.full >= 0) ci.stock.full = Math.round(x.stock.full); } /* v165 */
+          if (typeof x.form === "string" && SFORMS.some(function (f) { return f[0] === x.form; })) ci.form = x.form; if (/^(dose|beutel|flasche|karton|riegelbox|riegel)$/.test(x.cont || "")) ci.cont = x.cont; if (DRE.test(x.gone || "")) ci.gone = x.gone; if (isN(x.pack) && x.pack > 0) ci.pack = x.pack; if (x.stock && DRE.test(x.stock.d) && isN(x.stock.c) && x.stock.c >= 0) { ci.stock = { d: x.stock.d, c: x.stock.c }; if (isN(x.stock.full) && x.stock.full >= 0) ci.stock.full = Math.round(x.stock.full); } /* v165 */
           if (x.vor && DRE.test(x.vor.d) && isN(x.vor.c) && x.vor.c >= 0) { ci.vor = { d: x.vor.d, c: x.vor.c, full: isN(x.vor.full) && x.vor.full >= 0 ? Math.round(x.vor.full) : 0, x: Array.isArray(x.vor.x) ? x.vor.x.filter(function (k) { return IRE.test(k); }).slice(0, 60) : [] }; } /* v219 */
           if (Array.isArray(x.n) && x.n.length >= 21 && x.n.length <= NUTK.length && x.n.every(function (v) { return v === null || isN(v); })) ci.n = x.n; return ci;
         });
@@ -6501,7 +6502,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     return p + " · " + (r.days <= 7 ? '<b class="slow">nur noch ' + r.days + (r.days === 1 ? " Tag" : " Tage") + "</b>" : "reicht bis " + dfmt(addDays(r.last, dlEvery(a) - 1)));
   }
   /* v169 (Wunsch des Nutzers): Vorratsschrank – volle Dosen plus eine offene, die mit jeder Einnahme leerer wird. */
-  var CONTS = [["dose", "Dose"], ["beutel", "Beutel"], ["flasche", "Flasche"], ["karton", "Karton"], ["riegel", "Riegel"]]; /* v229: Karton (z. B. Riegel-Box, Eier) und einzelner Riegel */
+  var CONTS = [["dose", "Dose"], ["beutel", "Beutel"], ["flasche", "Flasche"], ["karton", "Karton"], ["riegelbox", "Riegel-Karton"], ["riegel", "Riegel"]]; /* v235: Riegel-Karton (Thekenkarton mit Deckel) */ /* v229: Karton (z. B. Riegel-Box, Eier) und einzelner Riegel */
   function suppCont(it) { return it.cont || (it.per === "g" ? "beutel" : it.per === "ml" ? "flasche" : "dose"); }
   /* v174 (Wunsch des Nutzers): Inhalt sichtbar – Kapseln, Tabletten, Pulver oder Flüssigkeit im gefüllten Teil. */
   function suppFill(it) { return it.per === "g" ? "powder" : it.per === "ml" || it.form === "Tropfen" ? "liquid" : it.form === "Tablette" ? "tabs" : "caps"; }
@@ -6518,6 +6519,11 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     if (k === "karton") { h = f * 10.2; /* v233 (Vorlage des Nutzers): offener Karton schräg von vorn, vier Klappen; Füllung steigt in beiden Seitenflächen */
       return o + (h > 0 ? '<path d="M3.5 ' + (27.1 - h).toFixed(1) + "L11 " + (30.5 - h).toFixed(1) + "V30.5L3.5 27.1zM11 " + (30.5 - h).toFixed(1) + "L18.5 " + (27.1 - h).toFixed(1) + 'V27.1L11 30.5z" class="jf"/>' : "") +
         '<path d="M3.5 12.1 L11 15.5 L11 30.5 L3.5 27.1Z M11 15.5 L18.5 12.1 L18.5 27.1 L11 30.5Z" class="jb"/><path d="M3.5 12.1 L11 8.7 L8 4.2 L0.5 7.6Z M11 8.7 L18.5 12.1 L21.5 7.6 L14 4.2Z M3.5 12.1 L11 15.5 L8.2 18.7 L0.7 15.3Z M11 15.5 L18.5 12.1 L21.3 15.3 L13.8 18.7Z" class="jz"/></svg>'; }
+    if (k === "riegelbox") { /* v235 (Vorlage des Nutzers): Riegel-Karton mit offenem Deckel und Griffmulde; Inhalt als 1–4 liegende Riegel, von hinten nach vorn */
+      var rn = f <= 0 ? 0 : Math.max(1, Math.min(4, Math.round(f * 4 + 0.49))), rb = "";
+      for (var ri = 0; ri < rn; ri++) { var yb = 16.3 + ri * 1.5, yf = yb + 1.15, ob = (22 - yb) / 6.5 * 3, of = (22 - yf) / 6.5 * 3;
+        rb += "M" + (2.9 + ob).toFixed(2) + " " + yb.toFixed(2) + "L" + (16.1 + ob).toFixed(2) + " " + yb.toFixed(2) + "L" + (16.1 + of).toFixed(2) + " " + yf.toFixed(2) + "L" + (2.9 + of).toFixed(2) + " " + yf.toFixed(2) + "Z"; }
+      return o + '<path d="M4.5 15.5 L5.4 2.6 L21 3.8 L20.5 15.5" class="jb"/>' + (rb ? '<path d="' + rb + '" class="jf"/>' : "") + '<path d="M1.5 22 L4.5 15.5 L20.5 15.5 M17.5 22 L20.5 15.5 L20.5 23.5 L17.5 30" class="jb"/><path d="M1.5 22H5.2v2.2q0 1 1 1h5.6q1 0 1-1V22h4.7V30H1.5Z" class="jb"/></svg>'; }
     if (k === "riegel") { h = f * 17.2; /* v231 (Vorlage des Nutzers): Riegel in Folie, gezackt verschweißt, Folie unter den Enden eingezogen, Riegelkanten innen */
       return o + '<path d="M1.50 3.4 L3.08 1.8 L4.67 3.4 L6.25 1.8 L7.83 3.4 L9.42 1.8 L11 3.4 L12.58 1.8 L14.17 3.4 L15.75 1.8 L17.33 3.4 L18.92 1.8 L20.50 3.4 L20.50 6.4 L18.4 8.2 L19.30 10.2 L19.30 21.8 L18.4 23.8 L20.50 25.6 L20.50 28.6 L18.92 30.2 L17.33 28.6 L15.75 30.2 L14.17 28.6 L12.58 30.2 L11 28.6 L9.42 30.2 L7.83 28.6 L6.25 30.2 L4.67 28.6 L3.08 30.2 L1.50 28.6 L1.50 25.6 L3.6 23.8 L2.70 21.8 L2.70 10.2 L3.6 8.2 L1.50 6.4Z" class="jb"/><path d="M6.6 7.4V24.6M15.4 7.4V24.6" class="jz"/>' + (h > 0 ? '<rect x="7.2" y="' + (24.6 - h).toFixed(1) + '" width="7.6" height="' + h.toFixed(1) + '" rx="1" class="jf"/>' : "") + "</svg>"; }
     if (k === "beutel") { h = f * 19.2; /* v232 (Vorlage des Nutzers): Standbeutel mit Siegelnaht, Zipper samt Schieber, seitlichen Falten und Bodenfalte */
@@ -6584,7 +6590,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     return h + '<div class="fpadd fvadd"><span class="qwrap"><input autocorrect="off" class="cbq" data-cb="fv" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="+ Lebensmittel suchen, z. B. Whey" aria-label="Lebensmittel für den Vorrat suchen"></span><div class="cbres tpres" id="cbr-fv" hidden></div></div>';
   }
   function fvStart(id) { var fdv = clone(foodDoc()), itv = ownItem(fdv, id); if (!itv) return;
-    if (!itv.pack) itv.pack = itv.per === "st" ? 10 : 1000; if (!itv.cont) itv.cont = itv.per === "ml" ? "flasche" : itv.per === "g" ? "beutel" : "karton"; /* v229: Stück-Lebensmittel (Riegel, Eier) im Karton */
+    if (!itv.pack) itv.pack = itv.per === "st" ? 10 : 1000; if (!itv.cont) itv.cont = itv.per === "ml" ? "flasche" : itv.per === "g" ? "beutel" : /riegel|\bbars?\b/i.test(itv.name) ? "riegelbox" : "karton"; /* v229/v235: Stück-Lebensmittel im Karton, Riegel im Riegel-Karton */
     itv.vor = { d: today(), c: itv.pack, full: 0, x: fvToday(fdv, itv.id) }; S.fOpen = itv.id; foodSave(fdv); }
   function fvToday(fd, id) { var nd = S.nutri["n_" + today()]; return (nd && nd.entries || []).filter(function (e) { return entUse(fd, e, id) > 0; }).map(function (e) { return e.id; }); }
   function fvLow(fd) { var o = foodAll(fd).filter(function (x) { return x.vor; }).map(function (x) { var r = fvRange(fd, x); if (!r || !r.rate || r.days > 7) return ""; return '<span class="slow">' + esc(shortName(x.name)) + (r.left ? " noch " + r.days + (r.days === 1 ? " Tag" : " Tage") : " leer") + "</span>"; }).filter(Boolean);
@@ -7559,7 +7565,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
           var nper = t.value === "g" || t.value === "ml" ? t.value : "st", pa3 = suppPortion(fd3, it3), of3 = suppFac(it3, pa3);
           if (nper !== it3.per) { var raw3 = nutRaw(it3); it3.per = nper; var nf3 = suppFac(it3, pa3); if (raw3) it3.n = raw3.map(function (v) { return v == null ? null : v * of3 / nf3; }); it3.kcal = (it3.kcal || 0) * of3 / nf3; it3.p = (it3.p || 0) * of3 / nf3; }
           if (nper === "st") it3.form = SFORMS.some(function (x) { return x[0] === t.value; }) ? t.value : "Kapsel"; else delete it3.form; }
-        else if (f3 === "cont") { if (/^(dose|beutel|flasche|karton|riegel)$/.test(t.value)) it3.cont = t.value; }
+        else if (f3 === "cont") { if (/^(dose|beutel|flasche|karton|riegelbox|riegel)$/.test(t.value)) it3.cont = t.value; }
         else if (f3 === "pack") { var opk = suppSplit(foodItem(foodDoc(), it3.id) || it3, suppLeft(foodDoc(), foodItem(foodDoc(), it3.id) || it3)), vpk = num(t.value);
           var reStock = function () { if (it3.stock) it3.stock = { d: today(), c: opk[0] + opk[1] * (it3.pack || 0), full: opk[1] }; };
           if (t.value.trim() === "" || !vpk) { delete it3.pack; reStock(); } else if (vpk > 0 && vpk < 1e5) { it3.pack = vpk; reStock(); } else return; }
