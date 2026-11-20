@@ -805,6 +805,8 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 [data-skin="neon"] .chips button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--accent-ink) }
 [data-skin="neon"] .chips button:disabled[aria-pressed="true"] { opacity: .5 }
 [data-skin="neon"] #kibtn { background: var(--accent); color: var(--accent-ink) } [data-skin="neon"] #kibtn svg { stroke: var(--accent-ink) }
+/* v223 (Wunsch des Nutzers): Wasser bei Neon neutral grau, damit es nicht wie Protein-Blau aussieht (Glas-Bild bleibt) */
+:root[data-skin="neon"] .wline { --wc: #64748b } @media (prefers-color-scheme: dark) { :root[data-skin="neon"]:not([data-theme="light"]) .wline { --wc: #a3aebf } } :root[data-skin="neon"][data-theme="dark"] .wline { --wc: #a3aebf }
 [data-skin="neon"] .cafch .cfl { stroke: var(--caf) } [data-skin="neon"] .cafch .cfa { fill: var(--caf) } [data-skin="neon"] .cafch .cfnow { stroke: var(--ink) } [data-skin="neon"] .cafch .cfnt { fill: var(--ink) }
 /* v187 (Wunsch des Nutzers): 12 satte Trainingstag-Farben, gleich in Hell und Dunkel; Schrift je Farbe (weiß oder dunkel, was besser lesbar ist); umrandet = Rand in der Farbe, Schrift normal */
 :root { --d1: #2f6bff; --d2: #ff7a00; --d3: #12b84a; --d4: #8b45ff; --d5: #ff2d87; --d6: #00b4d8; --d7: #f02d2d; --d8: #ffc400; --d9: #7ed321; --d10: #5b4dff; --d11: #00a99d; --d12: #d63af0; }
@@ -913,8 +915,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 222; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 223; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 223, tab: "home", text: "Design „Neon“: Trinken ist jetzt neutral grau, damit es nicht wie Protein aussieht." },
     { v: 222, tab: "home", text: "Neues Design „Neon“ zum Ausprobieren: ruhige Flächen, Protein blau, Fett coral, Kohlenhydrate mint, Koffein lila – hell und dunkel. Einstellungen → Design." },
     { v: 221, tab: "home", text: "Neues Design „Magerquark“: hell und bläulich, weiße Karten, kräftiges Blau. Einstellungen → Design." },
     { v: 220, tab: "data", text: "Vorrat hat jetzt einen eigenen Bereich unter Daten → Essen, direkt unter Nahrungsergänzung: „+ Lebensmittel suchen“, z. B. Whey, dann Packungen eintragen." },
