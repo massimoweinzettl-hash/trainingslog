@@ -834,8 +834,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 209; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 210; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 210, tab: "data", text: "Frag die App: Kaffee, Wochenschnitt und Fragen zum Gewicht ohne genug Messungen beantwortet die App jetzt selbst – zuverlässiger." },
     { v: 209, tab: "data", text: "Frag die App: Sagt dir, bis wann heute noch ein Kaffee passt, erklärt dein Kalorienziel und deinen BMI zuverlässiger und weiß, wo du Einträge löschst und dein Gewicht siehst." },
     { v: 208, tab: "data", text: "Frag die App: Versteht jetzt auch Fragen mit Tippfehlern und sagt dir, wann du dein Zielgewicht bei deinem Trend voraussichtlich erreichst." },
     { v: 207, tab: "data", text: "Frag die App: Erklärt beim Kalorienziel zuerst den Hauptgrund (Cut, Aufbau) und gibt auf „Erkläre mir die App“ einen kurzen Überblick über alle Reiter." },
@@ -1261,7 +1262,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
         add("gew", Math.abs(togo) < 0.3 ? "Dein Zielgewicht hast du schon erreicht." : !wks ? "Wann du dein Zielgewicht erreichst, lässt sich gerade nicht sagen: Dein Trend geht nicht in Richtung Ziel." : wks > 104 ? "Bei deinem jetzigen Tempo dauert es bis zum Zielgewicht noch sehr lange (über zwei Jahre)." : "Wenn dein Trend so bleibt, erreichst du dein Zielgewicht in etwa " + (wks < 1.5 ? "einer Woche" : r(wks) + " Wochen") + ", also um den " + dfmt(addDays(t, r(wks * 7))) + " (grobe Schätzung).");
       }
       if (lw) add("gew", "Prognose, wenn der Trend anhält (grobe Schätzung, Wasser schwankt): in 7 Tagen etwa " + fmt(r((lw.weight + tr.perWeek) * 10) / 10) + " kg, in 4 Wochen etwa " + fmt(r((lw.weight + tr.perWeek * 4) * 10) / 10) + " kg.");
-    } else add("gew", "Ob du im Plan liegst, was du in einigen Wochen wiegst und wann du dein Zielgewicht erreichst, kann die App noch nicht sagen: Dafür braucht sie Gewichtsmessungen über mindestens 7 Tage. Wieg dich am besten jeden Morgen.");
+    } else add("gew", KIX.notrend = "Ob du im Plan liegst, was du in einigen Wochen wiegst und wann du dein Zielgewicht erreichst, kann die App noch nicht sagen: Dafür braucht sie Gewichtsmessungen über mindestens 7 Tage. Wieg dich am besten jeden Morgen.");
     var day = S.nutri["n_" + t], ent = day ? day.entries : [];
     var sum = ent.reduce(function (a, e) { return { p: a.p + (e.p || 0), kcal: a.kcal + (e.kcal || 0), f: a.f + (e.f || 0), c: a.c + (e.c || 0) }; }, { p: 0, kcal: 0, f: 0, c: 0 });
     if (!E) add("kal", "Dein Kalorienziel kann noch nicht berechnet werden: Es fehlen Angaben unter Daten → Persönlich (Geschlecht, Geburtsjahr, Größe, Alltag) oder ein Gewicht unter Körper.");
@@ -1280,7 +1281,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       add("mak", mk("Eiweiß", sum.p, mc.p) + ". " + mk("Fett", sum.f, mc.f) + ". " + mk("Kohlenhydrate", sum.c, mc.c) + ".");
       var dk = [], dz = function (n) { var x = new Date(+t.slice(0, 4), +t.slice(5, 7) - 1, +t.slice(8, 10) - n); return x.getFullYear() + "-" + pad(x.getMonth() + 1) + "-" + pad(x.getDate()); };
       for (var k = 1; k <= 7; k++) { var nd = S.nutri["n_" + dz(k)]; if (nd && nd.entries && nd.entries.length) dk.push(nd.entries.reduce(function (a, e) { return a + (e.kcal || 0); }, 0)); }
-      add("ess", dk.length >= 3 ? "In den letzten 7 Tagen hast du im Schnitt " + g(dk.reduce(function (a, b) { return a + b; }, 0) / dk.length) + " kcal pro Tag gegessen (" + dk.length + " Tage mit Einträgen); dein Ziel im Wochenschnitt sind " + g(tgt) + " kcal." : "Für einen Wochenschnitt beim Essen sind zu wenige Tage eingetragen (mindestens 3 der letzten 7 Tage).");
+      KIX.avg = (dk.length >= 3 ? "In den letzten 7 Tagen hast du im Schnitt " + g(dk.reduce(function (a, b) { return a + b; }, 0) / dk.length) + " kcal pro Tag gegessen (" + dk.length + " Tage mit Einträgen); dein Ziel im Wochenschnitt sind " + g(tgt) + " kcal." : "Für einen Wochenschnitt beim Essen sind zu wenige Tage eingetragen (mindestens 3 der letzten 7 Tage)."); add("ess", KIX.avg);
     }
     if (!small) add("ess", ent.length ? "Heute eingetragen: " + ent.slice(-12).map(function (e) { return e.name + " (" + g(e.kcal) + " kcal)"; }).join("; ") + "." : "Heute hast du noch nichts eingetragen.");
     var cs = cafEvents(t, ent).filter(function (e) { return e.caf > 0; });
@@ -1292,7 +1293,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     /* v209 (großer Testlauf: Modell erfand Kaffee-Ratschläge): fertige Antwort, ob und bis wann noch ein Kaffee passt */
     var bt2 = bedTime(), nw2 = Date.now(), bed2 = 0; cs.forEach(function (e) { bed2 += cafAmt(e.caf, bt2.ms - cafMs(e, nw2)); });
     if (nw2 < bt2.ms) { var xl = cafLatest(CAF_BED - bed2, bt2.ms, nw2), xd2 = new Date(Math.floor(xl / 9e5) * 9e5);
-      add("kof", xl <= nw2 ? "Noch ein Kaffee heute: besser nicht. Ein Kaffee (etwa 90 mg) wäre zu deiner Schlafenszeit (" + bt2.hm + ") zu viel – für guten Schlaf sollten es dann höchstens " + CAF_BED + " mg sein." : "Noch ein Kaffee heute: Ein Kaffee (etwa 90 mg) passt noch, wenn du ihn bis etwa " + pad(xd2.getHours()) + ":" + pad(xd2.getMinutes()) + " Uhr trinkst. Später getrunken wäre zur Schlafenszeit (" + bt2.hm + ") noch zu viel Koffein im Körper."); }
+      KIX.coffee = (xl <= nw2 ? "Heute besser keinen Kaffee mehr: Ein Kaffee (etwa 90 mg) wäre zu deiner Schlafenszeit (" + bt2.hm + ") zu viel – für guten Schlaf sollten es dann höchstens " + CAF_BED + " mg sein." : "Ein Kaffee (etwa 90 mg) passt heute noch, wenn du ihn bis etwa " + pad(xd2.getHours()) + ":" + pad(xd2.getMinutes()) + " Uhr trinkst. Später, zum Beispiel am Abend, wäre zur Schlafenszeit (" + bt2.hm + ") noch zu viel Koffein im Körper."); add("kof", KIX.coffee); }
     if (done.length) done.forEach(function (w) {
       var ex = (w.entries || []).filter(function (e) { return e.sets && e.sets.length; }), n = ex.reduce(function (a, e) { return a + e.sets.length; }, 0);
       add("tra", "Training heute (" + (w.dayName || "Einheit") + "): " + n + " Sätze" + (w.done ? ", beendet um " + w.done : "") + (small ? "." : ": " + ex.slice(0, 8).map(function (e) { var b = e.sets.reduce(function (m, s) { return s.w * (1 + s.r / 30) > m.w * (1 + m.r / 30) ? s : m; }, e.sets[0]); return e.name + " " + e.sets.length + "× (bester Satz " + fmt(b.w) + " kg × " + b.r + ")"; }).join("; ") + "."));
@@ -1329,7 +1330,11 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* v209: Fragen, bei denen das Modell im großen Test trotz fertigem Satz danebenlag, beantwortet die App selbst (Satz aus kiFacts). */
   var KIX = {}, KI_WHY = /(warum|wieso|weshalb|wie kommt|wodurch|woher).{0,40}(kalorienziel|kalorien|kcal|\bziel\b)|(kalorienziel|\bziel\b).{0,30}(so hoch|so niedrig|so wenig|so viel|zu hoch|zu niedrig)/i;
   function kiFixed(q) { if (KI_TOUR.test(q)) return KI_TOURTXT;
-    var isBmi = /\bbmi\b|body.?mass/i.test(q);
+    var isBmi = /\bbmi\b|body.?mass/i.test(q), tp = kiTopics(q) || {};
+    /* v210 (Kontrolllauf): Kaffee, Wochenschnitt und Gewicht ohne Trend ebenfalls fest */
+    if (tp.kof && /noch|trink|darf|kann|abend|nachmittag|später|spaeter|passt/i.test(q)) { kiFacts(false, q); if (KIX.coffee) return KIX.coffee; }
+    if (/schnitt|durchschnitt|pro tag gegessen|diese woche gegessen|letzte[n]? (7|sieben) tage/i.test(q)) { kiFacts(false, q); if (KIX.avg) return KIX.avg; }
+    if (tp.gew && !isBmi && !kiHow(q)) { kiFacts(false, q); if (KIX.notrend) return KIX.notrend; }
     if (isBmi || (KI_WHY.test(q) && !/trainingstag|ruhetag/i.test(q))) { kiFacts(false, q); return (isBmi ? KIX.bmi : KIX.why) || ""; } return KI_HEALTH.test(q) && !kiHow(q) ? "Bei Schmerzen, Verletzungen oder gesundheitlichen Fragen lass das bitte von einem Arzt oder Physiotherapeuten abklären. Ich beantworte nur Fragen zu deinen Werten und zur Bedienung der App." : ""; }
   window.TL_KI = { prompt: kiPrompt, instr: function () { return KI_INSTR; }, fixed: kiFixed };
   function kiAsk(q) {
@@ -1339,7 +1344,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var fix = kiFixed(q); if (fix) { KI.a = fix; kiRender(); return; }
     KI.busy = true; kiRender();
     var go = function (small) { return C.nativePromise("Ki", "ask", { instructions: KI_INSTR, prompt: kiPrompt(q, small) }); };
-    go(false).then(function (r) { return r && !r.ok && r.reason === "long" ? go(true) : r; }).then(function (r) {
+    go(false).then(function (r) { return r && !r.ok && (r.reason === "long" || r.reason === "guard") ? go(true) : r; }) /* v210: Schutzregel griff im Test sporadisch – zweiter Versuch mit kürzerem Text */.then(function (r) {
       KI.busy = false; if (r && r.ok && r.text) KI.a = String(r.text).trim(); else { KI.err = kiWhy(r && r.reason, r && r.msg); if (r && (r.reason === "off" || r.reason === "loading")) { KI.ok = false; KI.why = r.reason; } }
       kiRender();
     }).catch(function (e) { KI.busy = false; KI.err = kiWhy("", e && e.message); kiRender(); });
