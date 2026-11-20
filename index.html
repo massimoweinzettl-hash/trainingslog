@@ -206,6 +206,7 @@ button.xs { min-height: 32px; padding: 2px 10px }
 .nlist li { grid-template-columns: auto minmax(0, 1fr) auto }
 .nlist .nnm { display: flex; flex-direction: column; min-width: 0 } .nlist .nnm > span:first-child { overflow-wrap: anywhere } .nlist .namt2 { font-weight: 700; white-space: nowrap }
 .nmac > span { white-space: nowrap } .nmac { display: flex; flex-wrap: wrap; column-gap: 10px; row-gap: 0; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 1px } .nmac i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: 1px }
+.nmac .mk i, .fcaf i { background: #e5484d } .fcaf { white-space: nowrap } .fcaf i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: 1px } /* v217: Koffein roter Punkt (Wunsch des Nutzers) */
 .nmac .z i { opacity: var(--pg-op) } .nmac .mp i { background: var(--pr) } .nmac .mf i { background: var(--m-f) } .nmac .mc i { background: var(--m-c) }
 .nkc { font-variant-numeric: tabular-nums; white-space: nowrap; margin-left: auto; color: var(--ink); font-weight: 500 }
 .scanval { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; background: var(--sunken); border-radius: 10px } .scanval .nmac { font-size: 14px } .nlist li.nsum { border-bottom: 0; font-weight: 600 } .nlist .nsl { width: 3.9em; padding: 0 5px; font-size: 13px; box-sizing: content-box } .nlist li.nsum .nmac { font-weight: 500; color: var(--ink) } .nlist li.nsum .nkc { font-weight: 700 }
@@ -309,8 +310,8 @@ body.cardioonly .tabs button[data-tab="plan"], body.cardioonly .dsec button[data
 .fcat { margin: 14px 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted) }
 .frow { border-bottom: 1px solid var(--line) }
 .fline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; width: 100%; border: 0; background: none; padding: 9px 0; min-height: 0; text-align: left; font-weight: 400; border-radius: 0 }
-.fline .fn { font-weight: 600; min-width: 0; overflow-wrap: anywhere }
-.fline .muted { font-size: 13px; white-space: nowrap }
+.fline .fn { font-weight: 600; min-width: 0; overflow-wrap: break-word; flex: 1 1 auto }
+.fline .muted { font-size: 13px; white-space: normal; text-align: right; flex: 0 1 auto } /* v217: darf umbrechen, damit Namen nicht im Wort getrennt werden */
 .frow.open .fitem { border-bottom: 0; padding-top: 0 }
 .fitem .fcatsel { grid-column: 1 / 4 }
 .dupwarn { grid-column: 1 / -1; font-size: 13px; color: var(--warn) }
@@ -864,8 +865,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 216; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 217; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 217, tab: "home", text: "Koffein mit rotem Punkt: bei deinen Einträgen (neben Eiweiß, Fett und Kohlenhydraten), in der Summe und in der Lebensmittelliste. Löschst du eine Portion eines Gerichts, kommt sie zurück zu den Resten." },
     { v: 216, tab: "data", text: "Lebensmittelliste: Bei Kaffee, Cola, Energy Drinks und Co. steht jetzt auch der Koffeingehalt." },
     { v: 215, tab: "home", text: "Essen im Rückblick: Für vergangene Tage nachtragen („+ Eintragen für diesen Tag“), Einträge löschen und die Uhrzeit ändern. Gerichte antippen zeigt die Zutaten – jetzt auch nach Wochen noch." },
     { v: 214, tab: "plan", text: "Plan teilen: Über „Plan teilen“ oben im Plan schickst du deinen ganzen Plan an Freunde. Sie fügen ihn unter „Plan-Code einfügen“ ein und können ihren Plan ersetzen oder die Tage dazunehmen." },
@@ -5800,11 +5802,11 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     if (!ent.length) return "";
     return '<ul class="nlist">' + ent.map(function (e) {
       var eck = e.ck ? cookById(fd, e.ck) : null, has = !!(eck || e.ckz), eop = has && S.ckShow === e.id, pn = eck ? mealPortions(eck) : e.ckn;
-      return '<li' + (eop ? ' class="ckopen"' : "") + '><input type="time" class="ntime" data-nt="' + e.id + '" data-nd="' + date + '" value="' + (e.t || "") + '" aria-label="Uhrzeit ' + esc(e.name) + '"><span class="nnm">' + (has ? '<button class="linkbtn ckname" data-act="ckshow" data-id="' + e.id + '" aria-expanded="' + !!eop + '">' + nAmtHtml(e.name) + ' <span class="muted">' + (eop ? "▴" : "▾") + "</span></button>" : "<span>" + (e.est ? "≈ " : "") + nAmtHtml(e.name) + "</span>") + nMac(e.p, e.f, e.c, '<span class="nkc">' + Math.round(e.kcal).toLocaleString("de-DE") + " kcal</span>") + '</span><button class="ghost xs" data-act="ndel" data-id="' + e.id + '" data-d="' + date + '" aria-label="' + esc(e.name) + ' entfernen">✕</button>' +
+      return '<li' + (eop ? ' class="ckopen"' : "") + '><input type="time" class="ntime" data-nt="' + e.id + '" data-nd="' + date + '" value="' + (e.t || "") + '" aria-label="Uhrzeit ' + esc(e.name) + '"><span class="nnm">' + (has ? '<button class="linkbtn ckname" data-act="ckshow" data-id="' + e.id + '" aria-expanded="' + !!eop + '">' + nAmtHtml(e.name) + ' <span class="muted">' + (eop ? "▴" : "▾") + "</span></button>" : "<span>" + (e.est ? "≈ " : "") + nAmtHtml(e.name) + "</span>") + nMac(e.p, e.f, e.c, (e.caf > 0 ? '<span class="mk" title="Koffein"><i></i>' + Math.round(e.caf) + " mg</span>" : "") + '<span class="nkc">' + Math.round(e.kcal).toLocaleString("de-DE") + " kcal</span>") + '</span><button class="ghost xs" data-act="ndel" data-id="' + e.id + '" data-d="' + date + '" aria-label="' + esc(e.name) + ' entfernen">✕</button>' +
         (eop ? '<span class="ckparts small muted">' + (eck ? cookParts(fd, eck) : esc(e.ckz)) + (pn ? " · ergibt " + pn + (pn === 1 ? " Portion" : " Portionen") : "") + (eck ? ' <button class="linkbtn small" data-act="ckedit" data-id="' + eck.id + '">Zutaten ändern</button>' : "") + "</span>" : "") + "</li>";
     }).join("") + (ent.length > 1 ? (function () { /* v129 (Wunsch des Nutzers): Summe unter der Liste */
-      var sm = { p: 0, f: 0, c: 0, k: 0 }; ent.forEach(function (e) { sm.p += e.p || 0; sm.k += e.kcal || 0; if (e.f != null) sm.f += e.f; if (e.c != null) sm.c += e.c; });
-      return '<li class="nsum"><span class="nsl">Summe</span><span class="nnm">' + nMac(sm.p, sm.f, sm.c, '<span class="nkc">' + Math.round(sm.k).toLocaleString("de-DE") + " kcal</span>") + '</span><button class="ghost xs" tabindex="-1" aria-hidden="true" style="visibility:hidden">✕</button></li>'; })() : "") + "</ul>";
+      var sm = { p: 0, f: 0, c: 0, k: 0, cf: 0 }; ent.forEach(function (e) { sm.p += e.p || 0; sm.k += e.kcal || 0; sm.cf += e.caf || 0; if (e.f != null) sm.f += e.f; if (e.c != null) sm.c += e.c; });
+      return '<li class="nsum"><span class="nsl">Summe</span><span class="nnm">' + nMac(sm.p, sm.f, sm.c, (sm.cf > 0 ? '<span class="mk" title="Koffein"><i></i>' + Math.round(sm.cf) + " mg</span>" : "") + '<span class="nkc">' + Math.round(sm.k).toLocaleString("de-DE") + " kcal</span>") + '</span><button class="ghost xs" tabindex="-1" aria-hidden="true" style="visibility:hidden">✕</button></li>'; })() : "") + "</ul>";
   }
   function nutriAdd(date, e) {
     var id = "n_" + date, d = clone(S.nutri[id] || { kind: "nutri", date: date, entries: [] });
@@ -6269,7 +6271,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var unitTxt = function (x) { return x.per === "st" ? "je Stück" : "je " + FPER[x.per]; };
     var pw = !x.lib && S.fOpen === x.id ? plausNote(plausIssues(x)) : ""; /* v179 */
       var open = S.fOpen === x.id, fv = isFav(fd, x.id);
-      return '<div class="frow' + (open ? " open" : "") + '"><div class="fhead"><button class="fline" data-act="fiopen" data-id="' + x.id + '" aria-expanded="' + open + '"><span class="fn">' + hl(x.name, q) + (x.lib ? "" : ' <span class="fown">eigen</span>') + '</span><span class="muted">' + (sup ? suppSum(x) : (x.f == null || x.c == null ? '<span class="fmiss">Fett/KH fehlt</span> · ' : "") + fmt(x.p) + " g · " + fmt(x.kcal) + " kcal" + (function () { var cf = cafOf(x, x.per === "st" ? 1 : 100); return cf >= 0.5 ? " · " + fmt(Math.round(cf)) + " mg Koffein" : ""; })() + " " + unitTxt(x)) + "</span></button>" + /* v216 (Wunsch des Nutzers): Koffein in der Lebensmittelliste */
+      return '<div class="frow' + (open ? " open" : "") + '"><div class="fhead"><button class="fline" data-act="fiopen" data-id="' + x.id + '" aria-expanded="' + open + '"><span class="fn">' + hl(x.name, q) + (x.lib ? "" : ' <span class="fown">eigen</span>') + '</span><span class="muted">' + (sup ? suppSum(x) : (x.f == null || x.c == null ? '<span class="fmiss">Fett/KH fehlt</span> · ' : "") + fmt(x.p) + " g · " + fmt(x.kcal) + " kcal" + (function () { var cf = cafOf(x, x.per === "st" ? 1 : 100); return cf >= 0.5 ? ' · <span class="fcaf" title="Koffein"><i></i>' + fmt(Math.round(cf)) + " mg</span>" : ""; })() + " " + unitTxt(x)) + "</span></button>" + /* v216 (Wunsch des Nutzers): Koffein in der Lebensmittelliste */
         '<button class="fstar" data-act="fstar" data-id="' + x.id + '" aria-pressed="' + fv + '" aria-label="Favorit">' + (fv ? "★" : "☆") + "</button></div>" +
         (open ? '<div class="fitem">' + (x.lib ? '<p class="small muted fsp">Aus der Bibliothek. Änderst du etwas, wird es zu deinem eigenen Eintrag.</p>' : "") + (pw ? pw.replace('class="small plausw"', 'class="small plausw fsp"') : "") + entriesBar(x) + '<input class="fname" data-fi="name" data-id="' + x.id + '" value="' + esc(x.name) + '" aria-label="Name" autocomplete="off">' +
           '<label class="fsp2">je<select data-fi="per" data-id="' + x.id + '">' + Object.keys(FPER).map(function (k) { return '<option value="' + k + '"' + (x.per === k ? " selected" : "") + ">" + FPER[k] + "</option>"; }).join("") + "</select></label>" +
@@ -7027,7 +7029,10 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       if (ef == null && ec == null) { ef = er * 0.4 / 9; ec = er * 0.6 / 4; } else if (ef == null) ef = er / 9; else if (ec == null) ec = er / 4;
       nutriAdd(nDay(), { name: $("ne-name").value.trim().slice(0, 60) || "Schätzung", p: ep, kcal: ek, f: Math.max(0, ef), c: Math.max(0, ec), est: true }); S.nForm = null; renderHome();
     }
-    else if (a === "ndel") { var ndd = b.dataset.d || today(); if (!S.nutri["n_" + ndd]) { renderHome(); return; } var nd = clone(S.nutri["n_" + ndd]); nd.entries = nd.entries.filter(function (e) { return e.id !== id; }); put("n_" + ndd, nd.entries.length || (nd.skip && nd.skip.length) || (nd.water && nd.water.length) ? nd : null); var yd = window.scrollY; renderHome(); window.scrollTo(0, yd); }
+    else if (a === "ndel") { var ndd = b.dataset.d || today(); if (!S.nutri["n_" + ndd]) { renderHome(); return; } var nd = clone(S.nutri["n_" + ndd]), gone = nd.entries.filter(function (e) { return e.id === id; })[0]; nd.entries = nd.entries.filter(function (e) { return e.id !== id; });
+      /* v217 (Wunsch des Nutzers): gelöschte Portion eines Gerichts kommt zurück zu den Resten (vorher verschwand ein aufgebrauchtes Gericht ganz) */
+      if (gone && gone.ck) { var fdr = clone(foodDoc()), cr0 = cookById(fdr, gone.ck); if (cr0 && cr0.done) { var eaten = 0; Object.keys(S.nutri).forEach(function (k) { var dd = k === "n_" + ndd ? nd : S.nutri[k]; (dd && dd.entries || []).forEach(function (e) { if (e.ck === cr0.id) eaten++; }); });
+        cr0.left = Math.max(0, Math.min((cr0.left || 0) + 1, mealPortions(cr0) - eaten)); foodSave(fdr); } } put("n_" + ndd, nd.entries.length || (nd.skip && nd.skip.length) || (nd.water && nd.water.length) ? nd : null); var yd = window.scrollY; renderHome(); window.scrollTo(0, yd); }
     else if (a === "ndate") { S.nDate = id || null; S.ckShow = null; renderHome(); if (id) { var nb = document.querySelector(".ndatebar"); if (nb) nb.scrollIntoView({ block: "center", behavior: "smooth" }); } } /* v121: skip behalten */
     else if (a === "sstp") { var fdp = clone(foodDoc()), itp = ownItem(fdp, id); if (!itp || !itp.pack) return; var lp = suppLeft(foodDoc(), foodItem(foodDoc(), id)) || 0; itp.stock = { d: today(), c: Math.round((lp + itp.pack) * 10) / 10 }; foodSave(fdp); var ysp = window.scrollY; renderData(); renderHome(); window.scrollTo(0, ysp); }
     else if (a === "fupdgo") { var itu = foodItem(foodDoc(), id); if (!itu) return; var nu = entriesUpdate(itu); S.fUpd = null; S.fUpdDone = { id: id, n: nu }; var yu = window.scrollY; renderData(); renderHome(); window.scrollTo(0, yu); }
