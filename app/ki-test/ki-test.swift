@@ -5,7 +5,7 @@
 import Foundation
 import FoundationModels
 
-struct Frage: Codable { let id: String; let q: String; let soll: String; let instructions: String; let prompt: String }
+struct Frage: Codable { let id: String; let q: String; let soll: String; let instructions: String; let prompt: String; let fest: String? }
 struct Antwort: Codable { let id: String; let q: String; let soll: String; let a: String; let sek: Double }
 
 let dir = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "app/ki-test")
@@ -20,12 +20,14 @@ var out: [Antwort] = []
 for f in fragen {
     let t0 = Date()
     var a: String
-    do {
+    if let fest = f.fest, !fest.isEmpty {
+        a = "(feste Antwort der App, ohne Modell) " + fest
+    } else { do {
         let s = LanguageModelSession(instructions: f.instructions)
         a = try await s.respond(to: f.prompt, options: GenerationOptions(temperature: 0.2, maximumResponseTokens: 350)).content
     } catch {
         a = "FEHLER: \(error)"
-    }
+    } }
     let sek = (Date().timeIntervalSince(t0) * 10).rounded() / 10
     out.append(Antwort(id: f.id, q: f.q, soll: f.soll, a: a, sek: sek))
     print("✓ \(f.id) (\(sek) s) \(f.q)")
