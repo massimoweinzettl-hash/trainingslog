@@ -911,8 +911,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 229; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 230; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 230, tab: "home", text: "iPhone-App: Der unscharfe Verlauf oben (und unten) am Bildschirmrand ist weg – Zahnrad und Glocke sind wieder scharf." },
     { v: 229, tab: "data", text: "Vorrat: zwei neue Behälter – „Karton“ (z. B. Box mit 12 Riegeln oder Eier) und „Riegel“ (jeder Riegel ein eigenes Symbol, dann „1 pro Packung“ eintragen)." },
     { v: 228, tab: "home", text: "Der große Schriftzug „Trainingslog“ oben ist weg – mehr Platz. Zahnrad, KI und Glocke stehen jetzt ganz oben links." },
     { v: 227, tab: "home", text: "Koffein hat jetzt überall dieselbe Farbe (Lila): der Punkt bei Einträgen und in der Lebensmittelliste und die Koffeinkurve. Vorher war der Punkt rot und die Kurve blau." },

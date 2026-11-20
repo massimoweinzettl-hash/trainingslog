@@ -1,4 +1,6 @@
 import Foundation
+import UIKit
+import WebKit
 import Capacitor
 #if canImport(FoundationModels)
 import FoundationModels
@@ -16,6 +18,20 @@ public class TrainingslogKiPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "status", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "ask", returnType: CAPPluginReturnPromise)
     ]
+
+    /// v230 (Wunsch des Nutzers): iOS 26 legt oben (und unten) einen weichen Unschärfe-Verlauf über die Web-Ansicht
+    /// („Scroll Edge Effect“), dadurch werden Zahnrad, KI und Glocke unscharf. Hier abgeschaltet, sobald das Plugin lädt.
+    override public func load() {
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *) {
+            DispatchQueue.main.async { [weak self] in
+                guard let sv = self?.bridge?.webView?.scrollView else { return }
+                sv.topEdgeEffect.isHidden = true
+                sv.bottomEdgeEffect.isHidden = true
+            }
+        }
+        #endif
+    }
 
     /// nil = Modell bereit, sonst Grund für die App.
     private func notReadyReason() -> String? {
