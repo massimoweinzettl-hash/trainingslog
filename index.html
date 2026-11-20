@@ -864,8 +864,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 215; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 216; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 216, tab: "data", text: "Lebensmittelliste: Bei Kaffee, Cola, Energy Drinks und Co. steht jetzt auch der Koffeingehalt." },
     { v: 215, tab: "home", text: "Essen im Rückblick: Für vergangene Tage nachtragen („+ Eintragen für diesen Tag“), Einträge löschen und die Uhrzeit ändern. Gerichte antippen zeigt die Zutaten – jetzt auch nach Wochen noch." },
     { v: 214, tab: "plan", text: "Plan teilen: Über „Plan teilen“ oben im Plan schickst du deinen ganzen Plan an Freunde. Sie fügen ihn unter „Plan-Code einfügen“ ein und können ihren Plan ersetzen oder die Tage dazunehmen." },
     { v: 213, tab: "data", text: "Neues Design „Aurora“: tiefes Navy, Karten wie aus Glas, Akzent wahlweise Violett oder Blau. Einstellungen → Darstellung → Design." },
@@ -5677,7 +5678,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   ];
   /* Koffein (seit v101, Wunsch des Nutzers): mg je 100 g/ml bzw. je Stück, ungefähre Werte (EFSA-Übersicht u. a.). Eigene Lebensmittel: Feld caf. */
   var CAF = { f_l_kaffee: 45, f_v8_espresso: 80, f_l_cappu: 80, f_m_hafercapp: 80, f_l_latte: 80, f_m_eiskaffee: 90, f_m_chai: 40, f_v8_tee: 22, f_v8_gruentee: 15, f_v8_mate: 100,
-    f_cola: 32, f_l_colazero: 32, f_m_cola_light: 40, f_l_energy: 80, f_l_eistee: 3, f_v8_booster: 200, f_v8_esncaramellatte: 61, f_schoko: 20, f_l_zartbitter: 80, f_l_kakao: 2, f_m_kakaopulver: 200, f_m_hotchoc: 10, f_m_kakaozero: 5 };
+    f_cola: 32, f_l_colazero: 32, f_m_cola_light: 40, f_l_energy: 80, f_l_eistee: 3, f_v8_booster: 200, f_v8_esncaramellatte: 61, f_schoko: 20, f_l_zartbitter: 80, f_l_kakao: 2, f_m_kakaopulver: 200, f_m_hotchoc: 10, f_m_kakaozero: 5, f_m_mezzo: 50 }; /* v216: Spezi 0,5 l ≈ 10 mg je 100 ml */
   /* v105: Kaffee schwarz und Tee je 100 ml statt je Tasse. Eigene, noch je Stück gespeicherte Kopien behalten die alten Tassenwerte. */
   var CAF_ST = { f_l_kaffee: 90, f_v8_tee: 45, f_v8_gruentee: 30 }, CUPS = ["f_l_kaffee", "f_v8_tee", "f_v8_gruentee"];
   var NUTST = { f_l_kaffee: NUTR.f_l_kaffee }; NUTR.f_l_kaffee = NUTR.f_l_kaffee.map(function (v) { return v == null ? null : Math.round(v * 0.3 * 1e4) / 1e4; }); /* BLS je 100 ml (Tasse ≈ 0,9 → 3 kcal) */
@@ -6268,7 +6269,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var unitTxt = function (x) { return x.per === "st" ? "je Stück" : "je " + FPER[x.per]; };
     var pw = !x.lib && S.fOpen === x.id ? plausNote(plausIssues(x)) : ""; /* v179 */
       var open = S.fOpen === x.id, fv = isFav(fd, x.id);
-      return '<div class="frow' + (open ? " open" : "") + '"><div class="fhead"><button class="fline" data-act="fiopen" data-id="' + x.id + '" aria-expanded="' + open + '"><span class="fn">' + hl(x.name, q) + (x.lib ? "" : ' <span class="fown">eigen</span>') + '</span><span class="muted">' + (sup ? suppSum(x) : (x.f == null || x.c == null ? '<span class="fmiss">Fett/KH fehlt</span> · ' : "") + fmt(x.p) + " g · " + fmt(x.kcal) + " kcal " + unitTxt(x)) + "</span></button>" +
+      return '<div class="frow' + (open ? " open" : "") + '"><div class="fhead"><button class="fline" data-act="fiopen" data-id="' + x.id + '" aria-expanded="' + open + '"><span class="fn">' + hl(x.name, q) + (x.lib ? "" : ' <span class="fown">eigen</span>') + '</span><span class="muted">' + (sup ? suppSum(x) : (x.f == null || x.c == null ? '<span class="fmiss">Fett/KH fehlt</span> · ' : "") + fmt(x.p) + " g · " + fmt(x.kcal) + " kcal" + (function () { var cf = cafOf(x, x.per === "st" ? 1 : 100); return cf >= 0.5 ? " · " + fmt(Math.round(cf)) + " mg Koffein" : ""; })() + " " + unitTxt(x)) + "</span></button>" + /* v216 (Wunsch des Nutzers): Koffein in der Lebensmittelliste */
         '<button class="fstar" data-act="fstar" data-id="' + x.id + '" aria-pressed="' + fv + '" aria-label="Favorit">' + (fv ? "★" : "☆") + "</button></div>" +
         (open ? '<div class="fitem">' + (x.lib ? '<p class="small muted fsp">Aus der Bibliothek. Änderst du etwas, wird es zu deinem eigenen Eintrag.</p>' : "") + (pw ? pw.replace('class="small plausw"', 'class="small plausw fsp"') : "") + entriesBar(x) + '<input class="fname" data-fi="name" data-id="' + x.id + '" value="' + esc(x.name) + '" aria-label="Name" autocomplete="off">' +
           '<label class="fsp2">je<select data-fi="per" data-id="' + x.id + '">' + Object.keys(FPER).map(function (k) { return '<option value="' + k + '"' + (x.per === k ? " selected" : "") + ">" + FPER[k] + "</option>"; }).join("") + "</select></label>" +
