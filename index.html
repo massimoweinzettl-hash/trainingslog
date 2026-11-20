@@ -588,6 +588,7 @@ table.strength .exico, table.recs .exico, .testlist .exico, .focusrow .exico { v
 .rl { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round }
 .rl.s0 { stroke: var(--accent) } .rl.s1 { stroke: var(--good) } .rl.s2 { stroke: var(--s2) } .rl.s3 { stroke: var(--s3) } .rl.s4 { stroke: var(--s4) } .rl.s5 { stroke: var(--s5) } .rl.s6 { stroke: var(--s6) }
 .serch { gap: 5px; margin: 10px 0 4px } .serch button { padding: 5px 9px; font-size: 13px } .serch button[aria-pressed="false"] { color: var(--muted) } .serch button[aria-pressed="false"] .lg { opacity: .35 }
+.hapst { display: flex; align-items: center; gap: 10px; margin: 8px 0 2px } .hapst input { flex: 1; padding: 0; background: none; accent-color: var(--accent) } .hapst b { min-width: 4.2em; text-align: right; font-size: 14px } /* v211 */
 .bmtime { display: flex; align-items: center; gap: 10px; margin: 4px 0 6px } .bmtime input { flex: 1; accent-color: var(--heat-hi) } .bmtime span { min-width: 64px; text-align: right }
 .bmplay { width: 36px; height: 36px; padding: 0; border-radius: 50%; font-size: 14px }
 .rleg { margin: 2px 0 0 } .lg { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin: 0 4px 0 8px }
@@ -834,8 +835,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 210; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 211; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 211, tab: "data", text: "iPhone-App: In den Einstellungen stellst du unter Haptik jetzt auch die Stärke ein – leicht, mittel oder kräftig." },
     { v: 210, tab: "data", text: "Frag die App: Kaffee, Wochenschnitt und Fragen zum Gewicht ohne genug Messungen beantwortet die App jetzt selbst – zuverlässiger." },
     { v: 209, tab: "data", text: "Frag die App: Sagt dir, bis wann heute noch ein Kaffee passt, erklärt dein Kalorienziel und deinen BMI zuverlässiger und weiß, wo du Einträge löschst und dein Gewicht siehst." },
     { v: 208, tab: "data", text: "Frag die App: Versteht jetzt auch Fragen mit Tippfehlern und sagt dir, wann du dein Zielgewicht bei deinem Trend voraussichtlich erreichst." },
@@ -1140,10 +1142,16 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     if (b.dataset.tab || HAPACTS[b.dataset.act] || (b.dataset.act === "scanoff" && b.dataset.id === "ok")) haptic(); }, true);
   function hapOn() { return !document.documentElement.dataset.nohap; }
   function hapChips() { var on = hapOn(); return '<button data-act="hap" data-id="1" aria-pressed="' + on + '">An</button><button data-act="hap" data-id="0" aria-pressed="' + !on + '">Aus</button>'; }
+  /* v211 (Wunsch des Nutzers): Stärke der Haptik in den Einstellungen – nur in der iPhone-App (Capacitor-Haptics kennt 3 Stufen);
+     in der Web-App legt iOS die Stärke fest. localStorage trainingslog-hapst = 0|1|2, Standard 1 (Mittel, wie seit v194). */
+  var HAPST = ["LIGHT", "MEDIUM", "HEAVY"], HAPSTL = ["Leicht", "Mittel", "Kräftig"];
+  function hapSt() { var v = 1; try { var x = localStorage.getItem("trainingslog-hapst"); if (x === "0" || x === "1" || x === "2") v = +x; } catch (e) {} return v; }
+  function hapStHtml() { if (!NATHAP || !hapOn()) return ""; var v = hapSt(); return '<div class="hapst"><span class="small muted">Stärke</span><input type="range" id="hapst" min="0" max="2" step="1" value="' + v + '" aria-label="Stärke der Haptik" aria-valuetext="' + HAPSTL[v] + '"><b id="hapst-l">' + HAPSTL[v] + "</b></div>"; }
+  function hapStSet(v) { v = Math.max(0, Math.min(2, Math.round(v))); try { localStorage.setItem("trainingslog-hapst", String(v)); } catch (e) {} var l = $("hapst-l"); if (l) l.textContent = HAPSTL[v]; var r = $("hapst"); if (r) r.setAttribute("aria-valuetext", HAPSTL[v]); haptic(); }
   function hapSet(on) {
     if (on) delete document.documentElement.dataset.nohap; else document.documentElement.dataset.nohap = "1";
     try { if (on) localStorage.removeItem("trainingslog-haptik"); else localStorage.setItem("trainingslog-haptik", "0"); } catch (e) {}
-    var c = $("set-hap"); if (c) c.innerHTML = hapChips(); renderHome();
+    var c = $("set-hap"); if (c) c.innerHTML = hapChips(); var cs = $("set-hapst"); if (cs) cs.innerHTML = hapStHtml(); renderHome();
   }
   function setHtml() {
     var P = S.person, hasP = !!P, opt = function (v, l, cur) { return '<option value="' + v + '"' + (String(cur) === String(v) ? " selected" : "") + ">" + l + "</option>"; };
@@ -1151,7 +1159,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       '<h3>Darstellung</h3><p class="lab">Design</p><div class="chips lookchips" role="group" aria-label="Design">' + lookChips() + "</div>" +
       '<p class="lab">Hell / Dunkel</p><div class="chips" id="set-theme" role="group" aria-label="Hell oder dunkel">' + themeChips() + "</div>" +
       '<p class="lab">Farben</p><div class="chips" id="set-cvd" role="group" aria-label="Farben">' + cvdChips() + "</div>" +
-      '<p class="lab">Haptik (Tipp-Feedback)</p><div class="chips" id="set-hap" role="group" aria-label="Haptik">' + hapChips() + "</div>" +
+      '<p class="lab">Haptik (Tipp-Feedback)</p><div class="chips" id="set-hap" role="group" aria-label="Haptik">' + hapChips() + '</div><div id="set-hapst">' + hapStHtml() + "</div>" +
       '<h3>Nutzung</h3><p class="lab">Training</p><div class="chips" id="pe-mode" role="group" aria-label="Trainingsart">' +
         TTYPES.map(function (x) { return '<button type="button" data-act="pemode" data-id="' + x[0] + '" aria-pressed="' + (ttype() === x[0]) + '"' + (hasP ? "" : " disabled") + ">" + x[1] + "</button>"; }).join("") + "</div>" +
       '<label>Schlafenszeit (für Koffein)<select id="pe-bed"' + (hasP ? "" : " disabled") + ">" + BEDS.map(function (b) { return opt(b, b + " Uhr", (P && P.bed) || "23:00"); }).join("") + "</select></label>" +
@@ -5919,7 +5927,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   var HAPT = null;
   function haptic() {
     if (!hapOn()) return;
-    if (NATHAP) { try { Capacitor.nativePromise("Haptics", "impact", { style: "MEDIUM" }).catch(function () {}); } catch (e) {} return; }
+    if (NATHAP) { try { Capacitor.nativePromise("Haptics", "impact", { style: HAPST[hapSt()] }).catch(function () {}); } catch (e) {} return; }
     try { if (navigator.vibrate && navigator.vibrate(15)) return; } catch (e) {}
     try {
       if (!HAPT) { HAPT = document.createElement("label"); HAPT.setAttribute("aria-hidden", "true"); HAPT.style.cssText = "position:fixed;left:-100px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none";
@@ -7112,6 +7120,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     }
     if (t.id === "tdate") { saveDraft(); S.date = t.value || today(); draft = null; renderTrain(); }
     else if (t.id === "exsel") { S.exSel = t.value; renderProgress(); }
+    else if (t.id === "hapst") hapStSet(+t.value);
     else if (t.dataset.nt) {
       var nd2 = clone(S.nutri["n_" + today()]); if (!nd2) return;
       nd2.entries.forEach(function (e) { if (e.id === t.dataset.nt) { if (HMRE.test(t.value)) e.t = t.value; else delete e.t; } });
