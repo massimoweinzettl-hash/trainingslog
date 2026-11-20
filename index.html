@@ -911,8 +911,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 230; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 231; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 231, tab: "data", text: "Vorratsschrank: neue Symbole für „Riegel“ (Folie mit gezackten Enden) und „Flasche“ (mit Deckel und runden Schultern)." },
     { v: 230, tab: "home", text: "iPhone-App: Der unscharfe Verlauf oben (und unten) am Bildschirmrand ist weg – Zahnrad und Glocke sind wieder scharf." },
     { v: 229, tab: "data", text: "Vorrat: zwei neue Behälter – „Karton“ (z. B. Box mit 12 Riegeln oder Eier) und „Riegel“ (jeder Riegel ein eigenes Symbol, dann „1 pro Packung“ eintragen)." },
     { v: 228, tab: "home", text: "Der große Schriftzug „Trainingslog“ oben ist weg – mehr Platz. Zahnrad, KI und Glocke stehen jetzt ganz oben links." },
@@ -6514,12 +6515,12 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     if (k === "karton") { h = f * 19.4; /* v229 (Wunsch des Nutzers): offener Karton, Inhalt als liegende Riegel */
       var bt = 29.6, bars = ""; for (var by = bt - 2.6; by >= bt - h - 0.2; by -= 3.2) bars += '<rect x="4.6" y="' + by.toFixed(1) + '" width="12.8" height="2.2" rx="1.1" class="jp"/>';
       return o + '<path d="M2 9.5h18v19.5q0 2-2 2H4q-2 0-2-2z" class="jb"/><path d="M2 9.5L.6 5.2h7.2l2 4.3M20 9.5l1.4-4.3h-7.2l-2 4.3" class="jz"/>' + (h > 0 ? '<rect x="3.4" y="' + (bt - h).toFixed(1) + '" width="15.2" height="' + h.toFixed(1) + '" rx="1.5" class="jf"/>' + bars : "") + "</svg>"; }
-    if (k === "riegel") { h = f * 19; /* v229: einzelner Riegel in der Folie, gezackte Enden */
-      return o + '<path d="M6 5.5h10v21H6z" class="jb"/><path d="M6 5.5l1-2.5 1.25 1.5 1.25-1.5 1.25 1.5 1.25-1.5 1.25 1.5 1.25-1.5 1 2.5M6 26.5l1 2.5 1.25-1.5 1.25 1.5 1.25-1.5 1.25 1.5 1.25-1.5 1.25 1.5 1-2.5" class="jz"/>' + (h > 0 ? '<rect x="7.2" y="' + (25.5 - h).toFixed(1) + '" width="7.6" height="' + h.toFixed(1) + '" rx="1" class="jf"/>' : "") + "</svg>"; }
+    if (k === "riegel") { h = f * 17.2; /* v231 (Vorlage des Nutzers): Riegel in Folie, gezackt verschweißt, Folie unter den Enden eingezogen, Riegelkanten innen */
+      return o + '<path d="M1.50 3.4 L3.08 1.8 L4.67 3.4 L6.25 1.8 L7.83 3.4 L9.42 1.8 L11 3.4 L12.58 1.8 L14.17 3.4 L15.75 1.8 L17.33 3.4 L18.92 1.8 L20.50 3.4 L20.50 6.4 L18.4 8.2 L19.30 10.2 L19.30 21.8 L18.4 23.8 L20.50 25.6 L20.50 28.6 L18.92 30.2 L17.33 28.6 L15.75 30.2 L14.17 28.6 L12.58 30.2 L11 28.6 L9.42 30.2 L7.83 28.6 L6.25 30.2 L4.67 28.6 L3.08 30.2 L1.50 28.6 L1.50 25.6 L3.6 23.8 L2.70 21.8 L2.70 10.2 L3.6 8.2 L1.50 6.4Z" class="jb"/><path d="M6.6 7.4V24.6M15.4 7.4V24.6" class="jz"/>' + (h > 0 ? '<rect x="7.2" y="' + (24.6 - h).toFixed(1) + '" width="7.6" height="' + h.toFixed(1) + '" rx="1" class="jf"/>' : "") + "</svg>"; }
     if (k === "beutel") { h = f * 20; /* v170: Standbeutel mit Zipper (z. B. Creatin) */
       return o + '<path d="M3.5 4.5h15l1.5 24.5q.1 2-2 2H4q-2.1 0-2-2z" class="jb"/><path d="M3.6 8.2h14.8" class="jz"/>' + (h > 0 ? '<rect x="3.6" y="' + (29.6 - h).toFixed(1) + '" width="14.8" height="' + h.toFixed(1) + '" rx="1.5" class="jf"/>' + jarPat(3.6, 18.4, 29.6 - h, 29.6, pat) : "") + "</svg>"; }
-    if (k === "flasche") { h = f * 19;
-      return o + '<rect x="8" y="1" width="6" height="4" rx="1" class="jl"/><path d="M8.5 5h5v3.5q5.5 1.5 5.5 6V28q0 3-3 3H6q-3 0-3-3V14.5q0-4.5 5.5-6z" class="jb"/>' + (h > 0 ? '<rect x="4.5" y="' + (29.6 - h).toFixed(1) + '" width="13" height="' + h.toFixed(1) + '" rx="2" class="jf"/>' + jarPat(4.5, 17.5, 29.6 - h, 29.6, pat) : "") + "</svg>"; }
+    if (k === "flasche") { h = f * 14.4; /* v231 (Vorlage des Nutzers): Flasche mit Deckel, Hals, runden Schultern und Linie unter der Schulter */
+      return o + '<rect x="7.3" y="1.2" width="7.4" height="3.8" rx="1.2" class="jb"/><path d="M8.3 5v2.2q0 1.2-1.5 1.8Q3.5 10.2 3.5 13v14.5Q3.5 30 6 30h10q2.5 0 2.5-2.5V13q0-2.8-3.3-4-1.5-.6-1.5-1.8V5" class="jb"/><path d="M3.5 13.4h15" class="jz"/>' + (h > 0 ? '<rect x="4.7" y="' + (28.8 - h).toFixed(1) + '" width="12.6" height="' + h.toFixed(1) + '" rx="1.8" class="jf"/>' + jarPat(4.7, 17.3, 28.8 - h, 28.8, pat) : "") + "</svg>"; }
     h = f * 24; return o + '<rect x="5" y="1" width="12" height="5" rx="1.5" class="jl"/><rect x="2" y="6" width="18" height="25" rx="4" class="jb"/>' + (h > 0 ? '<rect x="3.5" y="' + (30 - h).toFixed(1) + '" width="15" height="' + h.toFixed(1) + '" rx="2.5" class="jf"/>' + jarPat(3.5, 18.5, 30 - h, 30, pat) : "") + "</svg>"; }
   function suppShelf(fd, it, big) {
     if (!it.pack || !it.stock) return ""; var tot = suppLeft(fd, it); if (tot == null) return ""; var sp = suppSplit(it, tot), r = suppRange(fd, it), low = r && r.days <= 7 ? " low" : "", n = Math.min(sp[1], big ? 12 : 6);
