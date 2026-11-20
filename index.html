@@ -834,8 +834,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 207; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 208; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 208, tab: "data", text: "Frag die App: Versteht jetzt auch Fragen mit Tippfehlern und sagt dir, wann du dein Zielgewicht bei deinem Trend voraussichtlich erreichst." },
     { v: 207, tab: "data", text: "Frag die App: Erklärt beim Kalorienziel zuerst den Hauptgrund (Cut, Aufbau) und gibt auf „Erkläre mir die App“ einen kurzen Überblick über alle Reiter." },
     { v: 206, tab: "data", text: "Frag die App: Bei Schmerzen oder Gesundheitsfragen verweist sie jetzt immer auf Arzt oder Physiotherapie. Das Handbuch nennt, wo du dein Zielgewicht einstellst." },
     { v: 205, tab: "data", text: "Frag die App: Bekommt je Frage nur noch die passenden Werte als fertige Sätze und antwortet dadurch genauer (getestet mit 28 Fragen)." },
@@ -1221,7 +1222,24 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     kof: /koffein|kaffee|espresso|energy|schlaf/i,
     tra: /training|trainiert|satz|sätze|saetze|übung|uebung|ausdauer|laufen|joggen|rad/i
   };
-  function kiTopics(q) { var o = {}, any = false; Object.keys(KI_TOP).forEach(function (k) { if (KI_TOP[k].test(q || "")) { o[k] = 1; any = true; } }); if (o.mak || o.ess) o.kal = 1; return any ? o : null; }
+  /* v208 (großer Testlauf, Tippfehler): zusätzlich Wörter fehlertolerant mit Stichwörtern vergleichen (Damerau-Levenshtein,
+     1 Fehler bis 6 Buchstaben, sonst 2), z. B. „protien“, „kalorin“, „eiweis“, „gewischt“. */
+  var KI_FUZ = { kal: ["kalorie", "kalorien", "kalorienziel"], mak: ["eiweiß", "eiweiss", "protein", "proteine", "fett", "kohlenhydrate", "makros"], gew: ["gewicht", "abnehmen", "zunehmen", "zielgewicht", "prognose", "wiege"],
+    kof: ["koffein", "kaffee"], tra: ["training", "trainiert", "trainieren", "übung", "übungen"], ess: ["gegessen", "mahlzeit", "durchschnitt", "wochenschnitt"], verb: ["verbrauch", "gemessen"] };
+  function kiDist(a, b) {
+    var d = [], i, j; for (i = 0; i <= a.length; i++) { d[i] = [i]; } for (j = 0; j <= b.length; j++) d[0][j] = j;
+    for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++) {
+      var c = a[i - 1] === b[j - 1] ? 0 : 1; d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+    return d[a.length][b.length];
+  }
+  function kiTopics(q) {
+    var o = {}, any = false, ws = (String(q || "").toLowerCase().match(/[a-zäöüß]{4,}/g) || []);
+    Object.keys(KI_TOP).forEach(function (k) { if (KI_TOP[k].test(q || "")) { o[k] = 1; any = true; } });
+    Object.keys(KI_FUZ).forEach(function (k) { if (o[k]) return; KI_FUZ[k].forEach(function (st) { ws.forEach(function (w) { if (!o[k] && Math.abs(w.length - st.length) <= 2 && kiDist(w, st) <= (st.length <= 6 ? 1 : 2)) { o[k] = 1; any = true; } }); }); });
+    if (o.mak || o.ess) o.kal = 1; return any ? o : null;
+  }
   function kiFacts(small, q) {
     var t = today(), list = bodyList(), E = energy(list), ph = phaseAt(t), done = workoutsOn(t), F = [], now = new Date(), r = Math.round;
     var g = function (n) { return r(n).toLocaleString("de-DE"); }, add = function (tag, txt) { F.push([tag, txt]); };
@@ -1236,8 +1254,12 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       if (!ph || ph.type === "maintain") how = Math.abs(pw) < 0.15 ? "Dein Gewicht ist stabil, passend zum Halten." : pw < 0 ? "Du nimmst leicht ab, obwohl du halten willst." : "Du nimmst leicht zu, obwohl du halten willst.";
       else { var off = pw - want, tol = ph.type === "cut" ? 0.2 : 0.12; how = (Math.abs(off) <= tol ? "Ja, du liegst im Plan." : "Du bist " + ((ph.type === "cut") === (off < 0) ? "schneller" : "langsamer") + " als geplant.") + " Geplant sind etwa " + (ph.type === "cut" ? "0,5 % Abnahme" : "0,25 % Zunahme") + " pro Woche."; }
       add("gew", "Trend der letzten 4 Wochen: " + sgn(tr.perWeek) + " kg pro Woche (" + sgn(tr.pct) + " % pro Woche). " + how);
+      if (lw && ph && isN(ph.goal) && ph.type !== "maintain") { /* v208: Zieldatum aus dem Trend, damit das Modell keins erfindet */
+        var togo = ph.goal - lw.weight, wks = tr.perWeek && togo / tr.perWeek > 0 ? togo / tr.perWeek : null;
+        add("gew", Math.abs(togo) < 0.3 ? "Dein Zielgewicht hast du schon erreicht." : !wks ? "Wann du dein Zielgewicht erreichst, lässt sich gerade nicht sagen: Dein Trend geht nicht in Richtung Ziel." : wks > 104 ? "Bei deinem jetzigen Tempo dauert es bis zum Zielgewicht noch sehr lange (über zwei Jahre)." : "Wenn dein Trend so bleibt, erreichst du dein Zielgewicht in etwa " + (wks < 1.5 ? "einer Woche" : r(wks) + " Wochen") + ", also um den " + dfmt(addDays(t, r(wks * 7))) + " (grobe Schätzung).");
+      }
       if (lw) add("gew", "Prognose, wenn der Trend anhält (grobe Schätzung, Wasser schwankt): in 7 Tagen etwa " + fmt(r((lw.weight + tr.perWeek) * 10) / 10) + " kg, in 4 Wochen etwa " + fmt(r((lw.weight + tr.perWeek * 4) * 10) / 10) + " kg.");
-    } else add("gew", "Für einen Gewichtstrend gibt es noch zu wenige Messungen (mindestens 7 Tage nötig).");
+    } else add("gew", "Für einen Gewichtstrend, eine Prognose oder ein Datum fürs Zielgewicht gibt es noch zu wenige Messungen: nötig sind Messungen über mindestens 7 Tage.");
     var day = S.nutri["n_" + t], ent = day ? day.entries : [];
     var sum = ent.reduce(function (a, e) { return { p: a.p + (e.p || 0), kcal: a.kcal + (e.kcal || 0), f: a.f + (e.f || 0), c: a.c + (e.c || 0) }; }, { p: 0, kcal: 0, f: 0, c: 0 });
     if (!E) add("kal", "Dein Kalorienziel kann noch nicht berechnet werden: Es fehlen Angaben unter Daten → Persönlich (Geschlecht, Geburtsjahr, Größe, Alltag) oder ein Gewicht unter Körper.");
