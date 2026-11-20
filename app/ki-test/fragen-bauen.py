@@ -35,7 +35,7 @@ WERTE = [
 ALLG = [
     ("b1", "Wie trage ich ein selbst gekochtes Gericht ein?", "Schritte nach Handbuch (Gericht berechnen, Portionen, Reste)"),
     ("b2", "Erkläre mir die App.", "feste Antwort: Überblick über die Reiter"),
-    ("b3", "Wie mache ich ein Backup?", "Daten → Sicherung → Backup speichern"),
+    ("b3", "Wie mache ich ein Backup?", "Zahnrad oben → Sicherung → Backup speichern"),
     ("b4", "Wie ändere ich meinen Trainingsplan?", "Plan-Reiter / Plan-Assistent nach Handbuch"),
     ("b5", "Wie scanne ich ein Produkt?", "Barcode-Symbol beim Eintragen"),
     ("b6", "Wo stelle ich mein Zielgewicht ein?", "Reiter Körper unter dem Gewichtsdiagramm"),

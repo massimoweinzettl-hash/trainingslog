@@ -38,9 +38,10 @@ Kostenlos geht das mit GitHub Pages.
 WICHTIG
 -------
 - Deine Einträge liegen nur auf dem jeweiligen Gerät, nicht bei GitHub.
-  Im Tab "Daten" regelmäßig ein Backup speichern (z. B. in iCloud Drive).
-- Auf dem PC dieselbe Adresse öffnen und das Backup im Tab "Daten"
-  einspielen, um die Daten dort zu sehen.
+  Über das Zahnrad oben > "Sicherung" regelmäßig ein Backup speichern
+  (z. B. in iCloud Drive).
+- Auf dem PC dieselbe Adresse öffnen und das Backup über das Zahnrad
+  oben > "Sicherung" einspielen, um die Daten dort zu sehen.
 - App aktualisieren: geänderte Dateien wieder über "Upload files" hochladen.
   Die neue Fassung erscheint beim übernächsten Öffnen der App.
 - Das Repository ist öffentlich: Jeder kann den Programmcode sehen und die

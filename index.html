@@ -217,7 +217,7 @@ button.xs { min-height: 32px; padding: 2px 10px }
 .nextbtn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; font-weight: 400 }
 .nextbtn > span:nth-child(2) { flex: 1 1 auto }
 .linkbtn { border: 0; background: none; padding: 0 0 0 8px; min-height: 0; color: var(--accent); font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 2px }
-.chips.dsec { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px }
+.chips.dsec { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 5px } /* v236: so viele Spalten wie sichtbare Bereiche */
 .chips.dsec button { padding-left: 2px; padding-right: 2px; min-width: 0; font-size: 13px }
 .help h2 { margin-bottom: 0 }
 .hsec { border-top: 1px solid var(--line); padding: 8px 0 }
@@ -710,6 +710,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 #kip { z-index: 30 } .kisheet { width: min(460px, 100%); max-height: calc(100% - 20px); overflow: auto; gap: 10px } .kichips button { font-size: 14px; padding: 6px 10px; text-align: left }
 .kirow { display: flex; gap: 8px; align-items: flex-end } .kirow textarea { flex: 1; resize: none } .kirow button { flex: none }
 .kians { background: var(--sunken); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px } .kians p { margin: 0 } .kierr { color: var(--bad) }
+.setmenu { display: grid; grid-template-columns: 1fr 1fr; gap: 6px } /* v236: Daten & Hilfe im Zahnradmenü */ .setback { align-self: flex-start; margin: 0 0 -4px } body.touring #tab-set { min-height: 100vh }
 #setp { z-index: 30 } .setsheet { width: min(460px, 100%); max-height: calc(100% - 20px); overflow: auto; gap: 8px } .sethd { display: flex; align-items: center; justify-content: space-between; gap: 10px } .sethd h2 { margin: 0 }
 .setbody { display: flex; flex-direction: column; gap: 8px } .setbody h3 { margin: 10px 0 0 } .setbody .lab { margin: 4px 0 0 } .setbody label { display: flex; flex-direction: column; gap: 4px }
 .motto { display: none; font-size: 13px; font-style: italic }
@@ -873,6 +874,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   <section class="tab" id="tab-body" hidden></section>
   <section class="tab" id="tab-plan" hidden></section>
   <section class="tab" id="tab-data" hidden></section>
+  <section class="tab" id="tab-set" hidden></section>
 </div>
 
 <div class="overlay" id="who" role="dialog" aria-modal="true" aria-labelledby="who-h" hidden>
@@ -911,8 +913,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 235; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 236; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 236, tab: "data", text: "Sicherung, Export, Bericht, Profile, Hilfe und „Was ist neu?“ findest du jetzt über das Zahnrad oben, jeweils als eigene Seite. „‹ Einstellungen“ führt zurück ins Menü, „Fertig“ dorthin, wo du vorher warst. Unter Daten bleiben vorerst Essen, Übungen und Persönlich." },
     { v: 235, tab: "data", text: "Vorratsschrank: neuer Behälter „Riegel-Karton“ – der Thekenkarton mit offenem Deckel, die Riegel liegen darin. Riegel kommen beim Hinzufügen automatisch hinein." },
     { v: 234, tab: "data", text: "Vorratsschrank: neues Symbol für die „Dose“ – mit geriffeltem Deckel und Etikett. Damit haben alle fünf Behälter neue Symbole." },
     { v: 233, tab: "data", text: "Vorratsschrank: neues Symbol für den „Karton“ – offener Karton mit vier Klappen." },
@@ -1258,6 +1261,8 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   function setHtml() {
     var P = S.person, hasP = !!P, opt = function (v, l, cur) { return '<option value="' + v + '"' + (String(cur) === String(v) ? " selected" : "") + ">" + l + "</option>"; };
     return '<div class="sheet setsheet"><div class="sethd"><h2 id="set-h">Einstellungen</h2><button class="primary xs" data-act="setclose">Fertig</button></div><div class="setbody">' +
+      /* v236 (Wunsch des Nutzers): Sicherung, Export, Bericht, Profile, Hilfe und „Was ist neu?“ als eigene Menüpunkte (vorher Reiter Daten) */
+      '<h3>Daten &amp; Hilfe</h3><div class="setmenu">' + SSEC.map(function (x) { return '<button data-act="setgo" data-id="' + x[0] + '">' + x[2] + "</button>"; }).join("") + '<button data-act="setnews">Was ist neu?</button></div>' +
       '<h3>Darstellung</h3><p class="lab">Design</p><div class="chips lookchips" role="group" aria-label="Design">' + lookChips() + '</div><div id="set-acc">' + accHtml() + "</div>" +
       '<p class="lab">Hell / Dunkel</p><div class="chips" id="set-theme" role="group" aria-label="Hell oder dunkel">' + themeChips() + "</div>" +
       '<p class="lab">Farben</p><div class="chips" id="set-cvd" role="group" aria-label="Farben">' + cvdChips() + "</div>" +
@@ -1269,7 +1274,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
         '<label style="flex:1 1 160px">Tagesziel' + selWheel('id="set-wgoal"' + (hasP ? "" : " disabled"), rng(1000, 4000, 250), P && isN(P.wgoal) ? P.wgoal : "", function (v) { return lit(v) + " l"; }, "Automatisch (" + lit(waterAuto(false)) + " l)") + "</label></div>" +
       (hasP ? "" : '<p class="small muted">Krafttraining und Schlafenszeit gehen, sobald deine Angaben unter Daten → Persönlich gespeichert sind.</p>') +
       '<h3>App</h3><p class="small muted">Trainingslog v' + APP_VERSION + "</p>" +
-      '<div class="chips"><button data-act="setnews">Was ist neu?</button><button data-act="settour">Einführung</button><button data-act="sethelp">Hilfe</button></div>' +
+      '<div class="chips"><button data-act="settour">Einführung</button></div>' +
       (function () { var el = window.TLErrList ? window.TLErrList() : [], n = el.reduce(function (a, e) { return a + (e.n || 1); }, 0); /* v177 */
         return '<p class="lab">Fehlerprotokoll</p><p class="small muted">' + (n ? n + (n === 1 ? " Fehler" : " Fehler") + " aufgezeichnet, zuletzt " + new Date(el[el.length - 1].t).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + "." : "Keine Fehler aufgezeichnet.") + "</p>" +
           (n ? '<div class="chips"><button data-act="errcopy">Bericht kopieren</button><button class="danger" data-act="errclr">Protokoll leeren</button></div>' : ""); })() +
@@ -1289,7 +1294,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     "Es gibt drei Arten von Fragen: " +
     "1. Fragen zu den eigenen Werten (Kalorien, Eiweiß, Gewicht, Training): Die Sätze in DEINE DATEN sind schon fertige Antworten: Nimm den Satz, der genau zur Frage passt, und gib ihn sinngemäß wieder. Rechne nichts selbst aus, ändere keine Zahl und vermische keine Zahlen aus verschiedenen Sätzen. " +
     "Wenn die Frage etwas annimmt, das laut DEINE DATEN nicht stimmt (z. B. „so hoch“, obwohl das Ziel unter dem Verbrauch liegt), sag das freundlich und erkläre, wie es wirklich ist. " +
-    "2. Fragen zur Bedienung der App: Erkläre die Schritte nur nach ANLEITUNG. Beschreibe keine Knöpfe, Farben oder Anzeigen, die dort nicht stehen. Fehlt die Anleitung, sag, dass du es nicht genau weißt, und verweise auf das Handbuch unter Daten → Hilfe. " +
+    "2. Fragen zur Bedienung der App: Erkläre die Schritte nur nach ANLEITUNG. Beschreibe keine Knöpfe, Farben oder Anzeigen, die dort nicht stehen. Fehlt die Anleitung, sag, dass du es nicht genau weißt, und verweise auf das Handbuch unter Zahnrad → Hilfe. " +
     "3. Allgemeine Fragen, die nichts mit den Werten des Nutzers oder der Bedienung zu tun haben (z. B. ob Fett gut ist, wie viel Schlaf man braucht, ob man jeden Tag trainieren sollte): Beantworte sie NICHT. Sag in einem freundlichen Satz, dass du nur Fragen zu seinen eigenen Werten und zur Bedienung der App beantwortest, und nenne ein Beispiel, was er fragen kann (z. B. „Wie viele Kalorien habe ich heute noch übrig?“). " +
     "Eine Zahl aus DEINE DATEN nur nennen, wenn sie genau zum Thema der Frage gehört; bei einer Ablehnung keine Zahl nennen. Wird nach einer Prognose gefragt, nimm nur die Prognose aus DEINE DATEN. Sag „Kalorienziel“, nicht „Zielverbrauch“. " +
     "Schreib nie, woher etwas stammt: nicht „im Handbuch steht“, nicht „laut Daten“, und nie die Wörter DEINE DATEN oder ANLEITUNG. Keine Diagnosen; bei Beschwerden, Krankheit oder Medikamenten auf einen Arzt verweisen.";
@@ -1436,7 +1441,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   }
   /* v207: Überblick über die App fest (Modell blieb im Testlauf nichtssagend) */
   var KI_TOUR = /erkl[äa]r.{0,12}\bapp\b|was kann (die |diese )?app|[üu]berblick|wie funktioniert (die |diese )?app|was ist (das|diese) app/i;
-  var KI_TOURTXT = "Die App hat sechs Reiter: Ernährung (Essen und Trinken eintragen, dein Kalorienziel für heute), Training (Kalender, Einheiten und Sätze eintragen), Fortschritt (ob du stärker wirst), Körper (Gewicht, Maße, Phase und Zielgewicht), Plan (deine Trainingstage und Übungen) und Daten (Lebensmittel, Übungen, persönliche Angaben, Sicherung und Hilfe). Ausführlich steht alles im Handbuch unter Daten → Hilfe.";
+  var KI_TOURTXT = "Die App hat sechs Reiter: Ernährung (Essen und Trinken eintragen, dein Kalorienziel für heute), Training (Kalender, Einheiten und Sätze eintragen), Fortschritt (ob du stärker wirst), Körper (Gewicht, Maße, Phase und Zielgewicht), Plan (deine Trainingstage und Übungen) und Daten (Lebensmittel, Übungen, persönliche Angaben). Über das Zahnrad oben erreichst du Sicherung, Export, Bericht, Profile, Hilfe und „Was ist neu?“. Ausführlich steht alles im Handbuch unter Zahnrad → Hilfe.";
   /* v209: Fragen, bei denen das Modell im großen Test trotz fertigem Satz danebenlag, beantwortet die App selbst (Satz aus kiFacts). */
   var KIX = {}, KI_WHY = /(warum|wieso|weshalb|wie kommt|wodurch|woher).{0,40}(kalorienziel|kalorien|kcal|\bziel\b)|(kalorienziel|\bziel\b).{0,30}(so hoch|so niedrig|so wenig|so viel|zu hoch|zu niedrig)/i;
   function kiFixed(q) { if (KI_TOUR.test(q)) return KI_TOURTXT;
@@ -1667,7 +1672,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       else st = { mode: "idb", docs: r.docs, meta: { migrated: now, fresh: true }, metaDirty: true };
       LPID = pid; MODE = st.mode; META = st.meta || null; DOCS = st.docs || {}; idbFailed = !!st.noidb;
       written = {}; pend = {}; metaDirty = !!st.metaDirty; dataNote = st.note || "";
-      if (META && META.lost) dataNote = "Der Speicher dieses Geräts ist leer, obwohl hier schon Daten lagen (vermutlich hat iOS die Website-Daten gelöscht). Spiel dein letztes Backup ein: Daten → Sicherung → Backup einspielen.";
+      if (META && META.lost) dataNote = "Der Speicher dieses Geräts ist leer, obwohl hier schon Daten lagen (vermutlich hat iOS die Website-Daten gelöscht). Spiel dein letztes Backup ein: Zahnrad oben → Sicherung → Backup einspielen.";
       if (MODE === "lock") { DOCS = {}; return true; }
       if (MODE === "idb") {
         if (st.all) Object.keys(DOCS).forEach(function (k) { pend[k] = 1; });
@@ -1843,8 +1848,8 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
         if (BC) try { BC.postMessage({ pid: pid }); } catch (e) {}
       } else if (same) {
         if (meta) metaDirty = true;
-        warnMsg = jrnlOk ? "Speichern hat gerade nicht geklappt, der Speicher dieses Geräts antwortet nicht oder ist voll. Deine Eingaben sind vorgemerkt und werden beim nächsten Speichern oder Öffnen nachgeholt. Mach zur Sicherheit unter Daten → Sicherung ein Backup."
-          : "Speichern fehlgeschlagen: Der Speicher dieses Geräts ist voll oder gesperrt. Mach jetzt unter Daten → Sicherung ein Backup, sonst gehen die letzten Eingaben beim Schließen verloren.";
+        warnMsg = jrnlOk ? "Speichern hat gerade nicht geklappt, der Speicher dieses Geräts antwortet nicht oder ist voll. Deine Eingaben sind vorgemerkt und werden beim nächsten Speichern oder Öffnen nachgeholt. Mach zur Sicherheit über das Zahnrad oben → Sicherung ein Backup."
+          : "Speichern fehlgeschlagen: Der Speicher dieses Geräts ist voll oder gesperrt. Mach jetzt über das Zahnrad oben → Sicherung ein Backup, sonst gehen die letzten Eingaben beim Schließen verloren.";
         setSync(jrnlOk ? "Speichern verzögert – wird nachgeholt" : "Speichern fehlgeschlagen – Speicher voll oder gesperrt", true); topNotice();
         /* Von selbst erneut versuchen, mit wachsendem Abstand (5 s, 15 s, 45 s … höchstens 5 min). */
         clearTimeout(retryT); retryT = setTimeout(function () { retryT = null; if (MODE === "idb" && !wRun && Object.keys(pend).length) flush(); }, retryMs);
@@ -1871,7 +1876,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     if (ok) (id ? [id] : Object.keys(DOCS).concat(Object.keys(lsBase))).forEach(function (k) { if (DOCS[k]) lsBase[k] = JSON.stringify(DOCS[k]); else delete lsBase[k]; });
     setSync(ok ? "Auf diesem Gerät gespeichert" : "Speichern fehlgeschlagen – Speicher voll oder gesperrt", !ok);
     /* Voller Speicher: deutlich und bleibend warnen; ungespeicherte Sätze werden beim nächsten Speichern erneut versucht. */
-    if (!ok) { warnMsg = "Speichern fehlgeschlagen: Der Speicher dieses Browsers ist voll oder gesperrt. Mach jetzt unter Daten → Sicherung ein Backup, sonst gehen die letzten Eingaben beim Schließen verloren."; topNotice(); }
+    if (!ok) { warnMsg = "Speichern fehlgeschlagen: Der Speicher dieses Browsers ist voll oder gesperrt. Mach jetzt über das Zahnrad oben → Sicherung ein Backup, sonst gehen die letzten Eingaben beim Schließen verloren."; topNotice(); }
     else if (warnMsg) { warnMsg = ""; topNotice(); }
     if (ok) askPersist();
     return ok;
@@ -2235,7 +2240,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var fo = foodOnly(), co = cardioOnly(); document.body.classList.toggle("foodonly", fo); document.body.classList.toggle("cardioonly", co); TABS = fo ? TABS_FOOD : co ? TABS_CARDIO : TABS_ALL;
     if (co && S.dataSec === "ex") S.dataSec = "food";
     if (fo && S.dataSec === "ex") S.dataSec = "food";
-    if (fo && TABS.indexOf(S.tab) < 0) showTab("home");
+    if (fo && S.tab !== "set" && TABS.indexOf(S.tab) < 0) showTab("home");
   }
   /* v139 (Wunschliste, Auswahlrad statt Tippen): <select> mit festen Stufen; der aktuelle Wert ist immer dabei. ph = Platzhalter ohne Wert. */
   function selWheel(attrs, vals, cur, lab, ph) {
@@ -4577,7 +4582,10 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   }
   function alert0(msg) { var m = $("repblk") && $("repblk").querySelector(".repmsg"); if (!m && $("repblk")) { m = document.createElement("p"); m.className = "small repmsg fmiss"; $("repblk").appendChild(m); } if (m) m.textContent = msg; }
   /* Reiter „Daten“: Stammdaten (Essen, Übungen, persönliche Angaben) und Sicherung, umschaltbar. */
-  var DSEC = [["food", "Essen"], ["ex", "Übungen"], ["me", "Persönlich"], ["save", "Sicherung"], ["help", "Hilfe"]];
+  var DSEC = [["food", "Essen"], ["ex", "Übungen"], ["me", "Persönlich"]]; /* v236: Sicherung und Hilfe stehen jetzt im Zahnradmenü (SSEC) */
+  /* v236 (Wunsch des Nutzers): Einstellungs-Seiten, erreichbar über das Zahnrad. [Kennung, Seitentitel, Menüpunkt]. Eigene Seite #tab-set ohne Reiterknopf;
+     „‹ Einstellungen“ öffnet wieder das Zahnradmenü, dort führt „Fertig“ zurück in die Ansicht, aus der man kam (S.setFrom = {tab, y}). */
+  var SSEC = [["save", "Sicherung", "Sicherung"], ["csv", "Export", "Export"], ["rep", "Bericht", "Bericht"], ["prof", "Profile", "Profile"], ["help", "Hilfe", "Hilfe"]];
   /* ---------- Handbuch (seit v58) ----------
      Bei jeder Version, die die Bedienung ändert, hier mitpflegen. Kurz halten, Details stehen hinter den blauen i. */
   var HELP = [
@@ -4587,9 +4595,10 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     ["Fortschritt", "<p>Zeigt, ob du stärker wirst. Aussagekräftig wird es nach etwa drei bis vier Wochen.</p><ul><li><b>Kraft nach Körperbereichen:</b> Die Körperkarte färbt jede Muskelgruppe danach, wie sich dein geschätztes Maximum im Zeitraum verändert hat: orange = gleich, tiefrot = ab +20 %, graublau = schwächer, grau = keine Daten. Mit ▶ oder dem Regler läuft der Zeitraffer. Mit dem Zeitraum „Phase“ siehst du, ob du im Cut deine Kraft hältst. Im Diagramm darunter wählst du die Linien über die Knöpfe.</li><li><b>Verlauf pro Übung</b> als 1RM, schwerstes Gewicht oder Volumen.</li><li><b>Schwerpunkt:</b> deine wichtigsten Übungen mit geschätztem Maximum (1RM), Veränderung in der Phase, Rekord und nächstem Krafttest. Den Schwerpunkt setzt du unter Daten → Übungen.</li><li><b>Rekorde</b> und Krafttest-Ergebnisse stehen am Ende.</li></ul><p class=\"small muted\">Das 1RM ist eine Schätzung aus Gewicht und Wiederholungen (Epley-Formel), kein gemessener Wert.</p>"],
     ["Körper", "<p>Gewicht, Körperfett, Umfänge und deine Phasen.</p><ul><li><b>Gewicht eintragen und ansehen:</b> im Reiter Körper, mit Diagramm deines Verlaufs. Am besten täglich oder mehrmals pro Woche, morgens nach dem Aufstehen. Einzelne Werte schwanken um 1–2 kg, die App achtet auf den Verlauf. Auf dem iPhone holt „Aus Apple Health holen“ Gewicht und Körperfett über einen Kurzbefehl.</li><li><b>Messung korrigieren:</b> in der Tabelle „Messungen“ das Datum antippen. Die Werte stehen dann oben im Formular: ändern oder ein Feld leeren, „Speichern“. „Löschen“ entfernt den ganzen Tag.</li><li><b>Gewichtsdiagramm:</b> deine Messungen mit dem Korridor deiner Phase. Liegst du im Korridor, passt das Tempo. Hast du Körperfettwerte, läuft das Körperfett als gestrichelte Linie mit (Schnitt der letzten 7 Tage, Skala rechts). Tippe auf einen Tag, dann stehen unter dem Diagramm Datum, Gewicht und Körperfett dieses Tages; noch einmal tippen blendet es wieder aus.</li><li><b>Körperfett ohne Waage:</b> Ein Maßband reicht. Taille auf Höhe des Bauchnabels und Hals messen, Frauen zusätzlich die Hüfte an der breitesten Stelle.</li><li><b>Zielgewicht:</b> im Reiter Körper unter dem Gewichtsdiagramm (Feld „Zielgewicht im Cut“ bzw. „im Aufbau“).</li><li><b>Phasen:</b> Cut, Aufbau oder Halten mit Beginn und Zielgewicht. Mit „Übergang“ (Reverse Diet) wandert dein Kalorienziel nach einem Cut über 2 bis 4 Wochen gleichmäßig zum neuen Ziel, statt zu springen; 3 Wochen sind vorausgewählt. Der Korridor zeigt, ob du im Plan liegst. Fällst du heraus, schlägt die App Aufholen oder einen Neustart vor.</li><li><b>Kalorien und Makros:</b> Der Grundumsatz kommt aus Gewicht, Größe, Alter und Geschlecht, mit Körperfett genauer über die fettfreie Masse. Dazu kommen dein Alltag und dein Training. Trägst du Gewicht und Essen ein, leitet die App nach zwei Wochen deinen echten Bedarf aus dem Gewichtsverlauf ab. Die Tabelle zeigt den Wochenschnitt (Ø), die Zeile „Heute“ darunter dein Ziel für heute wie unter Ernährung.</li></ul>"],
     ["Plan", "<p>Hier legst du fest, welche Übungen an welchem Trainingstag dran sind.</p><ul><li><b>Plan erstellen lassen:</b> Tage pro Woche, Dauer und Geräte wählen. Der Assistent zeigt eine Vorschau, mit ↻ tauschst du einzelne Übungen. Danach „Plan übernehmen“. Später heißt es „Plan neu erstellen“: Plan ersetzen oder Tage hinzufügen, dein Verlauf bleibt.</li><li><b>Übung hinzufügen:</b> ein Suchfeld je Tag. Namen eintippen und Treffer antippen, die Übung ist sofort im Plan. Ohne Suchbegriff stehen oben Vorschläge für Muskelgruppen mit zu wenig Sätzen, darunter alle Übungen nach Gruppen. Findet sich nichts, legst du sie als eigene Übung an.</li><li><b>Sätze pro Muskelgruppe</b> (ganz oben): Balken = was du trainiert hast, Strich = was dein Plan pro Woche vorsieht, grünes Feld = 10–20 Sätze, ein üblicher Bereich für Muskelaufbau.</li><li><b>Übungen ordnen:</b> ↑ ↓ ändert die Reihenfolge, „Verschieben“ bringt eine Übung zu einem anderen Tag, ✕ nimmt sie aus dem Plan (der Verlauf bleibt). „Einstellungen“ führt zu Sätzen, Wiederholungen und Schritt.</li><li><b>Tage:</b> umbenennen, duplizieren, löschen. Unter dem Namen stehen geschätzte Dauer und Sätze je Muskelgruppe.</li><li><b>Sätze pro Woche:</b> oben im Plan. ↓ heißt unter 10, ↑ über 20 Sätze.</li><li><b>Plan-Code:</b> ein Text, mit dem sich ein Trainingstag auf einmal einfügen lässt (einfügen, prüfen, übernehmen).</li><li><b>Plan teilen:</b> „Plan teilen“ oben im Plan schickt deinen ganzen Plan als Text, z. B. per WhatsApp (ohne Gewichte und Verlauf). Wer ihn bekommt, fügt ihn ganz unten bei „Plan-Code einfügen“ ein und wählt „Plan ersetzen“ oder „Tage hinzufügen“.</li></ul>"],
-    ["Daten", "<p>Fünf Bereiche: Essen, Übungen, Persönlich, Sicherung, Hilfe.</p><ul><li><b>Essen:</b> Nahrungsergänzung (alles im Vorratsschrank: Präparat antippen für Inhalt, Rhythmus und Vorrat), Meal Prep (deine Mahlzeiten) und die Lebensmittelliste. Über 550 Lebensmittel und viele Markenprodukte sind eingebaut. Mit ☆ markierst du Favoriten, sie stehen beim Eintragen oben und in der Liste zugeklappt unter „★ Favoriten“. Eigene und gescannte Produkte stehen in ihrer Gruppe ganz oben; die Gruppe änderst du beim Produkt. Lebensmittel antippen, um Werte von der Verpackung zu übernehmen; das wird dein eigener Eintrag. Mahlzeiten stellst du aus Lebensmitteln zusammen. Für Meal-Prep bei „Ergibt“ die Portionen eintragen, dann wird je eine Portion gezählt. Darunter der Bereich Vorrat für Lebensmittel wie Whey: über „+ Lebensmittel suchen“ hinzufügen. Die App zieht ab, was du einträgst (auch in Meal Prep und Gerichten), und rechnet aus deinem Schnitt der letzten 14 Tage, bis wann er reicht.</li><li><b>Übungen:</b> Sätze, Wiederholungsbereich und Schritt je Übung, Sterne, Schwerpunkt, Muskelgruppe. Doppelte Übungen zusammenführen. „Katalog anpassen“ blendet Übungen aus, die du nie machst.</li><li><b>Persönlich:</b> die Angaben für deine Kalorien (Geschlecht, Geburtsjahr, Größe, Körperbau, Alltag, Trainingstage, Dauer) und Makros. Ändert sich dein Alltag oder Training, passe es hier an.</li><li><b>Einstellungen</b> (Zahnrad oben neben „Trainingslog“): Design, Hell/Dunkel, Farben (Rot-Grün-Schwäche), Krafttraining, Schlafenszeit, Version, „Was ist neu?“, Einführung und Hilfe. <b>Krafttraining „Nein, nur Ernährung“</b> blendet Training, Fortschritt, Plan und Übungen aus; die Kalorien rechnen dann ohne Trainingstage. Zurückschalten geht jederzeit, nichts wird gelöscht.</li><li><b>Sicherung:</b> Backup speichern und einspielen, Export für Excel und der <b>Bericht für den Arzt</b>: Zeitraum und Inhalt wählen, „Bericht erstellen“, dann drucken, als PDF sichern oder als Datei teilen. Der Name im Bericht wird nicht gespeichert. Hier legst du auch <b>Profile</b> für mehrere Personen an.</li><li><b>Darstellung:</b> Design („Standard“, „Magerquark“, „Aurora“, „Hölle“, „Winter Arc“), Hell/Dunkel und Farben stellst du in den Einstellungen ein (Zahnrad oben neben „Trainingslog“), ganz oben unter „Darstellung“. Dort auch die Haptik.</li></ul>"],
-    ["Häufige Fragen", "<ul><li><b>Es werden keine Kalorien angezeigt.</b> Dann fehlt eine Angabe: Geschlecht, Geburtsjahr, Größe oder Alltag unter Daten → Persönlich, oder ein Gewicht unter Körper.</li><li><b>Mein Kalorienziel ändert sich von Tag zu Tag.</b> An Tagen mit eingetragenem oder eingeplantem Training bekommst du mehr, an Ruhetagen weniger. Der Wochenschnitt bleibt gleich. Nach „Training beenden“ zählen nur die gemachten Sätze.</li><li><b>Ich habe die falsche Übung eingetragen.</b> Im Training auf „Ersetzen“ tippen und „eingetragene Sätze mitnehmen“ anhaken. Das geht am selben Tag.</li><li><b>Ein Lebensmittel fehlt.</b> Barcode scannen oder unter Daten → Essen selbst anlegen. Die Werte stehen auf der Verpackung.</li><li><b>Ich habe gestern vergessen, Essen einzutragen.</b> Nachtragen geht nicht. Der Tag bleibt im Rückblick grau und zählt nicht in die Schnitte.</li><li><b>Das vorgeschlagene Gewicht ist zu leicht oder zu schwer.</b> Trag einfach ein, was du wirklich gemacht hast. Der nächste Vorschlag richtet sich danach.</li><li><b>Neues Handy.</b> Auf dem alten Gerät unter Daten → Sicherung ein Backup speichern, auf dem neuen einspielen. Einen automatischen Abgleich zwischen Geräten gibt es nicht.</li><li><b>Mehrere Personen.</b> Unter Daten → Sicherung legst du Profile an. Jedes Profil hat eigene Daten und ein eigenes Backup.</li></ul>"],
-    ["Gut zu wissen", "<ul><li><b>Deine Daten liegen nur auf diesem Gerät.</b> Niemand sonst sieht sie. Ohne Backup sind sie weg, wenn die App oder die Website-Daten gelöscht werden. Die App erinnert dich nach 14 Tagen an ein Backup (Glocke oben).</li><li><b>Glocke oben:</b> Nachrichten der App – Backup-Erinnerung, Vorrat fast leer, neue Version, Speicher-Umzug. Die rote Zahl zeigt, wie viele es sind. ✕ blendet eine aus, sie kommt wieder, wenn es nötig wird.</li><li><b>Ohne Internet</b> geht alles außer der Abfrage unbekannter Barcodes und Updates.</li><li><b>Updates:</b> Gibt es eine neue Version, fragt die App „Jetzt aktualisieren“ oder „Später“. Was neu ist, zeigt ein gelber Punkt am Reiter und „Was ist neu?“ unter Daten → Sicherung.</li><li><b>Wischen:</b> Nach links oder rechts wischen wechselt den Reiter. In seitlich scrollenden Diagrammen und Tabellen scrollt der Inhalt.</li><li><b>Blaues i:</b> Dahinter steht eine kurze Erklärung, oft auch wie gerechnet wird.</li><li><b>Schätzungen:</b> Kalorienbedarf, 1RM, Körperfett aus dem Maßband und Koffeinspiegel sind Schätzungen aus üblichen Formeln. Sie ersetzen keine ärztliche Beratung.</li><li><b>Quellen:</b> Markenprodukte stammen von <b>Open Food Facts</b> (openfoodfacts.org, Lizenz ODbL 1.0), Stand 13.11.2026. Die Werte pflegen Nutzer dort selbst, bei Auffälligem kurz mit der Packung vergleichen. Vitamine und Mineralstoffe der Grundlebensmittel stammen aus dem <b>Bundeslebensmittelschlüssel 4.0</b> (Max Rubner-Institut 2025, Karlsruhe, DOI 10.25826/Data20251217-134202-0, Lizenz CC BY 4.0); die Empfehlungen sind die DGE/ÖGE-Referenzwerte.</li><li><b>Frag die App</b> (nur in der iPhone-App mit Apple Intelligence, blauer Knopf „KI“ oben neben dem Zahnrad): Fragen zur Bedienung und zu deinen heutigen Werten. Die Zahlen rechnet die App selbst, die KI formuliert nur die Antwort. Sie läuft offline auf dem iPhone, nichts verlässt das Gerät. Sie kann sich irren – im Zweifel gilt, was in der App steht.</li></ul>"]
+    ["Daten", "<p>Drei Bereiche: Essen, Übungen, Persönlich. Sicherung, Export, Bericht, Profile und Hilfe findest du über das Zahnrad oben.</p><ul><li><b>Essen:</b> Nahrungsergänzung (alles im Vorratsschrank: Präparat antippen für Inhalt, Rhythmus und Vorrat), Meal Prep (deine Mahlzeiten) und die Lebensmittelliste. Über 550 Lebensmittel und viele Markenprodukte sind eingebaut. Mit ☆ markierst du Favoriten, sie stehen beim Eintragen oben und in der Liste zugeklappt unter „★ Favoriten“. Eigene und gescannte Produkte stehen in ihrer Gruppe ganz oben; die Gruppe änderst du beim Produkt. Lebensmittel antippen, um Werte von der Verpackung zu übernehmen; das wird dein eigener Eintrag. Mahlzeiten stellst du aus Lebensmitteln zusammen. Für Meal-Prep bei „Ergibt“ die Portionen eintragen, dann wird je eine Portion gezählt. Darunter der Bereich Vorrat für Lebensmittel wie Whey: über „+ Lebensmittel suchen“ hinzufügen. Die App zieht ab, was du einträgst (auch in Meal Prep und Gerichten), und rechnet aus deinem Schnitt der letzten 14 Tage, bis wann er reicht.</li><li><b>Übungen:</b> Sätze, Wiederholungsbereich und Schritt je Übung, Sterne, Schwerpunkt, Muskelgruppe. Doppelte Übungen zusammenführen. „Katalog anpassen“ blendet Übungen aus, die du nie machst.</li><li><b>Persönlich:</b> die Angaben für deine Kalorien (Geschlecht, Geburtsjahr, Größe, Körperbau, Alltag, Trainingstage, Dauer) und Makros. Ändert sich dein Alltag oder Training, passe es hier an.</li></ul>"],
+    ["Einstellungen (Zahnrad)", "<p>Das Zahnrad oben links öffnet die Einstellungen.</p><ul><li><b>Daten &amp; Hilfe:</b> Sicherung, Export, Bericht, Profile, Hilfe und „Was ist neu?“. Jeder Punkt öffnet eine eigene Seite. „‹ Einstellungen“ oben bringt dich zurück ins Menü, dort führt „Fertig“ zurück dorthin, wo du vorher warst.</li><li><b>Sicherung:</b> Backup speichern und einspielen. Leg die Datei zum Beispiel in iCloud Drive ab.</li><li><b>Export:</b> Sätze und Körperwerte als CSV-Datei für Excel.</li><li><b>Bericht</b> für den Arzt: Zeitraum und Inhalt wählen, „Bericht erstellen“, dann drucken, als PDF sichern oder als Datei teilen. Der Name im Bericht wird nicht gespeichert.</li><li><b>Profile</b> für mehrere Personen auf diesem Gerät, jedes mit eigenen Daten und eigenem Backup.</li><li><b>Darstellung:</b> Design („Standard“, „Magerquark“, „Aurora“, „Hölle“, „Winter Arc“), Hell/Dunkel, Farben (Rot-Grün-Schwäche) und Haptik.</li><li><b>Nutzung:</b> Krafttraining, Schlafenszeit und Wasser. <b>Krafttraining „Nein, nur Ernährung“</b> blendet Training, Fortschritt, Plan und Übungen aus; die Kalorien rechnen dann ohne Trainingstage. Zurückschalten geht jederzeit, nichts wird gelöscht.</li><li><b>App:</b> Version, Einführung und Fehlerprotokoll.</li></ul>"],
+    ["Häufige Fragen", "<ul><li><b>Es werden keine Kalorien angezeigt.</b> Dann fehlt eine Angabe: Geschlecht, Geburtsjahr, Größe oder Alltag unter Daten → Persönlich, oder ein Gewicht unter Körper.</li><li><b>Mein Kalorienziel ändert sich von Tag zu Tag.</b> An Tagen mit eingetragenem oder eingeplantem Training bekommst du mehr, an Ruhetagen weniger. Der Wochenschnitt bleibt gleich. Nach „Training beenden“ zählen nur die gemachten Sätze.</li><li><b>Ich habe die falsche Übung eingetragen.</b> Im Training auf „Ersetzen“ tippen und „eingetragene Sätze mitnehmen“ anhaken. Das geht am selben Tag.</li><li><b>Ein Lebensmittel fehlt.</b> Barcode scannen oder unter Daten → Essen selbst anlegen. Die Werte stehen auf der Verpackung.</li><li><b>Ich habe gestern vergessen, Essen einzutragen.</b> Nachtragen geht nicht. Der Tag bleibt im Rückblick grau und zählt nicht in die Schnitte.</li><li><b>Das vorgeschlagene Gewicht ist zu leicht oder zu schwer.</b> Trag einfach ein, was du wirklich gemacht hast. Der nächste Vorschlag richtet sich danach.</li><li><b>Neues Handy.</b> Auf dem alten Gerät über das Zahnrad → Sicherung ein Backup speichern, auf dem neuen einspielen. Einen automatischen Abgleich zwischen Geräten gibt es nicht.</li><li><b>Mehrere Personen.</b> Über das Zahnrad → Profile legst du Profile an. Jedes Profil hat eigene Daten und ein eigenes Backup.</li></ul>"],
+    ["Gut zu wissen", "<ul><li><b>Deine Daten liegen nur auf diesem Gerät.</b> Niemand sonst sieht sie. Ohne Backup sind sie weg, wenn die App oder die Website-Daten gelöscht werden. Die App erinnert dich nach 14 Tagen an ein Backup (Glocke oben).</li><li><b>Glocke oben:</b> Nachrichten der App – Backup-Erinnerung, Vorrat fast leer, neue Version, Speicher-Umzug. Die rote Zahl zeigt, wie viele es sind. ✕ blendet eine aus, sie kommt wieder, wenn es nötig wird.</li><li><b>Ohne Internet</b> geht alles außer der Abfrage unbekannter Barcodes und Updates.</li><li><b>Updates:</b> Gibt es eine neue Version, fragt die App „Jetzt aktualisieren“ oder „Später“. Was neu ist, zeigen die Glocke, ein gelber Punkt am Reiter und „Was ist neu?“ im Zahnradmenü.</li><li><b>Wischen:</b> Nach links oder rechts wischen wechselt den Reiter. In seitlich scrollenden Diagrammen und Tabellen scrollt der Inhalt.</li><li><b>Blaues i:</b> Dahinter steht eine kurze Erklärung, oft auch wie gerechnet wird.</li><li><b>Schätzungen:</b> Kalorienbedarf, 1RM, Körperfett aus dem Maßband und Koffeinspiegel sind Schätzungen aus üblichen Formeln. Sie ersetzen keine ärztliche Beratung.</li><li><b>Quellen:</b> Markenprodukte stammen von <b>Open Food Facts</b> (openfoodfacts.org, Lizenz ODbL 1.0), Stand 13.11.2026. Die Werte pflegen Nutzer dort selbst, bei Auffälligem kurz mit der Packung vergleichen. Vitamine und Mineralstoffe der Grundlebensmittel stammen aus dem <b>Bundeslebensmittelschlüssel 4.0</b> (Max Rubner-Institut 2025, Karlsruhe, DOI 10.25826/Data20251217-134202-0, Lizenz CC BY 4.0); die Empfehlungen sind die DGE/ÖGE-Referenzwerte.</li><li><b>Frag die App</b> (nur in der iPhone-App mit Apple Intelligence, blauer Knopf „KI“ oben neben dem Zahnrad): Fragen zur Bedienung und zu deinen heutigen Werten. Die Zahlen rechnet die App selbst, die KI formuliert nur die Antwort. Sie läuft offline auf dem iPhone, nichts verlässt das Gerät. Sie kann sich irren – im Zweifel gilt, was in der App steht.</li></ul>"]
   ];
   /* Erste Schritte als Liste zum Abhaken (v115): gleiche Prüfungen wie im Rundgang, Antippen öffnet die Station. */
   function firstSteps() {
@@ -4693,9 +4702,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     ["Daten: Übungen", "Alle Übungen nach Muskelgruppen, deine und die aus dem Katalog. Antippen, um Sätze, Wiederholungen, Schritt, Sterne und Schwerpunkt einzustellen oder sie einem Trainingstag zuzuordnen.", "ex", function () { var f = $("exfilter"); return [document.querySelector('.dsec [data-id="ex"]'), f && f.closest(".searchbox"), $("exlist")]; }, null],
     ["Deine Angaben", "Aus diesen Angaben berechnet die App deine Kalorien und Makros. Prüfe sie kurz und tippe nach Änderungen auf „Speichern“. Ändert sich später dein Alltag oder Training, passt du es hier an.", "me", function () { var x = $("pe-sex"); return [document.querySelector('.dsec [data-id="me"]'), x && x.closest(".block")]; },
       function () { var P = S.person || {}, m = [], w = false; Object.keys(S.body).forEach(function (k) { if (S.body[k] && S.body[k].weight != null) w = true; }); if (!P.sex) m.push("Geschlecht"); if (!isN(P.year)) m.push("Geburtsjahr"); if (!isN(P.height)) m.push("Größe"); if (!isN(P.act)) m.push("Alltag"); if (!w) m.push("Gewicht (Reiter Körper)"); return m.length ? [0, "Fehlt noch: " + m.join(", ")] : [1, "Vollständig, deine Kalorien werden berechnet"]; }],
-    ["Backup", "Deine Daten liegen nur auf diesem Gerät. Tippe auf „Backup speichern“ und leg die Datei zum Beispiel in iCloud Drive ab. Die App erinnert dich alle zwei Wochen daran.", "save", function () { var x = document.querySelector("[data-act=pick]"); return [document.querySelector('.dsec [data-id="save"]'), x && x.closest(".block")]; },
+    ["Backup", "Deine Daten liegen nur auf diesem Gerät. Tippe auf „Backup speichern“ und leg die Datei zum Beispiel in iCloud Drive ab. Die App erinnert dich alle zwei Wochen daran.", "save", function () { var x = document.querySelector("[data-act=pick]"); return [document.querySelector("#tab-set .setback"), x && x.closest(".block")]; },
       function () { return lastBackup() ? [1, "Backup ist gespeichert"] : [0, "Noch kein Backup"]; }],
-    ["Hilfe", "Hier steht das Handbuch zu allen Reitern, Abschnitt antippen zum Aufklappen. Den Rundgang kannst du hier jederzeit noch einmal starten.", "help", function () { return [document.querySelector('.dsec [data-id="help"]'), document.querySelector("#tab-data .help")]; }, null]
+    ["Hilfe", "Hier steht das Handbuch zu allen Reitern, Abschnitt antippen zum Aufklappen. Den Rundgang kannst du hier jederzeit noch einmal starten.", "help", function () { return [document.querySelector("#tab-set .setback"), document.querySelector("#tab-set .help")]; }, null]
   ];
   function tourStat() {
     var el = $("tour"), st = tourStep >= 0 && TOUR[tourStep], p = el && el.querySelector(".tst"); if (!p || !st || !st[4]) return;
@@ -4738,21 +4747,22 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   function tourEnd() { tourStep = -1; try { localStorage.setItem(tourKey(), "1"); } catch (e) {} var el = $("tour"); if (el) el.remove(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
   /* v116 (Nutzer: Übergänge zu hart, Reiter nicht erkennbar): Ort in der Karte, Seite gleitet in Richtung des neuen Reiters,
      Reiter pulsiert, Hervorhebung erst nach dem Gleiten (tourHold bremst solange den MutationObserver). */
-  var TOURLOC = { home: "Reiter Ernährung", train: "Reiter Training", body: "Reiter Körper", plan: "Reiter Plan", food: "Daten → Essen", ex: "Daten → Übungen", me: "Daten → Persönlich", save: "Daten → Sicherung", help: "Daten → Hilfe" }, tourHold = 0;
+  var TOURLOC = { home: "Reiter Ernährung", train: "Reiter Training", body: "Reiter Körper", plan: "Reiter Plan", food: "Daten → Essen", ex: "Daten → Übungen", me: "Daten → Persönlich", save: "Zahnrad → Sicherung", help: "Zahnrad → Hilfe" }, tourHold = 0;
   function tourShow(i) {
-    var from = S.tab === "data" ? "data:" + S.dataSec : S.tab, fromI = TABS.indexOf(S.tab), firstCard = !$("tour");
+    var from = S.tab === "data" ? "data:" + S.dataSec : S.tab === "set" ? "set:" + S.setSec : S.tab, fromI = TABS.indexOf(S.tab), firstCard = !$("tour");
     document.querySelectorAll(".tfocus").forEach(function (x) { x.classList.remove("tfocus"); }); document.body.classList.remove("tfocusing");
     tourStep = i; var st = TOUR[i], tab = st[2];
     if (DSEC.some(function (x) { return x[0] === tab; })) { S.dataSec = tab; showTab("data"); }
+    else if (SSEC.some(function (x) { return x[0] === tab; })) { if (S.tab !== "set") S.setFrom = { tab: S.tab, y: 0 }; S.setSec = tab; showTab("set"); } /* v236 */
     else if (tab === "plan") {
       if (!S.plan) { S.plan = { kind: "plan", fav3: 1, m58: 1, days: [] }; planChanged(true); }
       if (!S.plan.days.length && !S.wiz) wizStart();
       showTab("plan");
     } else showTab(tab);
-    if (!(from.indexOf("data:") === 0 && S.tab === "data")) window.scrollTo(0, 0);
+    if (!(from.indexOf("data:") === 0 && S.tab === "data") && !(from.indexOf("set:") === 0 && S.tab === "set")) window.scrollTo(0, 0);
     var el = $("tour"); if (!el) { el = document.createElement("div"); el.id = "tour"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Einführung"); document.body.appendChild(el); }
     document.body.classList.add("touring");
-    var to = S.tab === "data" ? "data:" + S.dataSec : S.tab, hop = from.indexOf("data:") === 0 && to.indexOf("data:") === 0, moved = to !== from && !firstCard && i > 0 && !hop, rm = /* v190 (Wunsch des Nutzers): innerhalb von „Daten“ wandert nur die Pille, ohne Gleiten und Zoom */ window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var to = S.tab === "data" ? "data:" + S.dataSec : S.tab === "set" ? "set:" + S.setSec : S.tab, hop = (from.indexOf("data:") === 0 && to.indexOf("data:") === 0) || (from.indexOf("set:") === 0 && to.indexOf("set:") === 0), moved = to !== from && !firstCard && i > 0 && !hop, rm = /* v190 (Wunsch des Nutzers): innerhalb von „Daten“ wandert nur die Pille, ohne Gleiten und Zoom */ window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (moved && !rm) {
       var pane = $("tab-" + S.tab), tb = document.querySelector('.tabs button[data-tab="' + S.tab + '"]'), cls = TABS.indexOf(S.tab) < fromI ? "tslL" : "tslR";
       pane.classList.remove("tslL", "tslR"); void pane.offsetWidth; pane.classList.add(cls); pane.addEventListener("animationend", function () { pane.classList.remove(cls); }, { once: true });
@@ -4779,17 +4789,44 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     else if (sec === "ex") h += S.plan ? exViewHtml() : '<p class="empty">Noch kein Plan. Leg ihn im Reiter „Plan“ an.</p>';
     else if (sec === "me") { var E = energy(bodyList()); h += personForm() + '<div class="block">' + macroForm(E) + "</div>" +
       '<p class="small muted">Design, Hell/Dunkel, Krafttraining und Schlafenszeit: <button class="linkbtn small" data-act="setopen">Einstellungen</button> (Zahnrad oben).</p>'; }
-    else if (sec === "help") h += helpHtml();
-    else {
-      var lb = lastBackup(), ld = lb ? new Date(lb) : null, old = $("datamsg") ? $("datamsg").textContent : "";
-      h += migCard("data") + '<div class="block"><h2>Backup' + ib("bk") + "</h2>" + itx("bk", "Deine Einträge liegen nur auf diesem Gerät. Ein Backup ist eine Datei, die du zum Beispiel in iCloud Drive ablegst. Damit stellst du deine Daten wieder her oder überträgst sie auf ein anderes Gerät. Beim Einspielen werden die Einträge aus der Datei ergänzt. Gibt es einen Tag schon, gilt die Version aus der Datei." + (PROF.list.length > 1 ? " Backup, Einspielen und Export gelten für das aktive Profil „" + esc(profName()) + "“." : "")) +
+    el.innerHTML = h; if (sec === "me") fdRestore();
+    if (S.tab === "set") renderSet(); /* v236: Profile, Sicherung usw. rufen weiter renderData() auf */
+  }
+  function backupHtml() {
+    var lb = lastBackup(), ld = lb ? new Date(lb) : null, old = $("datamsg") ? $("datamsg").textContent : "";
+    return migCard("data") + '<div class="block"><h2>Backup' + ib("bk") + "</h2>" + itx("bk", "Deine Einträge liegen nur auf diesem Gerät. Ein Backup ist eine Datei, die du zum Beispiel in iCloud Drive ablegst. Damit stellst du deine Daten wieder her oder überträgst sie auf ein anderes Gerät. Beim Einspielen werden die Einträge aus der Datei ergänzt. Gibt es einen Tag schon, gilt die Version aus der Datei." + (PROF.list.length > 1 ? " Backup, Einspielen und Export gelten für das aktive Profil „" + esc(profName()) + "“." : "")) +
       "<p>Letztes Backup: <b>" + (ld ? pad(ld.getDate()) + "." + pad(ld.getMonth() + 1) + "." + ld.getFullYear() : "noch keins") + "</b></p>" +
       '<div class="row"><button class="primary" data-act="backup">Backup speichern</button><button data-act="pick">Backup einspielen</button><input type="file" id="impfile" accept=".json,.txt,application/json,text/plain" hidden></div>' +
-      '<p class="small muted" id="datamsg">' + esc(old || "") + "</p></div>" +
-      '<div class="block"><h2>Export für Excel' + ib("csv") + "</h2>" + itx("csv", "CSV-Dateien mit einer Zeile pro Satz bzw. pro Messung, die Excel direkt öffnet.") + '<div class="row"><button data-act="csvsets">Sätze exportieren</button><button data-act="csvbody">Körperwerte exportieren</button></div></div>' + repBlock() +
-      profileBlock() + '<div class="row" style="align-items:center;justify-content:space-between"><span class="small muted" id="datacount">' + Object.keys(S.workouts).length + " Einheiten und " + Object.keys(S.body).length + " Messungen gespeichert · Version " + APP_VERSION + "<br>" + esc(storeLine()) + '</span><button class="ghost" data-act="news">Was ist neu?</button></div>';
-    }
+      '<p class="small muted" id="datamsg">' + esc(old || "") + "</p></div>";
+  }
+  function csvHtml() { return '<div class="block"><h2>Export für Excel' + ib("csv") + "</h2>" + itx("csv", "CSV-Dateien mit einer Zeile pro Satz bzw. pro Messung, die Excel direkt öffnet.") + '<div class="row"><button data-act="csvsets">Sätze exportieren</button><button data-act="csvbody">Körperwerte exportieren</button></div></div>'; }
+  function dataInfoHtml() { return '<div class="row" style="align-items:center;justify-content:space-between"><span class="small muted" id="datacount">' + Object.keys(S.workouts).length + " Einheiten und " + Object.keys(S.body).length + " Messungen gespeichert · Version " + APP_VERSION + "<br>" + esc(storeLine()) + '</span><button class="ghost" data-act="news">Was ist neu?</button></div>'; }
+  function renderSet() {
+    var el = $("tab-set"); if (!el || !S.ready) return;
+    var sec = SSEC.some(function (x) { return x[0] === S.setSec; }) ? S.setSec : "save";
+    var h = '<button class="linkbtn setback" data-act="setback">‹ Einstellungen</button>';
+    if (sec === "save") h += backupHtml() + dataInfoHtml();
+    else if (sec === "csv") h += csvHtml();
+    else if (sec === "rep") h += repBlock();
+    else if (sec === "prof") h += profileBlock();
+    else h += helpHtml();
     el.innerHTML = h;
+  }
+  function setGo(sec) { if (S.tab !== "set") S.setFrom = { tab: S.tab, y: window.scrollY }; S.setSec = sec; setClose(); showTab("set"); }
+  function setLeave() { var f = S.setFrom || { tab: "home", y: 0 }; showTab(f.tab); window.scrollTo(0, f.y || 0); }
+  /* v236 (Wunsch des Nutzers): ungespeicherte Eingaben in „Persönlich“ (pe-…) und bei den Makros (mc-…) überstehen Reiterwechsel und Neuzeichnen,
+     bis „Speichern“ sie übernimmt. Felder im Zahnradmenü speichern sofort und zählen nicht. */
+  var FDRAFT = {};
+  function fdTrack(t) { if (t && t.id && /^(pe|mc)-/.test(t.id) && t.id !== "pe-days" && !(t.closest && t.closest("#setp"))) FDRAFT[t.id] = t.value; }
+  function fdClear(pre) { Object.keys(FDRAFT).forEach(function (k) { if (k.indexOf(pre) === 0) delete FDRAFT[k]; }); }
+  function fdRestore() {
+    var pe = false, mc = false;
+    Object.keys(FDRAFT).forEach(function (k) { var e = $(k); if (!e) return;
+      if (k === "pe-days") e.querySelectorAll("[data-id]").forEach(function (x) { x.setAttribute("aria-pressed", String(FDRAFT[k].indexOf(+x.dataset.id) >= 0)); });
+      else if (e.value !== FDRAFT[k]) e.value = FDRAFT[k];
+      if (k.indexOf("pe-") === 0) pe = true; else mc = true; });
+    if (pe && $("pemsg") && !$("pemsg").textContent) $("pemsg").textContent = "Noch nicht gespeichert – tippe auf „Speichern“.";
+    if (mc && $("mcmsg") && !$("mcmsg").textContent) $("mcmsg").textContent = "Noch nicht gespeichert – tippe auf „Speichern“.";
   }
   function topNotice() {
     setTimeout(partyCheck, 500); /* v127 */
@@ -4877,7 +4914,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   function switchProfile(id) {
     if (!PROF.list.some(function (p) { return p.id === id; })) return;
     saveDraft(); if (planTimer) planChanged(true);
-    PROF.active = id; profWrite(); S.ready = false; migMsg = "";
+    PROF.active = id; profWrite(); S.ready = false; migMsg = ""; FDRAFT = {}; /* v236 */
     S.date = today(); S.dayId = null; S.exSel = null; S.calSel = null; S.planCode = ""; planPatch = null; S.pick = {}; pickMsg = {}; S.exOpen = null; S.exFilter = ""; draft = null; dirty = false;
     loadAll().then(function (ok) {
       if (!ok || lockCheck()) return;
@@ -6720,14 +6757,15 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     renderBody(!force);
     if (force || (!planTimer && !focusIn("tab-plan"))) renderPlan();
     if (force || !focusIn("tab-data")) renderData();
+    if (S.tab === "set" && (force || !focusIn("tab-set"))) renderSet(); /* v236 */
     renderHome(); renderProfSel(); topNotice();
   }
   function showTab(t) {
-    if (foodOnly() && TABS_FOOD.indexOf(t) < 0) t = "home"; else if (cardioOnly() && TABS_CARDIO.indexOf(t) < 0) t = "train";
+    if (t === "set") { /* v236: Einstellungs-Seite in allen Modi */ } else if (foodOnly() && TABS_FOOD.indexOf(t) < 0) t = "home"; else if (cardioOnly() && TABS_CARDIO.indexOf(t) < 0) t = "train";
     var prevTab = S.tab; saveDraft(); S.tab = t; if ($("lookpop")) $("lookpop").hidden = true; bellClose();
-    ["home", "train", "prog", "body", "plan", "data"].forEach(function (k) { $("tab-" + k).hidden = k !== t; });
+    ["home", "train", "prog", "body", "plan", "data", "set"].forEach(function (k) { $("tab-" + k).hidden = k !== t; });
     document.querySelectorAll(".tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === t)); });
-    if (t === "home") renderHome(); else if (t === "train") { draft = null; renderTrain(); } else if (t === "prog") renderProgress(); else if (t === "body") renderBody(true); else if (t === "plan") renderPlan(); else if (t === "data") renderData(); /* v121: body fehlte, „Heute“ blieb stehen */
+    if (t === "home") renderHome(); else if (t === "train") { draft = null; renderTrain(); } else if (t === "prog") renderProgress(); else if (t === "body") renderBody(true); else if (t === "plan") renderPlan(); else if (t === "data") renderData(); else if (t === "set") renderSet(); /* v121: body fehlte, „Heute“ blieb stehen */
     topNotice();
     try { localStorage.setItem("trainingslog-tab", t); } catch (e) {}
     if (prevTab !== t) window.scrollTo(0, 0);
@@ -6749,7 +6787,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   document.addEventListener("touchstart", function (ev) {
     SW = null; if (!S.ready || ev.touches.length !== 1) return;
     var tc = ev.touches[0], wv = window.innerWidth; if (tc.clientX < 18 || tc.clientX > wv - 18) return; /* Randgesten von iOS frei lassen */
-    if (swBlocked(ev.target)) return;
+    if (swBlocked(ev.target) || S.tab === "set") return; /* v236: Einstellungs-Seite hat keinen Nachbar-Reiter */
     SW = { x: tc.clientX, y: tc.clientY, t: Date.now(), dir: 0, dx: 0, el: $("tab-" + S.tab) };
   }, { passive: true });
   document.addEventListener("touchmove", function (ev) {
@@ -6860,7 +6898,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       setTimeout(function () { var nf = document.querySelector('input[data-fi="name"][data-id="' + nit.id + '"]'); if (nf) { nf.scrollIntoView({ block: "center" }); nf.select(); } }, 80);
     }
     else if (a === "setopen") setOpen();
-    else if (a === "setclose") setClose();
+    else if (a === "setclose") { setClose(); if (S.tab === "set") setLeave(); } /* v236: „Fertig“ auf einer Einstellungs-Seite führt zurück, woher man kam */
+    else if (a === "setgo") setGo(id);
+    else if (a === "setback") setOpen();
     else if (a === "kiopen") kiOpen();
     else if (a === "kiclose") kiClose();
     else if (a === "kiask") { var kq = $("ki-q"); kiAsk(kq ? kq.value : ""); }
@@ -6873,7 +6913,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     else if (a === "errclr") { if (!arm(b, "Wirklich leeren?")) return; window.TLErrClear(); var dp = $("setp"); if (dp) dp.innerHTML = setHtml(); }
     else if (a === "setnews") { setClose(); showNews(true); }
     else if (a === "settour") { setClose(); tourFrom = 0; tourShow(0); }
-    else if (a === "sethelp") { setClose(); S.dataSec = "help"; showTab("data"); }
+    else if (a === "sethelp") setGo("help");
     else if (a === "lookmenu") { var lp = $("lookpop"); lp.hidden = !lp.hidden; if (!lp.hidden) lp.innerHTML = '<span class="small muted">Design:</span>' + lookChips(); }
     else if (a === "look") { var inPop = !!b.closest("#lookpop"); lookSet(id); if (inPop) $("lookpop").hidden = true; }
     else if (a === "nutp") { S.nutP = id; if ($("nutbox")) $("nutbox").innerHTML = nutBlock(); }
@@ -7029,6 +7069,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     }
     else if (a === "peday") {
       b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true"));
+      if (!S.person) { var tdd = []; $("pe-days").querySelectorAll('[aria-pressed="true"]').forEach(function (x) { tdd.push(+x.dataset.id); }); FDRAFT["pe-days"] = tdd; } /* v236 */
       /* Sind die übrigen Angaben schon gespeichert, gelten die Trainingstage sofort, ohne „Speichern“. */
       if (S.person) {
         var tds = []; $("pe-days").querySelectorAll('[aria-pressed="true"]').forEach(function (x) { tds.push(+x.dataset.id); });
@@ -7042,7 +7083,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
         if (![nm.pc, nm.pm, nm.pb].every(function (x) { return x != null && x >= 1 && x <= 3.5; })) { $("mcmsg").textContent = "Eiweiß bitte zwischen 1 und 3,5 g pro kg angeben."; return; }
         if (nm.fat == null || nm.fat < 15 || nm.fat > 45) { $("mcmsg").textContent = "Fett bitte zwischen 15 und 45 % der Kalorien angeben."; return; }
       }
-      S.macro = nm; saveSettings(); renderBody(true); renderHome(); renderData();
+      S.macro = nm; fdClear("mc-"); saveSettings(); renderBody(true); renderHome(); renderData();
       $("mcmsg").textContent = nm ? "Gespeichert. Ernährung, Tabelle und Kalender rechnen jetzt damit." : "Auf Standard zurückgesetzt.";
     }
     else if (a === "pesave") {
@@ -7056,7 +7097,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       var bd = $("pe-build").value || null, lw = lastWeight(bodyList());
       saveSettings(null, { sex: sx, year: Math.round(yr), height: hg, act: ac, job: jb, tmin: tm, intake: it == null ? null : Math.round(it), since: it == null ? null : ($("pe-since").value || today()), tdays: td, bed: HMRE.test(bdt) && bdt !== "23:00" ? bdt : null,
         build: bd, buildW: bd && lw ? lw.weight : null, notrain: ntr ? 1 : null, ttype: S.person && S.person.ttype || null, glass: S.person && S.person.glass || null, wgoal: S.person && S.person.wgoal || null });
-      renderAll(false); $("pemsg").textContent = "Gespeichert. Kalorien und Makros stehen im Reiter „Körper“.";
+      fdClear("pe-"); renderAll(false); $("pemsg").textContent = "Gespeichert. Kalorien und Makros stehen im Reiter „Körper“.";
     }
     else if (a === "pfswitch") switchProfile(id);
     else if (a === "gome") { S.dataSec = "me"; showTab("data"); var pb = $("pe-build"); if (pb) { pb.scrollIntoView({ block: "center" }); pb.focus(); } }
@@ -7411,6 +7452,8 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var t = ev.target; if (ev.key !== "Enter" || !t.classList || !t.classList.contains("cbq")) return;
     ev.preventDefault(); var first = document.querySelector('[id="cbr-' + t.dataset.cb + '"] button'); if (first && t.value.trim()) first.click();
   });
+  document.addEventListener("input", function (ev) { fdTrack(ev.target); }, true); /* v236 */
+  document.addEventListener("change", function (ev) { fdTrack(ev.target); }, true);
   document.addEventListener("input", function (ev) {
     if (!S.ready) return;
     var t = ev.target, ds = t.dataset;
