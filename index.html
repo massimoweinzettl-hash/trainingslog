@@ -830,8 +830,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 196; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 197; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 197, tab: "data", text: "Frag die App: Antwortet klarer, widerspricht freundlich, wenn eine Frage von etwas Falschem ausgeht, und erfindet keine Anzeigen mehr." },
     { v: 196, tab: "data", text: "Neu in der iPhone-App: „Frag die App“ (Sprechblase oben neben dem Zahnrad). Stell Fragen zur Bedienung oder zu deinen heutigen Werten, z. B. warum dein Ziel heute so hoch ist. Antwortet Apples KI direkt auf dem iPhone, auch offline. Nur sichtbar, wenn Apple Intelligence verfügbar ist." },
     { v: 195, tab: "home", text: "Ernährung: Die Eingabefelder unter „Schätzen“, „Gericht berechnen“ und beim Eintragen sind jetzt hell mit Rahmen und als Felder gut zu erkennen." },
     { v: 194, tab: "home", text: "Ernährung: Auch Eintragen, Schätzen, Gericht-Portionen, Reste und gescannte Produkte geben jetzt ein kurzes Tipp-Feedback. In der iPhone-App ist die Haptik etwas kräftiger und kommt auch beim Scannen. Meal Prep heißt jetzt auch beim Eintragen so und lässt sich unter Daten → Essen einklappen." },
@@ -1158,7 +1159,10 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   var KI = { ok: false, why: "", open: false, busy: false, q: "", a: "", err: "", draft: "" };
   var KI_INSTR = "Du bist der Assistent der App „Trainingslog“ (Krafttraining, Ernährung, Körperwerte). Antworte immer auf Deutsch, in Du-Form, freundlich und kurz: höchstens vier Sätze. " +
     "Stütze dich nur auf die Abschnitte FAKTEN und HANDBUCH. Nenne nur Zahlen, die dort stehen, rechne nichts Neues aus und erfinde nichts. " +
-    "Steht die Antwort nicht darin, sag ehrlich, dass du es nicht weißt, und nenne, wo man in der App nachsehen kann. Keine Diagnosen; bei Beschwerden auf einen Arzt verweisen.";
+    "Steht die Antwort nicht darin, sag ehrlich, dass du es nicht weißt, und nenne, wo man in der App nachsehen kann. Keine Diagnosen; bei Beschwerden auf einen Arzt verweisen. " +
+    /* v197 (Test auf dem iPhone): Modell übernahm falsche Annahmen der Frage, erfand Bildschirmteile, schrieb „HANDBUCH“ und wiederholte sich */
+    "Wenn die Frage etwas annimmt, das laut FAKTEN nicht stimmt (z. B. „so hoch“, obwohl das Ziel unter dem Verbrauch liegt), sag das freundlich und erkläre, wie es wirklich ist. " +
+    "Beschreibe keine Knöpfe, Balken oder Anzeigen, die nicht im HANDBUCH stehen. Schreib die Wörter FAKTEN und HANDBUCH nie in deine Antwort, sag stattdessen „im Handbuch unter …“. Sag jeden Gedanken nur einmal; lieber zwei klare Sätze als vier.";
   var KI_Q = ["Warum ist mein Kalorienziel heute so?", "Wie viel Eiweiß fehlt mir heute noch?", "Wie läuft mein Gewicht gerade?", "Wie trage ich ein selbst gekochtes Gericht ein?"];
   var KI_STOP = ["warum", "wieso", "weshalb", "welche", "welcher", "welches", "meine", "meinen", "meinem", "meiner", "heute", "kann", "habe", "hast", "bitte", "noch", "wird", "werden", "gerade", "wenn", "dass", "sich", "eine", "einen", "einem", "einer", "nicht", "auch", "eigentlich", "soll", "sollte", "machen", "mache", "gibt", "dies", "diese", "dieser", "sind", "denn", "schon", "viel", "viele", "mehr"];
   function kiNative() { var C = window.Capacitor; return C && C.isNativePlatform && C.isNativePlatform() && C.nativePromise ? C : null; }
@@ -1200,6 +1204,11 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       var use = E.maint + (E.n ? (di.train ? E.d * ((di.fac || 1) - E.n / 7) : -E.d * E.n / 7) : 0);
       L.push("Tagesart: " + (!E.n ? "Ziel gilt jeden Tag gleich" : di.train ? (di.plan ? "Trainingstag (Training eingeplant, noch nichts eingetragen)" : "Trainingstag") : "Ruhetag"));
       L.push("Kalorienziel heute: " + g(di.kcal) + " kcal. So berechnet:\n" + kiTxt(kcalSteps(E, di, use)));
+      /* v197: fertige Einordnung, damit das kleine Modell nicht selbst vergleichen muss */
+      var dd = di.kcal - use, ptype = ph ? ph.type : "maintain";
+      L.push("Einordnung: Dein geschätzter Verbrauch heute ist " + g(use) + " kcal. Das Ziel liegt " + (Math.abs(dd) < 50 ? "etwa gleich hoch" : g(Math.abs(dd)) + " kcal " + (dd < 0 ? "darunter" : "darüber")) +
+        (ptype === "cut" ? " – das ist das Defizit zum Abnehmen." : ptype === "bulk" ? " – das ist der Überschuss für den Aufbau." : "."));
+      if (E.n) { var sp = E.split(di.mtype === "cut" || di.mtype === "bulk" ? di.mtype : ptype); L.push("Ruhetag oder Trainingstag: An Ruhetagen gibt es weniger (" + g(sp.rest) + " kcal), an vollen Trainingstagen mehr (" + g(sp.train) + " kcal); der Wochenschnitt bleibt gleich. Heute ist " + (di.train ? "ein Trainingstag." : "ein Ruhetag, also gilt der niedrigere Wert.")); }
       L.push("Gegessen heute: " + g(sum.kcal) + " kcal; Eiweiß " + g(sum.p) + " von " + mc.p + " g, Fett " + g(sum.f) + " von " + mc.f + " g, Kohlenhydrate " + g(sum.c) + " von " + mc.c + " g");
       L.push("Noch offen heute: " + (di.kcal - sum.kcal >= 0 ? g(di.kcal - sum.kcal) + " kcal" : g(sum.kcal - di.kcal) + " kcal über dem Ziel") + ", Eiweiß noch " + g(Math.max(0, mc.p - sum.p)) + " g");
     }
