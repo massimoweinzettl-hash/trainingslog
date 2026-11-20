@@ -302,6 +302,7 @@ body.cardioonly .tabs button[data-tab="plan"], body.cardioonly .dsec button[data
 .dline1 { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted) }
 .dline1 .ic { width: 16px; height: 16px } .dline1 b { color: var(--ink) } .dline1 b.def { color: var(--ph-cut) } .dline1 b.sur { color: var(--good) }
 .dline1 .ibtn { margin-left: 2px }
+.mline { display: flex; align-items: center; gap: 4px; margin: 2px 0 0; font-size: 13px; color: var(--muted) } .mline.mok { color: var(--good) } /* v204 Messung des Verbrauchs */
 .foodblk .nadd { border-top: 1px solid var(--line); padding-top: 12px }
 .row.nlinks { flex-wrap: nowrap; gap: 4px; justify-content: space-between } @media (max-width: 400px) { .row.nlinks { flex-wrap: wrap; justify-content: flex-start } }
 .row.nlinks .ghost { padding-left: 4px; padding-right: 4px; font-size: 15px; white-space: nowrap }
@@ -833,8 +834,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 203; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 204; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 204, tab: "home", text: "Ernährung: Unter „Verbrauch“ steht jetzt, ab wann die App genug Daten hat, um deinen echten Verbrauch aus Gewichtsverlauf und Essen zu berechnen. Wenn es so weit ist, gibt es einen kurzen Hinweis." },
     { v: 203, tab: "data", text: "Frag die App: Kennt jetzt eine Gewichtsprognose aus deinem echten Trend und erklärt die App, wenn du danach fragst." },
     { v: 202, tab: "data", text: "Frag die App kennt jetzt auch deinen BMI, deinen Wochenschnitt beim Essen und ob dein Gewicht im Plan liegt. Allgemeine Ernährungsfragen beantwortet sie bewusst nicht, dafür ist das Modell auf dem iPhone zu ungenau." },
     { v: 201, tab: "data", text: "Der Knopf für „Frag die App“ ist jetzt eine blaue Pille mit „KI“." },
@@ -1229,6 +1231,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       var use = E.maint + (E.n ? (di.train ? E.d * ((di.fac || 1) - E.n / 7) : -E.d * E.n / 7) : 0);
       L.push("Tagesart: " + (!E.n ? "Ziel gilt jeden Tag gleich" : di.train ? (di.plan ? "Trainingstag (Training eingeplant, noch nichts eingetragen)" : "Trainingstag") : "Ruhetag"));
       L.push("Kalorienziel heute: " + g(di.kcal) + " kcal. So berechnet:\n" + kiTxt(kcalSteps(E, di, use)));
+      var mpk = measProg(E, list); L.push(mpk ? "Verbrauch: noch nach Formel geschätzt. Genug Daten für den gemessenen Verbrauch voraussichtlich ab " + dfmt(mpk.date) + ", wenn täglich eingetragen wird (Essen an " + mpk.n + " von 14 Tagen, Gewicht über " + mpk.span + " von 14 Tagen)." : "Verbrauch: gemessen aus Gewichtsverlauf und Essen (genauer als die Formel)."); /* v204 */
       /* v197: fertige Einordnung, damit das kleine Modell nicht selbst vergleichen muss */
       var dd = di.kcal - use, ptype = ph ? ph.type : "maintain";
       L.push("Einordnung: Dein geschätzter Verbrauch heute ist " + g(use) + " kcal. Das Ziel liegt " + (Math.abs(dd) < 50 ? "etwa gleich hoch" : g(Math.abs(dd)) + " kcal " + (dd < 0 ? "darunter" : "darüber")) +
@@ -2123,6 +2126,34 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       if (k >= bmr * 0.5) { sum += k; n++; }
     }
     return days >= 14 && n >= 14 && n / days >= 0.7 ? { avg: sum / n, n: n, days: days } : null;
+  }
+  /* v204 (Wunsch des Nutzers): Wann rechnet die App mit dem gemessenen Verbrauch? Spiegelt die Bedingungen aus
+     intakeLog/energy: Essen an ≥ 14 Tagen (≥ 70 % der Tage, je ≥ halber Grundumsatz) und Gewicht über ≥ 14 Tage mit ≥ 3 Messungen.
+     Rückgabe null = schon gemessen; sonst Stand und geschätztes Datum (bei täglichem Eintragen). */
+  function measProg(E, list) {
+    if (!E || E.measured != null) return null;
+    var t = today(), first = null; Object.keys(S.nutri).forEach(function (k) { var d = k.slice(2); if (!first || d < first) first = d; });
+    var from = addDays(t, -28); if (first && first > from) from = first;
+    var days = 0, n = 0;
+    for (var d = from; d < t; d = addDays(d, 1)) { days++; var nd = S.nutri["n_" + d]; if (nd && (nd.entries || []).reduce(function (a, e) { return a + (e.kcal || 0); }, 0) >= E.bmr * 0.5) n++; }
+    var ws = list.filter(function (x) { return x.weight != null && x.date >= from && x.date <= t; });
+    var span = ws.length > 1 ? Math.round((Date.parse(ws[ws.length - 1].date) - Date.parse(ws[0].date)) / 864e5) : 0;
+    var needF = Math.max(14, Math.ceil(0.7 * Math.max(days, 14))), fLeft = Math.max(0, needF - n);
+    var wLeft = ws.length ? Math.max(0, 14 - Math.round((Date.parse(t) - Date.parse(ws[0].date)) / 864e5)) : 14;
+    var left = Math.max(fLeft, wLeft, ws.length >= 3 ? 0 : 1);
+    return { n: Math.min(n, 14), span: Math.min(span, 14), wn: ws.length, left: left, date: addDays(t, Math.max(1, left)), odd: !left && n >= needF && span >= 14 && ws.length >= 3 };
+  }
+  function measLine(E, list) {
+    var mp = measProg(E, list), key = "trainingslog-meas-" + PROF.active, seen = null;
+    try { seen = localStorage.getItem(key); } catch (e) {}
+    if (!mp) {
+      if (!seen) { seen = today(); try { localStorage.setItem(key, seen); } catch (e) {} }
+      return seen > addDays(today(), -3) ? '<p class="mline mok">✓ Verbrauch jetzt gemessen aus Gewicht und Essen' + ib("meas") + "</p>" + itx("meas", "Die App hat genug Daten: Aus deinem Gewichtsverlauf und dem, was du gegessen hast, berechnet sie deinen echten Verbrauch. Das ist meist genauer als die Formel. Die Aufstellung siehst du am i neben „Verbrauch“.") : "";
+    }
+    if (seen) { try { localStorage.removeItem(key); } catch (e) {} }
+    var how = "Bis dahin rechnet die App mit einer Formel (Grundumsatz × Alltag). Danach berechnet sie deinen echten Verbrauch aus Gewichtsverlauf und Essen – das ist meist genauer.<br><br>Stand: Essen an " + mp.n + " von 14 Tagen eingetragen (mindestens 70 % der Tage, je ein ganzer Tag), Gewicht über " + mp.span + " von 14 Tagen (" + mp.wn + (mp.wn === 1 ? " Messung" : " Messungen") + ", mindestens 3).";
+    if (mp.odd) return '<p class="mline">Verbrauch geschätzt · Messung unplausibel' + ib("meas") + "</p>" + itx("meas", "Genug Daten sind da, aber der berechnete Verbrauch wirkt unrealistisch (zum Beispiel durch lückenhafte Einträge oder Wasserschwankungen). Die App bleibt deshalb bei der Formel. Trag möglichst jeden Tag vollständig ein.<br><br>" + how);
+    return '<p class="mline">Verbrauch geschätzt · gemessen ab ≈ ' + dfmt(mp.date) + ib("meas") + "</p>" + itx("meas", "Das Datum gilt, wenn du ab jetzt jeden Tag dein Essen einträgst und dich regelmäßig wiegst. " + how);
   }
   function energy(list) {
     var P = S.person, w = null; list.forEach(function (x) { if (x.weight != null) w = x.weight; });
@@ -6256,7 +6287,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       var use = E.maint + (E.n ? (di.train ? E.d * ((di.fac || 1) - E.n / 7) : -E.d * E.n / 7) : 0), gap = Math.round(use) - di.kcal;
       var gl = Math.abs(gap) < 50 ? ["even", "Ausgeglichen", "±0", "maintain"] : gap > 0 ? ["def", "Defizit", "−" + gap.toLocaleString("de-DE"), "down"] : ["sur", "Überschuss", "+" + (-gap).toLocaleString("de-DE"), "bulk"];
       stats = '<p class="dline1">' + ic(gl[3], gl[0]) + "<span>" + gl[1] + ' <b class="' + gl[0] + '">' + gl[2] + " kcal</b> · Verbrauch <b>" + Math.round(use).toLocaleString("de-DE") + " kcal</b></span>" + ib("gap") + "</p>" +
-        itx("gap", kcalSteps(E, di, use) + "Geplantes Defizit: geschätzter Verbrauch " + (E.measured != null ? "(aus Gewichtsverlauf und Kalorienzufuhr)" : "(nach Formel)") + " minus Ziel von heute" + (E.n ? " (" + (di.train ? "Trainingstag" : "Ruhetag") + ")" : "") + ". Was du tatsächlich isst, zeigt der Balken oben.");
+        itx("gap", kcalSteps(E, di, use) + "Geplantes Defizit: geschätzter Verbrauch " + (E.measured != null ? "(aus Gewichtsverlauf und Kalorienzufuhr)" : "(nach Formel)") + " minus Ziel von heute" + (E.n ? " (" + (di.train ? "Trainingstag" : "Ruhetag") + ")" : "") + ". Was du tatsächlich isst, zeigt der Balken oben.") + measLine(E, list);
     }
     var head = '<div class="dhead"><span class="ddate">' + ic("cal") + "<span>" + WDAYS[dateOf(t).getDay()].slice(0, 2) + ". " + dfmt(t) + (E && E.n && !di.train ? '<span class="muted"> · Ruhetag</span>' : "") + "</span></span>" + '<span class="dpills">' +
       /* v128 (Wunsch des Nutzers): Trainingstag deutlich als Pille statt grauer Text */

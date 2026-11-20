@@ -24,6 +24,7 @@ FRAGEN = [
     ("w12", "Wie viel Koffein habe ich noch im Körper?", "Koffein jetzt + zur Schlafenszeit"),
     ("w13", "Warum bekomme ich an Trainingstagen mehr Kalorien?", "Ruhetag/Trainingstag-Erklärung mit beiden Werten, Wochenschnitt gleich"),
     ("w14", "Wie viel Fett darf ich heute noch essen?", "Fett gegessen von Ziel; Rest nur, wenn nicht neu gerechnet – sonst beide Zahlen nennen"),
+    ("w15", "Ab wann rechnet die App mit meinem echten Verbrauch?", "Datum/Stand aus der Verbrauch-Zeile bzw. dass schon gemessen wird"),
     ("b1", "Wie trage ich ein selbst gekochtes Gericht ein?", "Schritte nach Handbuch (Gericht berechnen, Portionen, Reste)"),
     ("b2", "Erkläre mir die App.", "Kurzer Überblick über die Reiter aus dem Handbuch"),
     ("b3", "Wie mache ich ein Backup?", "Daten → Sicherung → Backup speichern"),
