@@ -239,3 +239,11 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 - v216 (Wunsch des Nutzers): Lebensmittelliste (Daten → Essen, `foodLine`) zeigt Koffein (`cafOf` je 100 g/ml bzw. Stück, ab 0,5 mg). `CAF.f_m_mezzo` (Spezi 0,5 l) = 50 mg ergänzt.
 - v217 (Wünsche des Nutzers): Koffein als roter Punkt (`.nmac .mk`, `.fcaf`, #e5484d) bei Einträgen (`nListHtml`, auch Summe) und in der Lebensmittelliste („● 80 mg“ statt „80 mg Koffein“); `.fline .muted` darf umbrechen, Namen nicht mehr im Wort getrennt. `ndel`: gelöschter Eintrag mit `e.ck` gibt die Portion an die Reste zurück (`left + 1`, höchstens Portionen − noch eingetragene).
 - v218 (Wünsche des Nutzers): Einträge antippen (jeder, `ckshow`/`S.ckShow`) → Bearbeiten-Bereich `.nedit`: Lebensmittel „Menge“ (`data-ne`, `nReAmt` → `itemVals` neu; ältere Einträge ohne `e.it` über den Namen erkannt, `entItem`), sonst „Portionen“/„Menge ×“ (`data-nq`, `nReQ`, Faktor `e.q`, Name „(1,5 Portionen)“ bzw. „(×1,5)“), bei Gerichten dazu Zutaten. `itemVals`/`nRound` aus `nadd`/`nutriAdd` herausgelöst; `cookSync` beachtet `e.q`; Sanitizer übernimmt `q`. Nachtragen: Formular (`nAddHtml`) beim Nachtragen im Rückblick unter dem Tag statt oben (oben nur Hinweis „läuft unten im Rückblick · Beenden“), `renderHome` hält den Rückblick an seiner Bildschirmposition (`S.eatAnchor`, `#eatbox`-Versatz). HELP angepasst.
+
+## v219 – Vorrat für Lebensmittel (z. B. Whey)
+- Wunsch: Whey wird täglich in unterschiedlichen Mengen gegessen und soll trotzdem in den Vorratsschrank.
+- Entscheidung: Vorrat für jedes Lebensmittel möglich, Verbrauch zählt auch in Meal Prep und Gerichten.
+- Beim Lebensmittel (Daten → Essen → Lebensmittel) „Vorrat führen“: volle Packungen, Inhalt je Packung, Rest in der offenen, Behälter.
+- Verbrauch = eingetragene Mengen seit dem Setzen des Vorrats (direkt, Meal-Prep-Anteil über e.use, Gericht-Anteil über e.use bzw. Zutaten; alte Einträge über den Namen). Einträge vom Tag des Setzens zählen nicht doppelt (vor.x).
+- „Reicht bis“ aus dem Schnitt der letzten 14 Tage ohne heute, nur Tage mit Essens-Einträgen. ≤ 7 Tage: Hinweis unter Ernährung.
+- Steht im Vorratsschrank über den Präparaten; Antippen klappt die Einstellungen auf.
