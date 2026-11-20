@@ -911,8 +911,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 233; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 234; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 234, tab: "data", text: "Vorratsschrank: neues Symbol für die „Dose“ – mit geriffeltem Deckel und Etikett. Damit haben alle fünf Behälter neue Symbole." },
     { v: 233, tab: "data", text: "Vorratsschrank: neues Symbol für den „Karton“ – offener Karton mit vier Klappen." },
     { v: 232, tab: "data", text: "Vorratsschrank: neues Symbol für den „Beutel“ – Standbeutel mit Zipper." },
     { v: 231, tab: "data", text: "Vorratsschrank: neue Symbole für „Riegel“ (Folie mit gezackten Enden) und „Flasche“ (mit Deckel und runden Schultern)." },
@@ -6524,7 +6525,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
         '<path d="M3.4 5.3h15.2M3.3 7.8h11.6M4.4 28.4l.9-.9M17.6 28.4l-.9-.9M5.6 27.4q5.4 1 10.8 0" class="jz"/><path d="M4.7 11.5q-.5 8 .4 14.5M17.3 11.5q.5 8-.4 14.5" class="jz jfold"/><rect x="15" y="6.4" width="3.2" height="2.8" rx=".7" class="jz"/></svg>'; }
     if (k === "flasche") { h = f * 14.4; /* v231 (Vorlage des Nutzers): Flasche mit Deckel, Hals, runden Schultern und Linie unter der Schulter */
       return o + '<rect x="7.3" y="1.2" width="7.4" height="3.8" rx="1.2" class="jb"/><path d="M8.3 5v2.2q0 1.2-1.5 1.8Q3.5 10.2 3.5 13v14.5Q3.5 30 6 30h10q2.5 0 2.5-2.5V13q0-2.8-3.3-4-1.5-.6-1.5-1.8V5" class="jb"/><path d="M3.5 13.4h15" class="jz"/>' + (h > 0 ? '<rect x="4.7" y="' + (28.8 - h).toFixed(1) + '" width="12.6" height="' + h.toFixed(1) + '" rx="1.8" class="jf"/>' + jarPat(4.7, 17.3, 28.8 - h, 28.8, pat) : "") + "</svg>"; }
-    h = f * 24; return o + '<rect x="5" y="1" width="12" height="5" rx="1.5" class="jl"/><rect x="2" y="6" width="18" height="25" rx="4" class="jb"/>' + (h > 0 ? '<rect x="3.5" y="' + (30 - h).toFixed(1) + '" width="15" height="' + h.toFixed(1) + '" rx="2.5" class="jf"/>' + jarPat(3.5, 18.5, 30 - h, 30, pat) : "") + "</svg>"; }
+    /* v234 (Vorlage des Nutzers): Dose mit geriffeltem Deckel, runden Schultern und Etikett (zwei Bogenlinien) */
+    h = f * 17.8; return o + (h > 0 ? '<rect x="3.7" y="' + (29.8 - h).toFixed(1) + '" width="14.6" height="' + h.toFixed(1) + '" rx="2.5" class="jf"/>' + jarPat(3.7, 18.3, 29.8 - h, 29.8, pat) : "") +
+      '<path d="M4.6 7.7Q2.5 8.7 2.5 11.3v17.1q0 2.4 8.5 2.4t8.5-2.4V11.3q0-2.6-2.1-3.6" class="jb"/><path d="M4.6 3.1v4.4q6.4 2 12.8 0V3.1" class="jb"/><ellipse cx="11" cy="3.1" rx="6.4" ry="1.7" class="jb"/><path d="M6.7 5.2v2.4M8.8 5.6v2.4M11 5.7v2.4M13.2 5.6v2.4M15.3 5.2v2.4" class="jz"/><path d="M2.5 13.4q8.5 2.2 17 0M2.5 25.8q8.5 2.2 17 0" class="jz jfold"/></svg>'; }
   function suppShelf(fd, it, big) {
     if (!it.pack || !it.stock) return ""; var tot = suppLeft(fd, it); if (tot == null) return ""; var sp = suppSplit(it, tot), r = suppRange(fd, it), low = r && r.days <= 7 ? " low" : "", n = Math.min(sp[1], big ? 12 : 6);
     var ck = suppCont(it), un = it.per === "st" ? "" : " " + it.per;
