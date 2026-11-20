@@ -80,6 +80,27 @@
           "text": "Dazu viele Darstellungs- und Komfortverbesserungen, u. a. ein überarbeiteter Rundgang und kein versehentliches Zoomen mehr."
         }
       ]
+    },
+    {
+      "v": 214,
+      "punkte": [
+        {
+          "tab": "plan",
+          "text": "Plan teilen: Über „Plan teilen“ oben im Plan schickst du deinen ganzen Trainingsplan an Freunde. Einen geschickten Plan fügst du unten bei „Plan-Code einfügen“ ein und wählst, ob er deinen ersetzt oder die Tage dazukommen."
+        },
+        {
+          "tab": "home",
+          "text": "Unter „Verbrauch“ siehst du jetzt, ab wann die App deinen echten Verbrauch aus Gewichtsverlauf und Essen berechnet. „Mahlzeiten“ heißen jetzt „Meal Prep“, mit ein paar Beispiel-Gerichten zum Start."
+        },
+        {
+          "tab": "home",
+          "text": "Kurzes Tipp-Feedback (Vibration) beim Trinken, Eintragen und Wechseln der Reiter – in den Einstellungen unter „Haptik“ abschaltbar."
+        },
+        {
+          "tab": "data",
+          "text": "Neues Design „Aurora“ (Einstellungen → Design) mit Akzentfarbe Violett oder Blau. Dazu viele Darstellungs- und Komfortverbesserungen."
+        }
+      ]
     }
   ]
 }

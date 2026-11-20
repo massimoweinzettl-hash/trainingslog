@@ -38,11 +38,13 @@ STORE = {
     '"trainingslog-planclosed"', '"trainingslog-calview"', '"trainingslog-tour-"',
     '"trainingslog-theme"', '"trainingslog-cvd"', '"trainingslog-haptik"', '"trainingslog-hapst"', '"trainingslog-acc"',  # v137/v138: Hell/Dunkel, Farbenblind-Modus
     '"trainingslog-errors"',  # v177: Fehlerprotokoll
+    '"trainingslog-meas-"',   # v204: Hinweis „Verbrauch jetzt gemessen“ (je Profil)
 }
 # Texte, die bleiben müssen (Dateiformate und Dateinamen).
 KEEP = {
     '"trainingslog-plan"', '"trainingslog-backup-"', '"trainingslog-bericht-"',
     '"trainingslog-saetze-"', '"trainingslog-koerper-"',
+    '"trainingslog-planall"',  # v214: geteilter ganzer Plan – gleiches Format in Haupt-App und Freunde-Version
 }
 # "trainingslog" ist an diesen Stellen das Backup-Kennzeichen, nicht der Speicher.
 BACKUP_MARK = ['o.app !== "trainingslog"', 'app: "trainingslog"']
