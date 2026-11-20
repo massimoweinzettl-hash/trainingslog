@@ -830,8 +830,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 198; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 199; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 199, tab: "data", text: "Frag die App: Allgemeine Fragen werden konkreter beantwortet, deine Zahlen kommen nur noch dazu, wenn sie zur Frage passen." },
     { v: 198, tab: "data", text: "Frag die App: Beantwortet jetzt auch allgemeine Fragen zu Ernährung und Training und bringt deine Werte nicht mehr mit dem Handbuch durcheinander." },
     { v: 197, tab: "data", text: "Frag die App: Antwortet klarer, widerspricht freundlich, wenn eine Frage von etwas Falschem ausgeht, und erfindet keine Anzeigen mehr." },
     { v: 196, tab: "data", text: "Neu in der iPhone-App: „Frag die App“ (Sprechblase oben neben dem Zahnrad). Stell Fragen zur Bedienung oder zu deinen heutigen Werten, z. B. warum dein Ziel heute so hoch ist. Antwortet Apples KI direkt auf dem iPhone, auch offline. Nur sichtbar, wenn Apple Intelligence verfügbar ist." },
@@ -1158,14 +1159,15 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
      das Modell formuliert nur. Kleiner Textrahmen (4096 Token für Frage + Antwort), daher jede Frage frisch, kein Verlauf.
      In der Web-App/Freunde-Version bleibt der Knopf #kibtn verborgen. */
   var KI = { ok: false, why: "", open: false, busy: false, q: "", a: "", err: "", draft: "" };
-  /* v198 (2. iPhone-Test): Modell verwechselte Daten und Handbuch („im Handbuch steht, dass du 9 g Fett …“), lehnte allgemeine Fragen ab.
+  /* v199: allgemeine Antworten konkreter, persönliche Zahlen nur passend. v198 (2. iPhone-Test): Modell verwechselte Daten und Handbuch („im Handbuch steht, dass du 9 g Fett …“), lehnte allgemeine Fragen ab.
      Jetzt: drei Fragearten, Anleitung nur bei Bedienfragen (kiHow), keine Quellenangaben in der Antwort. */
   var KI_INSTR = "Du bist der Assistent der App „Trainingslog“ (Krafttraining, Ernährung, Körperwerte). Antworte immer auf Deutsch, in Du-Form, freundlich und kurz: höchstens drei Sätze. Sag jeden Gedanken nur einmal. " +
     "Es gibt drei Arten von Fragen: " +
     "1. Fragen zu den eigenen Werten (Kalorien, Eiweiß, Gewicht, Training): Nimm Zahlen nur aus DEINE DATEN, rechne nichts Neues aus und erfinde nichts. Nenne die passende Zahl und erkläre sie kurz. Steht in DEINE DATEN eine fertige Einordnung, nutze sie. " +
     "Wenn die Frage etwas annimmt, das laut DEINE DATEN nicht stimmt (z. B. „so hoch“, obwohl das Ziel unter dem Verbrauch liegt), sag das freundlich und erkläre, wie es wirklich ist. " +
     "2. Fragen zur Bedienung der App: Erkläre die Schritte nur nach ANLEITUNG. Beschreibe keine Knöpfe, Farben oder Anzeigen, die dort nicht stehen. Fehlt die Anleitung, sag, dass du es nicht genau weißt, und verweise auf das Handbuch unter Daten → Hilfe. " +
-    "3. Allgemeine Fragen zu Ernährung, Nährstoffen, Training oder Erholung (z. B. ob Fett gut ist, wofür Mineralstoffe wichtig sind): Antworte mit gesichertem Grundwissen, sachlich und ausgewogen. Nenne dabei keine persönlichen Zahlen, außer sie stehen in DEINE DATEN. " +
+    "3. Allgemeine Fragen zu Ernährung, Nährstoffen, Training oder Erholung (z. B. ob Fett gut ist, wofür Mineralstoffe wichtig sind): Antworte zuerst direkt und konkret auf genau das Gefragte, mit gesichertem Grundwissen: bei „gut oder schlecht“ die Unterschiede nennen (z. B. welche Fette eher günstig sind und welche nicht), bei „sollte man …“ den wichtigsten Grund (z. B. Erholung). Keine allgemeinen Floskeln wie „wichtig für eine ausgewogene Ernährung“. " +
+    "Eine persönliche Zahl aus DEINE DATEN nur dann anhängen, wenn sie genau zum Thema der Frage gehört (bei einer Frage zu Fett die Fettmenge, bei einer Frage zum Training aber keine Kalorien). " +
     "Schreib nie, woher etwas stammt: nicht „im Handbuch steht“, nicht „laut Daten“, und nie die Wörter DEINE DATEN oder ANLEITUNG. Keine Diagnosen; bei Beschwerden, Krankheit oder Medikamenten auf einen Arzt verweisen.";
   /* Bedienfrage? Nur dann geht ein Handbuch-Auszug mit (sonst vermischt das kleine Modell Handbuch und eigene Werte). */
   var KI_HOW = /\b(wie (trage|kann|mache|stelle|l[öo]sche|[äa]ndere|finde|geht|funktioniert|benutze|nutze|lege|scanne|sichere|starte|beende)|wo (finde|steht|ist|kann|sehe|stelle)|was (bedeutet|hei[ßs]t|zeigt) (der|die|das)|eintragen|einstellen|[äa]ndern|l[öo]schen|anlegen|scannen|backup|sicherung|rundgang|knopf|reiter|profil)/i;
