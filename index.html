@@ -833,8 +833,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 202; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 203; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 203, tab: "data", text: "Frag die App: Kennt jetzt eine Gewichtsprognose aus deinem echten Trend und erklärt die App, wenn du danach fragst." },
     { v: 202, tab: "data", text: "Frag die App kennt jetzt auch deinen BMI, deinen Wochenschnitt beim Essen und ob dein Gewicht im Plan liegt. Allgemeine Ernährungsfragen beantwortet sie bewusst nicht, dafür ist das Modell auf dem iPhone zu ungenau." },
     { v: 201, tab: "data", text: "Der Knopf für „Frag die App“ ist jetzt eine blaue Pille mit „KI“." },
     { v: 199, tab: "data", text: "Frag die App: Allgemeine Fragen werden konkreter beantwortet, deine Zahlen kommen nur noch dazu, wenn sie zur Frage passen." },
@@ -1172,10 +1173,10 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     "Wenn die Frage etwas annimmt, das laut DEINE DATEN nicht stimmt (z. B. „so hoch“, obwohl das Ziel unter dem Verbrauch liegt), sag das freundlich und erkläre, wie es wirklich ist. " +
     "2. Fragen zur Bedienung der App: Erkläre die Schritte nur nach ANLEITUNG. Beschreibe keine Knöpfe, Farben oder Anzeigen, die dort nicht stehen. Fehlt die Anleitung, sag, dass du es nicht genau weißt, und verweise auf das Handbuch unter Daten → Hilfe. " +
     "3. Allgemeine Fragen, die nichts mit den Werten des Nutzers oder der Bedienung zu tun haben (z. B. ob Fett gut ist, wie viel Schlaf man braucht, ob man jeden Tag trainieren sollte): Beantworte sie NICHT. Sag in einem freundlichen Satz, dass du nur Fragen zu seinen eigenen Werten und zur Bedienung der App beantwortest, und nenne ein Beispiel, was er fragen kann. " +
-    "Eine Zahl aus DEINE DATEN nur nennen, wenn sie genau zum Thema der Frage gehört. " +
+    "Eine Zahl aus DEINE DATEN nur nennen, wenn sie genau zum Thema der Frage gehört; bei einer Ablehnung keine Zahl nennen. Wird nach einer Prognose gefragt, nimm nur die Prognose aus DEINE DATEN. Sag „Kalorienziel“, nicht „Zielverbrauch“. " +
     "Schreib nie, woher etwas stammt: nicht „im Handbuch steht“, nicht „laut Daten“, und nie die Wörter DEINE DATEN oder ANLEITUNG. Keine Diagnosen; bei Beschwerden, Krankheit oder Medikamenten auf einen Arzt verweisen.";
   /* Bedienfrage? Nur dann geht ein Handbuch-Auszug mit (sonst vermischt das kleine Modell Handbuch und eigene Werte). */
-  var KI_HOW = /\b(wie (trage|kann|mache|stelle|l[öo]sche|[äa]ndere|finde|geht|funktioniert|benutze|nutze|lege|scanne|sichere|starte|beende)|wo (finde|steht|ist|kann|sehe|stelle)|was (bedeutet|hei[ßs]t|zeigt) (der|die|das)|eintragen|einstellen|[äa]ndern|l[öo]schen|anlegen|scannen|backup|sicherung|rundgang|knopf|reiter|profil)/i;
+  var KI_HOW = /\b(wie (trage|kann|mache|stelle|l[öo]sche|[äa]ndere|finde|geht|funktioniert|benutze|nutze|lege|scanne|sichere|starte|beende)|wo (finde|steht|ist|kann|sehe|stelle)|was (bedeutet|hei[ßs]t|zeigt) (der|die|das)|eintragen|einstellen|[äa]ndern|l[öo]schen|anlegen|scannen|backup|sicherung|rundgang|knopf|reiter|profil|erkl[äa]r|was kann|[üu]berblick|\bapp\b|anfangen|einrichten)/i;
   function kiHow(q) { return KI_HOW.test(q); }
   var KI_Q = ["Warum ist mein Kalorienziel heute so?", "Wie viel Eiweiß fehlt mir heute noch?", "Wie läuft mein Gewicht gerade?", "Wie trage ich ein selbst gekochtes Gericht ein?"];
   var KI_STOP = ["warum", "wieso", "weshalb", "welche", "welcher", "welches", "meine", "meinen", "meinem", "meiner", "heute", "kann", "habe", "hast", "bitte", "noch", "wird", "werden", "gerade", "wenn", "dass", "sich", "eine", "einen", "einem", "einer", "nicht", "auch", "eigentlich", "soll", "sollte", "machen", "mache", "gibt", "dies", "diese", "dieser", "sind", "denn", "schon", "viel", "viele", "mehr"];
@@ -1215,7 +1216,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     if (tr) { var pw = tr.pct, want = ph && ph.type === "cut" ? -0.5 : ph && ph.type === "bulk" ? 0.25 : 0, how;
       if (!ph || ph.type === "maintain") how = Math.abs(pw) < 0.15 ? "Das Gewicht ist stabil, passend zum Halten." : pw < 0 ? "Du nimmst leicht ab, obwohl du halten willst." : "Du nimmst leicht zu, obwohl du halten willst.";
       else { var off = pw - want, tol = ph.type === "cut" ? 0.2 : 0.12; how = (pw < 0 ? "Du nimmst ab" : pw > 0 ? "Du nimmst zu" : "Das Gewicht ist stabil") + ". Geplant sind " + (ph.type === "cut" ? "etwa 0,5 % Abnahme" : "etwa 0,25 % Zunahme") + " pro Woche; das ist " + (Math.abs(off) <= tol ? "im Plan." : (ph.type === "cut" ? (off < 0 ? "schneller als geplant." : "langsamer als geplant.") : (off > 0 ? "schneller als geplant." : "langsamer als geplant."))); }
-      L.push("Einordnung Gewicht: " + how); }
+      L.push("Einordnung Gewicht: " + how);
+      /* v203: Prognose von der App (KI rechnete sonst selbst mit dem Plan-Tempo) */
+      if (lw) L.push("Prognose, wenn der Trend der letzten 4 Wochen anhält: in 7 Tagen etwa " + fmt(r((lw.weight + tr.perWeek) * 10) / 10) + " kg, in 4 Wochen etwa " + fmt(r((lw.weight + tr.perWeek * 4) * 10) / 10) + " kg (nur eine grobe Schätzung, Wasser schwankt täglich)."); }
     if (tr) L.push("Gewichtstrend der letzten 4 Wochen: " + (tr.perWeek >= 0 ? "+" : "−") + fmt(Math.abs(r(tr.perWeek * 100) / 100)) + " kg pro Woche (" + (tr.pct >= 0 ? "+" : "−") + fmt(Math.abs(r(tr.pct * 100) / 100)) + " % pro Woche)");
     else L.push("Gewichtstrend: noch zu wenige Messungen (mindestens 7 Tage nötig).");
     var day = S.nutri["n_" + t], ent = day ? day.entries : [];
