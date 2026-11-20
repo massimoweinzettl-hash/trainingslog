@@ -1274,13 +1274,16 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     items.slice(0, 6).forEach(function (it) { var t = it.t.length > 700 ? it.t.slice(0, 700) + " …" : it.t; if (out.length + t.length <= max) out += "- " + t + "\n"; });
     return out.trim();
   }
+  /* Prompt für eine Frage; auch vom KI-Testlauf (app/ki-test) über window.TL_KI genutzt, damit Test und App gleich fragen. */
+  function kiPrompt(q, small) {
+    var help = kiHow(q) ? kiHelp(q, small ? 900 : 2600) : "";
+    return "DEINE DATEN (aus der App):\n" + kiFacts(small) + (help ? "\n\nANLEITUNG (Auszug):\n" + help : "") + "\n\nFRAGE: " + q;
+  }
+  window.TL_KI = { prompt: kiPrompt, instr: function () { return KI_INSTR; } };
   function kiAsk(q) {
     var C = kiNative(); q = String(q || "").trim().slice(0, 300); if (!q || KI.busy || !C) return;
     KI.q = q; KI.a = ""; KI.err = ""; KI.draft = ""; KI.busy = true; kiRender();
-    var go = function (small) {
-      var help = kiHow(q) ? kiHelp(q, small ? 900 : 2600) : "";
-      return C.nativePromise("Ki", "ask", { instructions: KI_INSTR, prompt: "DEINE DATEN (aus der App):\n" + kiFacts(small) + (help ? "\n\nANLEITUNG (Auszug):\n" + help : "") + "\n\nFRAGE: " + q });
-    };
+    var go = function (small) { return C.nativePromise("Ki", "ask", { instructions: KI_INSTR, prompt: kiPrompt(q, small) }); };
     go(false).then(function (r) { return r && !r.ok && r.reason === "long" ? go(true) : r; }).then(function (r) {
       KI.busy = false; if (r && r.ok && r.text) KI.a = String(r.text).trim(); else { KI.err = kiWhy(r && r.reason, r && r.msg); if (r && (r.reason === "off" || r.reason === "loading")) { KI.ok = false; KI.why = r.reason; } }
       kiRender();
