@@ -834,8 +834,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 204; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 205; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 205, tab: "data", text: "Frag die App: Bekommt je Frage nur noch die passenden Werte als fertige Sätze und antwortet dadurch genauer (getestet mit 28 Fragen)." },
     { v: 204, tab: "home", text: "Ernährung: Unter „Verbrauch“ steht jetzt, ab wann die App genug Daten hat, um deinen echten Verbrauch aus Gewichtsverlauf und Essen zu berechnen. Wenn es so weit ist, gibt es einen kurzen Hinweis." },
     { v: 203, tab: "data", text: "Frag die App: Kennt jetzt eine Gewichtsprognose aus deinem echten Trend und erklärt die App, wenn du danach fragst." },
     { v: 202, tab: "data", text: "Frag die App kennt jetzt auch deinen BMI, deinen Wochenschnitt beim Essen und ob dein Gewicht im Plan liegt. Allgemeine Ernährungsfragen beantwortet sie bewusst nicht, dafür ist das Modell auf dem iPhone zu ungenau." },
@@ -1171,10 +1172,10 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
      Jetzt: drei Fragearten, Anleitung nur bei Bedienfragen (kiHow), keine Quellenangaben in der Antwort. */
   var KI_INSTR = "Du bist der Assistent der App „Trainingslog“ (Krafttraining, Ernährung, Körperwerte). Antworte immer auf Deutsch, in Du-Form, freundlich und kurz: höchstens drei Sätze. Sag jeden Gedanken nur einmal. " +
     "Es gibt drei Arten von Fragen: " +
-    "1. Fragen zu den eigenen Werten (Kalorien, Eiweiß, Gewicht, Training): Nimm Zahlen nur aus DEINE DATEN, rechne nichts Neues aus und erfinde nichts. Nenne die passende Zahl und erkläre sie kurz. Steht in DEINE DATEN eine fertige Einordnung, nutze sie. " +
+    "1. Fragen zu den eigenen Werten (Kalorien, Eiweiß, Gewicht, Training): Die Sätze in DEINE DATEN sind schon fertige Antworten: Nimm den Satz, der genau zur Frage passt, und gib ihn sinngemäß wieder. Rechne nichts selbst aus, ändere keine Zahl und vermische keine Zahlen aus verschiedenen Sätzen. " +
     "Wenn die Frage etwas annimmt, das laut DEINE DATEN nicht stimmt (z. B. „so hoch“, obwohl das Ziel unter dem Verbrauch liegt), sag das freundlich und erkläre, wie es wirklich ist. " +
     "2. Fragen zur Bedienung der App: Erkläre die Schritte nur nach ANLEITUNG. Beschreibe keine Knöpfe, Farben oder Anzeigen, die dort nicht stehen. Fehlt die Anleitung, sag, dass du es nicht genau weißt, und verweise auf das Handbuch unter Daten → Hilfe. " +
-    "3. Allgemeine Fragen, die nichts mit den Werten des Nutzers oder der Bedienung zu tun haben (z. B. ob Fett gut ist, wie viel Schlaf man braucht, ob man jeden Tag trainieren sollte): Beantworte sie NICHT. Sag in einem freundlichen Satz, dass du nur Fragen zu seinen eigenen Werten und zur Bedienung der App beantwortest, und nenne ein Beispiel, was er fragen kann. " +
+    "3. Allgemeine Fragen, die nichts mit den Werten des Nutzers oder der Bedienung zu tun haben (z. B. ob Fett gut ist, wie viel Schlaf man braucht, ob man jeden Tag trainieren sollte): Beantworte sie NICHT. Sag in einem freundlichen Satz, dass du nur Fragen zu seinen eigenen Werten und zur Bedienung der App beantwortest, und nenne ein Beispiel, was er fragen kann (z. B. „Wie viele Kalorien habe ich heute noch übrig?“). " +
     "Eine Zahl aus DEINE DATEN nur nennen, wenn sie genau zum Thema der Frage gehört; bei einer Ablehnung keine Zahl nennen. Wird nach einer Prognose gefragt, nimm nur die Prognose aus DEINE DATEN. Sag „Kalorienziel“, nicht „Zielverbrauch“. " +
     "Schreib nie, woher etwas stammt: nicht „im Handbuch steht“, nicht „laut Daten“, und nie die Wörter DEINE DATEN oder ANLEITUNG. Keine Diagnosen; bei Beschwerden, Krankheit oder Medikamenten auf einen Arzt verweisen.";
   /* Bedienfrage? Nur dann geht ein Handbuch-Auszug mit (sonst vermischt das kleine Modell Handbuch und eigene Werte). */
@@ -1204,61 +1205,69 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       .replace(/[ \t]+/g, " ").replace(/ :/g, ":").replace(/ *\n */g, "\n").replace(/\n{2,}/g, "\n").trim();
   }
   /* Faktenzettel mit den echten Zahlen von heute, gerechnet wie unter „Ernährung“ (renderHome). small = kürzere Fassung, falls der Text nicht passt. */
-  function kiFacts(small) {
-    var t = today(), list = bodyList(), E = energy(list), ph = phaseAt(t), done = workoutsOn(t), L = [], now = new Date(), r = Math.round;
-    var g = function (n) { return r(n).toLocaleString("de-DE"); };
-    L.push("Heute: " + WDAYS[now.getDay()] + ", " + dfmt(t, 1) + ", " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + " Uhr");
-    if (ph) L.push("Phase: " + PH[ph.type] + ", Woche " + weekOf(ph, t) + (isN(ph.goal) && ph.type !== "maintain" ? ", Zielgewicht " + fmt(ph.goal) + " kg" : ""));
+  /* v205 (KI-Testlauf auf dem Mac): Das Modell griff bei langer Liste die falsche Zeile (Koffein jetzt/Schlafenszeit,
+     Fett selbst falsch gerechnet). Jetzt: jede Angabe hat Themen, kiPrompt gibt nur die zur Frage passenden mit,
+     als fertige Sätze in Du-Form. Ohne Treffer: kurzer Grundstock. */
+  var KI_TOP = {
+    kal: /kalor|kcal|ziel heute|defizit|überschuss|ueberschuss|so hoch|so niedrig|übrig|uebrig|noch essen|noch offen|trainingstag|ruhetag|mehr essen|weniger essen/i,
+    rech: /warum|wieso|weshalb|berechn|rechn|woher|wie kommt|grundumsatz|erhaltung|so hoch|so niedrig|zusammen/i,
+    verb: /verbrauch|gemessen|messung|\becht|formel|genau/i,
+    mak: /eiwei|protein|fett|kohlenhydrat|makro|carbs|\bkh\b/i,
+    gew: /gewicht|wieg|abnehm|zunehm|nehme ich|im plan|trend|zielgewicht|prognose|in \d+ (tag|woche)|kilo|\bkg\b|bmi|körperfett|koerperfett/i,
+    ess: /gegessen|eingetragen|mahlzeit|im schnitt|wochenschnitt|durchschnitt|diese woche|letzte woche/i,
+    kof: /koffein|kaffee|espresso|energy|schlaf/i,
+    tra: /training|trainiert|satz|sätze|saetze|übung|uebung|ausdauer|laufen|joggen|rad/i
+  };
+  function kiTopics(q) { var o = {}, any = false; Object.keys(KI_TOP).forEach(function (k) { if (KI_TOP[k].test(q || "")) { o[k] = 1; any = true; } }); if (o.mak || o.ess) o.kal = 1; return any ? o : null; }
+  function kiFacts(small, q) {
+    var t = today(), list = bodyList(), E = energy(list), ph = phaseAt(t), done = workoutsOn(t), F = [], now = new Date(), r = Math.round;
+    var g = function (n) { return r(n).toLocaleString("de-DE"); }, add = function (tag, txt) { F.push([tag, txt]); };
+    add("", "Heute ist " + WDAYS[now.getDay()] + ", " + dfmt(t, 1) + ", " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + " Uhr.");
+    if (ph) add("", "Du bist im " + PH[ph.type] + ", Woche " + weekOf(ph, t) + (isN(ph.goal) && ph.type !== "maintain" ? ", Zielgewicht " + fmt(ph.goal) + " kg." : "."));
     var lw = lastWeight(list), tr = trendOf(list);
-    if (lw) L.push("Letztes Gewicht: " + fmt(lw.weight) + " kg (" + dfmt(lw.date) + ")" + (lw.fat != null ? ", Körperfett " + fmt(lw.fat) + " %" : ""));
-    /* v202: BMI, Restweg zum Zielgewicht, Trend in Worten – fertig gerechnet für das kleine Modell */
+    if (lw) add("gew", "Dein letztes Gewicht: " + fmt(lw.weight) + " kg (" + dfmt(lw.date) + ")" + (lw.fat != null ? ", Körperfett " + fmt(lw.fat) + " %." : "."));
     var hgt = S.person && S.person.height;
-    if (lw && isN(hgt) && hgt > 100) { var bmi = lw.weight / Math.pow(hgt / 100, 2); L.push("BMI: " + fmt(r(bmi * 10) / 10) + " (" + (bmi < 18.5 ? "Untergewicht" : bmi < 25 ? "Normalgewicht" : bmi < 30 ? "Übergewicht" : "Adipositas") + " nach WHO-Einteilung; der BMI unterscheidet nicht zwischen Muskeln und Fett, bei viel Muskelmasse ist er wenig aussagekräftig" + (lw.fat != null ? ", Körperfett ist hier aussagekräftiger" : "") + ")"); }
-    if (lw && ph && isN(ph.goal) && ph.type !== "maintain") { var rest = lw.weight - ph.goal; L.push("Bis zum Zielgewicht: " + (Math.abs(rest) < 0.3 ? "erreicht" : "noch " + fmt(r(Math.abs(rest) * 10) / 10) + " kg " + ((rest > 0) === (ph.type === "cut") ? (ph.type === "cut" ? "abnehmen" : "zunehmen") : (ph.type === "cut" ? "– du bist schon darunter" : "– du bist schon darüber")))); }
-    if (tr) { var pw = tr.pct, want = ph && ph.type === "cut" ? -0.5 : ph && ph.type === "bulk" ? 0.25 : 0, how;
-      if (!ph || ph.type === "maintain") how = Math.abs(pw) < 0.15 ? "Das Gewicht ist stabil, passend zum Halten." : pw < 0 ? "Du nimmst leicht ab, obwohl du halten willst." : "Du nimmst leicht zu, obwohl du halten willst.";
-      else { var off = pw - want, tol = ph.type === "cut" ? 0.2 : 0.12; how = (pw < 0 ? "Du nimmst ab" : pw > 0 ? "Du nimmst zu" : "Das Gewicht ist stabil") + ". Geplant sind " + (ph.type === "cut" ? "etwa 0,5 % Abnahme" : "etwa 0,25 % Zunahme") + " pro Woche; das ist " + (Math.abs(off) <= tol ? "im Plan." : (ph.type === "cut" ? (off < 0 ? "schneller als geplant." : "langsamer als geplant.") : (off > 0 ? "schneller als geplant." : "langsamer als geplant."))); }
-      L.push("Einordnung Gewicht: " + how);
-      /* v203: Prognose von der App (KI rechnete sonst selbst mit dem Plan-Tempo) */
-      if (lw) L.push("Prognose, wenn der Trend der letzten 4 Wochen anhält: in 7 Tagen etwa " + fmt(r((lw.weight + tr.perWeek) * 10) / 10) + " kg, in 4 Wochen etwa " + fmt(r((lw.weight + tr.perWeek * 4) * 10) / 10) + " kg (nur eine grobe Schätzung, Wasser schwankt täglich)."); }
-    if (tr) L.push("Gewichtstrend der letzten 4 Wochen: " + (tr.perWeek >= 0 ? "+" : "−") + fmt(Math.abs(r(tr.perWeek * 100) / 100)) + " kg pro Woche (" + (tr.pct >= 0 ? "+" : "−") + fmt(Math.abs(r(tr.pct * 100) / 100)) + " % pro Woche)");
-    else L.push("Gewichtstrend: noch zu wenige Messungen (mindestens 7 Tage nötig).");
+    if (lw && isN(hgt) && hgt > 100) { var bmi = lw.weight / Math.pow(hgt / 100, 2); add("gew", "Dein BMI ist " + fmt(r(bmi * 10) / 10) + ", das gilt nach WHO als " + (bmi < 18.5 ? "Untergewicht" : bmi < 25 ? "Normalgewicht" : bmi < 30 ? "Übergewicht" : "Adipositas") + ". Wichtig: Der BMI unterscheidet nicht zwischen Muskeln und Fett; bei viel Muskelmasse sagt er wenig aus" + (lw.fat != null ? ", dein Körperfett ist aussagekräftiger." : ".")); }
+    if (lw && ph && isN(ph.goal) && ph.type !== "maintain") { var rest = lw.weight - ph.goal; add("gew", Math.abs(rest) < 0.3 ? "Dein Zielgewicht hast du erreicht." : (rest > 0) === (ph.type === "cut") ? "Bis zum Zielgewicht musst du noch " + fmt(r(Math.abs(rest) * 10) / 10) + " kg " + (ph.type === "cut" ? "abnehmen." : "zunehmen.") : "Du bist schon " + (ph.type === "cut" ? "unter" : "über") + " deinem Zielgewicht."); }
+    if (tr) { var pw = tr.pct, want = ph && ph.type === "cut" ? -0.5 : ph && ph.type === "bulk" ? 0.25 : 0, how, sgn = function (x) { return (x >= 0 ? "+" : "−") + fmt(Math.abs(r(x * 100) / 100)); };
+      if (!ph || ph.type === "maintain") how = Math.abs(pw) < 0.15 ? "Dein Gewicht ist stabil, passend zum Halten." : pw < 0 ? "Du nimmst leicht ab, obwohl du halten willst." : "Du nimmst leicht zu, obwohl du halten willst.";
+      else { var off = pw - want, tol = ph.type === "cut" ? 0.2 : 0.12; how = (Math.abs(off) <= tol ? "Ja, du liegst im Plan." : "Du bist " + ((ph.type === "cut") === (off < 0) ? "schneller" : "langsamer") + " als geplant.") + " Geplant sind etwa " + (ph.type === "cut" ? "0,5 % Abnahme" : "0,25 % Zunahme") + " pro Woche."; }
+      add("gew", "Trend der letzten 4 Wochen: " + sgn(tr.perWeek) + " kg pro Woche (" + sgn(tr.pct) + " % pro Woche). " + how);
+      if (lw) add("gew", "Prognose, wenn der Trend anhält (grobe Schätzung, Wasser schwankt): in 7 Tagen etwa " + fmt(r((lw.weight + tr.perWeek) * 10) / 10) + " kg, in 4 Wochen etwa " + fmt(r((lw.weight + tr.perWeek * 4) * 10) / 10) + " kg.");
+    } else add("gew", "Für einen Gewichtstrend gibt es noch zu wenige Messungen (mindestens 7 Tage nötig).");
     var day = S.nutri["n_" + t], ent = day ? day.entries : [];
     var sum = ent.reduce(function (a, e) { return { p: a.p + (e.p || 0), kcal: a.kcal + (e.kcal || 0), f: a.f + (e.f || 0), c: a.c + (e.c || 0) }; }, { p: 0, kcal: 0, f: 0, c: 0 });
-    if (!E) L.push("Kalorienziel: kann nicht berechnet werden, es fehlen Angaben (Daten → Persönlich: Geschlecht, Geburtsjahr, Größe, Alltag; oder ein Gewicht unter Körper).");
+    if (!E) add("kal", "Dein Kalorienziel kann noch nicht berechnet werden: Es fehlen Angaben unter Daten → Persönlich (Geschlecht, Geburtsjahr, Größe, Alltag) oder ein Gewicht unter Körper.");
     else {
-      var di = dayKcal(t, E, done.length > 0), mc = macros(di.kcal, di.mtype, E.pw);
-      var use = E.maint + (E.n ? (di.train ? E.d * ((di.fac || 1) - E.n / 7) : -E.d * E.n / 7) : 0);
-      L.push("Tagesart: " + (!E.n ? "Ziel gilt jeden Tag gleich" : di.train ? (di.plan ? "Trainingstag (Training eingeplant, noch nichts eingetragen)" : "Trainingstag") : "Ruhetag"));
-      L.push("Kalorienziel heute: " + g(di.kcal) + " kcal. So berechnet:\n" + kiTxt(kcalSteps(E, di, use)));
-      var mpk = measProg(E, list); L.push(mpk ? "Verbrauch: noch nach Formel geschätzt. Genug Daten für den gemessenen Verbrauch voraussichtlich ab " + dfmt(mpk.date) + ", wenn täglich eingetragen wird (Essen an " + mpk.n + " von 14 Tagen, Gewicht über " + mpk.span + " von 14 Tagen)." : "Verbrauch: gemessen aus Gewichtsverlauf und Essen (genauer als die Formel)."); /* v204 */
-      /* v197: fertige Einordnung, damit das kleine Modell nicht selbst vergleichen muss */
-      var dd = di.kcal - use, ptype = ph ? ph.type : "maintain";
-      L.push("Einordnung: Dein geschätzter Verbrauch heute ist " + g(use) + " kcal. Das Ziel liegt " + (Math.abs(dd) < 50 ? "etwa gleich hoch" : g(Math.abs(dd)) + " kcal " + (dd < 0 ? "darunter" : "darüber")) +
-        (ptype === "cut" ? " – das ist das Defizit zum Abnehmen." : ptype === "bulk" ? " – das ist der Überschuss für den Aufbau." : "."));
-      if (E.n) { var sp = E.split(di.mtype === "cut" || di.mtype === "bulk" ? di.mtype : ptype); L.push("Ruhetag oder Trainingstag: An Ruhetagen gibt es weniger (" + g(sp.rest) + " kcal), an vollen Trainingstagen mehr (" + g(sp.train) + " kcal); der Wochenschnitt bleibt gleich. Heute ist " + (di.train ? "ein Trainingstag." : "ein Ruhetag, also gilt der niedrigere Wert.")); }
-      L.push("Gegessen heute: " + g(sum.kcal) + " kcal; Eiweiß " + g(sum.p) + " von " + mc.p + " g, Fett " + g(sum.f) + " von " + mc.f + " g, Kohlenhydrate " + g(sum.c) + " von " + mc.c + " g");
-      L.push("Noch offen heute: " + (di.kcal - sum.kcal >= 0 ? g(di.kcal - sum.kcal) + " kcal" : g(sum.kcal - di.kcal) + " kcal über dem Ziel") + ", Eiweiß noch " + g(Math.max(0, mc.p - sum.p)) + " g");
-    }
-    if (E) { /* v202: Wochenschnitt der letzten 7 Tage (ohne heute), nur Tage mit Einträgen */
+      var di = dayKcal(t, E, done.length > 0), mc = macros(di.kcal, di.mtype, E.pw), ptype = ph ? ph.type : "maintain";
+      var use = E.maint + (E.n ? (di.train ? E.d * ((di.fac || 1) - E.n / 7) : -E.d * E.n / 7) : 0), dd = di.kcal - use, tgt = E.target[di.type];
+      var tag = !E.n ? "" : di.train ? (di.plan ? "Trainingstag (eingeplant)" : "Trainingstag") : "Ruhetag";
+      add("kal", "Dein Kalorienziel heute: " + g(di.kcal) + " kcal" + (tag ? ", heute ist " + tag : "") + ". Dein geschätzter Verbrauch heute: " + g(use) + " kcal. Das Ziel liegt " + (Math.abs(dd) < 50 ? "etwa gleich hoch wie der Verbrauch." : g(Math.abs(dd)) + " kcal " + (dd < 0 ? "unter dem Verbrauch" : "über dem Verbrauch") + (ptype === "cut" ? ", das ist dein Defizit zum Abnehmen – das Ziel ist also nicht hoch, sondern bewusst niedriger als dein Verbrauch." : ptype === "bulk" ? ", das ist dein Überschuss für den Aufbau." : ".")));
+      if (E.n) { var sp = E.split(di.mtype === "cut" || di.mtype === "bulk" ? di.mtype : ptype); add("kal", "Warum Ruhetage weniger und Trainingstage mehr: Training verbraucht zusätzliche Energie, deshalb verteilt die App dein Wochenziel um. Ruhetag " + g(sp.rest) + " kcal, voller Trainingstag " + g(sp.train) + " kcal, im Wochenschnitt " + g(tgt) + " kcal."); }
+      add("rech", "So entsteht dein Ziel: Erhaltung (Verbrauch ohne Ab- oder Zunehmen) " + g(E.maint) + " kcal" + (ptype !== "maintain" ? (ptype === "cut" ? " minus " : " plus ") + g(Math.abs(tgt - E.maint)) + " kcal für " + (ptype === "cut" ? "0,5 % Abnahme" : "0,25 % Zunahme") + " pro Woche" : "") + " ergibt " + g(tgt) + " kcal im Wochenschnitt" + (E.n ? "; heute als " + (di.train ? "Trainingstag " : "Ruhetag ") + (di.kcal - tgt >= 0 ? "plus " : "minus ") + g(Math.abs(di.kcal - tgt)) + " kcal = " + g(di.kcal) + " kcal." : "."));
+      var mpk = measProg(E, list); add("verb", mpk ? "Dein Verbrauch wird noch mit einer Formel geschätzt. Den echten Verbrauch aus Gewichtsverlauf und Essen berechnet die App voraussichtlich ab " + dfmt(mpk.date) + ", wenn du täglich einträgst (Stand: Essen an " + mpk.n + " von 14 Tagen, Gewicht über " + mpk.span + " von 14 Tagen)." : "Dein Verbrauch ist gemessen aus Gewichtsverlauf und Essen, das ist genauer als die Formel.");
+      var left = di.kcal - sum.kcal;
+      add("kal", left >= 0 ? "Heute hast du " + g(sum.kcal) + " kcal gegessen, noch " + g(left) + " kcal übrig." : "Heute hast du " + g(sum.kcal) + " kcal gegessen, das sind " + g(-left) + " kcal über dem Ziel.");
+      var mk = function (nm, a, z) { return nm + ": " + g(a) + " von " + z + " g gegessen, " + (z - a >= 0 ? "noch " + g(z - a) + " g offen" : g(a - z) + " g über dem Ziel"); };
+      add("mak", mk("Eiweiß", sum.p, mc.p) + ". " + mk("Fett", sum.f, mc.f) + ". " + mk("Kohlenhydrate", sum.c, mc.c) + ".");
       var dk = [], dz = function (n) { var x = new Date(+t.slice(0, 4), +t.slice(5, 7) - 1, +t.slice(8, 10) - n); return x.getFullYear() + "-" + pad(x.getMonth() + 1) + "-" + pad(x.getDate()); };
       for (var k = 1; k <= 7; k++) { var nd = S.nutri["n_" + dz(k)]; if (nd && nd.entries && nd.entries.length) dk.push(nd.entries.reduce(function (a, e) { return a + (e.kcal || 0); }, 0)); }
-      var wt = E.target[ph ? ph.type : "maintain"];
-      L.push(dk.length >= 3 ? "Wochenschnitt Essen (letzte 7 Tage, " + dk.length + " Tage mit Einträgen): " + g(dk.reduce(function (a, b) { return a + b; }, 0) / dk.length) + " kcal pro Tag; Ziel im Wochenschnitt " + g(wt) + " kcal." : "Wochenschnitt Essen: zu wenige Tage eingetragen (mindestens 3 der letzten 7 Tage nötig).");
+      add("ess", dk.length >= 3 ? "In den letzten 7 Tagen hast du im Schnitt " + g(dk.reduce(function (a, b) { return a + b; }, 0) / dk.length) + " kcal pro Tag gegessen (" + dk.length + " Tage mit Einträgen); dein Ziel im Wochenschnitt sind " + g(tgt) + " kcal." : "Für einen Wochenschnitt beim Essen sind zu wenige Tage eingetragen (mindestens 3 der letzten 7 Tage).");
     }
-    if (!small) L.push(ent.length ? "Heute eingetragen: " + ent.slice(-12).map(function (e) { return e.name + " (" + g(e.kcal) + " kcal)"; }).join("; ") : "Heute noch kein Essen eingetragen.");
+    if (!small) add("ess", ent.length ? "Heute eingetragen: " + ent.slice(-12).map(function (e) { return e.name + " (" + g(e.kcal) + " kcal)"; }).join("; ") + "." : "Heute hast du noch nichts eingetragen.");
     var cs = cafEvents(t, ent).filter(function (e) { return e.caf > 0; });
     if (cs.length) {
-      var nw = Date.now(), bt = bedTime(), tot = 0, left = 0, bed = 0;
-      cs.forEach(function (e) { if (!e.prev) tot += e.caf; var t0 = cafMs(e, nw); left += cafAmt(e.caf, nw - t0); bed += cafAmt(e.caf, bt.ms - t0); });
-      L.push("Koffein heute: " + r(tot) + " mg; jetzt im Körper etwa " + r(left) + " mg; zur Schlafenszeit (" + bt.hm + ") noch etwa " + r(bed) + " mg (für guten Schlaf höchstens " + CAF_BED + " mg)");
-    }
+      var nw = Date.now(), bt = bedTime(), tot = 0, cl = 0, bed = 0;
+      cs.forEach(function (e) { if (!e.prev) tot += e.caf; var t0 = cafMs(e, nw); cl += cafAmt(e.caf, nw - t0); bed += cafAmt(e.caf, bt.ms - t0); });
+      add("kof", "Koffein: heute insgesamt " + r(tot) + " mg aufgenommen. Jetzt gerade im Körper: etwa " + r(cl) + " mg. Zur Schlafenszeit (" + bt.hm + ") voraussichtlich noch etwa " + r(bed) + " mg; für guten Schlaf sollten es höchstens " + CAF_BED + " mg sein.");
+    } else add("kof", "Heute hast du kein Koffein eingetragen.");
     if (done.length) done.forEach(function (w) {
       var ex = (w.entries || []).filter(function (e) { return e.sets && e.sets.length; }), n = ex.reduce(function (a, e) { return a + e.sets.length; }, 0);
-      L.push("Training heute (" + (w.dayName || "Einheit") + "): " + n + " Sätze" + (w.done ? ", beendet um " + w.done : "") + (small ? "" : ": " + ex.slice(0, 8).map(function (e) { var b = e.sets.reduce(function (m, s) { return s.w * (1 + s.r / 30) > m.w * (1 + m.r / 30) ? s : m; }, e.sets[0]); return e.name + " " + e.sets.length + "× (bester Satz " + fmt(b.w) + " kg × " + b.r + ")"; }).join("; ")));
-    });
-    cardioOn(t).forEach(function (c) { L.push("Ausdauer heute: " + ((CARDIO[c.type] || CARDIO.other)[0]) + (c.min ? " " + c.min + " min" : "") + (c.km ? ", " + fmt(c.km) + " km" : "")); });
-    return L.join("\n");
+      add("tra", "Training heute (" + (w.dayName || "Einheit") + "): " + n + " Sätze" + (w.done ? ", beendet um " + w.done : "") + (small ? "." : ": " + ex.slice(0, 8).map(function (e) { var b = e.sets.reduce(function (m, s) { return s.w * (1 + s.r / 30) > m.w * (1 + m.r / 30) ? s : m; }, e.sets[0]); return e.name + " " + e.sets.length + "× (bester Satz " + fmt(b.w) + " kg × " + b.r + ")"; }).join("; ") + "."));
+    }); else add("tra", "Heute hast du noch kein Krafttraining eingetragen.");
+    cardioOn(t).forEach(function (c) { add("tra", "Ausdauer heute: " + ((CARDIO[c.type] || CARDIO.other)[0]) + (c.min ? " " + c.min + " min" : "") + (c.km ? ", " + fmt(c.km) + " km" : "") + "."); });
+    var tp = kiTopics(q), core = { kal: 1, gew: 1 };
+    return F.filter(function (x) { return !x[0] || (tp ? tp[x[0]] : core[x[0]] && !/BMI|Prognose|Trend der/.test(x[1])); }).map(function (x) { return "- " + x[1]; }).join("\n");
   }
   /* Passende Stellen aus dem Handbuch: Absätze/Punkte nach Wörtern der Frage bewerten, die besten bis max Zeichen. */
   function kiHelp(q, max) {
@@ -1280,7 +1289,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Prompt für eine Frage; auch vom KI-Testlauf (app/ki-test) über window.TL_KI genutzt, damit Test und App gleich fragen. */
   function kiPrompt(q, small) {
     var help = kiHow(q) ? kiHelp(q, small ? 900 : 2600) : "";
-    return "DEINE DATEN (aus der App):\n" + kiFacts(small) + (help ? "\n\nANLEITUNG (Auszug):\n" + help : "") + "\n\nFRAGE: " + q;
+    return "DEINE DATEN (aus der App):\n" + kiFacts(small, q) + (help ? "\n\nANLEITUNG (Auszug):\n" + help : "") + "\n\nFRAGE: " + q;
   }
   window.TL_KI = { prompt: kiPrompt, instr: function () { return KI_INSTR; } };
   function kiAsk(q) {
