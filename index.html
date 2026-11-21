@@ -252,15 +252,10 @@ button.xs { min-height: 32px; padding: 2px 10px }
 .chart .wsell { stroke: var(--ink); stroke-width: 1; opacity: .55 } .chart .wselc { fill: none; stroke: var(--ink); stroke-width: 2 } .wleg b { color: var(--ink) } .wleg .wk { color: var(--s3); font-weight: 600 }
 #tour .row { justify-content: flex-end; gap: 6px }
 /* v242: dezenter Slide nur beim Wechsel zwischen den Hauptreitern im Rundgang. */
-@keyframes tourSlideForward { from { transform: translateX(18px); opacity: .88 } to { transform: translateX(0); opacity: 1 } }
-@keyframes tourSlideBack { from { transform: translateX(-18px); opacity: .88 } to { transform: translateX(0); opacity: 1 } }
-.tab.tour-slide-forward { animation: tourSlideForward .2s ease-out both }
-.tab.tour-slide-back { animation: tourSlideBack .2s ease-out both }
-@media (prefers-reduced-motion: reduce) { .tab.tour-slide-forward, .tab.tour-slide-back { animation: none } }
 body.touring { padding-bottom: 230px }
 body.tfocusing .tab:not(.tfocus) > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing .tab .block:has(.tfocus):not(.tfocus) > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing #notice {
-  filter: none; opacity: .48; pointer-events: none; transition: opacity .18s }
-body.tfocusing .tfocus { position: relative; outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 12px; scroll-margin-top: 90px; transition: outline-color .25s }
+  filter: none; opacity: .48; pointer-events: none }
+body.tfocusing .tfocus { position: relative; outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 12px; scroll-margin-top: 90px }
 .block > .mform:first-child { border-top: 0; padding-top: 0 }
 .foodblk p { margin: 0 }
 .ic { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
@@ -917,8 +912,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 244; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 245; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 245, tab: "home", text: "Der Rundgang scrollt bei internen Zielen jetzt langsam und nur bei Bedarf. Die Reiterwechsel-Animationen wurden entfernt; die Hervorhebung bleibt ruhig." },
     { v: 244, tab: "home", text: "Im Rundgang wird der Hintergrund nur noch leicht abgedunkelt statt unscharf gezeichnet. Der obere Kopfbereich bleibt klar erkennbar." },
     { v: 243, tab: "home", text: "Der Rundgang zeigt jetzt zuerst das Zahnrad oben rechts und hebt es hervor. Erst nach dem Antippen öffnen sich die Einstellungen; danach folgt die Erklärung der Einstellungsbereiche." },
     { v: 242, tab: "home", text: "Beim Rundgang gleiten die Hauptreiter jetzt mit einem kurzen, dezenten Slide ineinander. Innerhalb eines Bereichs bleibt die Ansicht ruhig." },
@@ -4731,16 +4727,38 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   }
   /* Hervorheben: der beschriebene Bereich bleibt scharf (.tfocus), alles andere wird grau und unscharf (CSS über :has).
      Nach jedem Neuzeichnen wird die Markierung wieder gesetzt (MutationObserver). */
-  var tourObs = null, tourRaf = 0;
+  var tourObs = null, tourRaf = 0, tourScrollRaf = 0;
+  function tourScrollStop() {
+    if (tourScrollRaf) cancelAnimationFrame(tourScrollRaf);
+    tourScrollRaf = 0;
+  }
+  /* Interne Rundgangsziele langsam nachführen statt den Browser schnell scrollIntoView ausführen zu lassen. */
+  function tourScrollTo(y) {
+    tourScrollStop();
+    var from = window.scrollY, delta = y - from;
+    if (Math.abs(delta) < 12) return;
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) { window.scrollTo(0, y); return; }
+    var start = performance.now(), duration = 700;
+    function frame(now) {
+      var p = Math.min(1, (now - start) / duration), e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+      window.scrollTo(0, from + delta * e);
+      if (p < 1) tourScrollRaf = requestAnimationFrame(frame); else tourScrollRaf = 0;
+    }
+    tourScrollRaf = requestAnimationFrame(frame);
+  }
   function tourMark(scroll) {
     document.querySelectorAll(".tfocus").forEach(function (x) { x.classList.remove("tfocus"); });
     var f = tourStep >= 0 && TOUR[tourStep][3], els = f ? f().filter(Boolean) : [];
     els.forEach(function (x) { x.classList.add("tfocus"); });
     document.body.classList.toggle("tfocusing", els.length > 0);
     if (scroll && els[0] && !els[0].classList.contains("tab")) {
-      var r = els[0].getBoundingClientRect(), safeBottom = window.innerHeight - 230;
-      /* Große Bereiche bleiben an ihrer aktuellen Position. Nur kleine, außerhalb liegende Ziele werden sanft nachgeführt. */
-      if (r.height < window.innerHeight * .8 && (r.bottom < 80 || r.top > safeBottom)) els[0].scrollIntoView({ block: "nearest", behavior: "smooth" });
+      var r = els[0].getBoundingClientRect(), safeTop = 90, safeBottom = window.innerHeight - 230, shift = 0;
+      /* Große Bereiche bleiben stehen. Kleine Ziele werden nur nachgeführt, wenn sie außerhalb des sichtbaren Bereichs liegen. */
+      if (r.height < window.innerHeight * .8) {
+        if (r.top < safeTop) shift = r.top - safeTop;
+        else if (r.bottom > safeBottom) shift = r.bottom - safeBottom;
+      }
+      if (shift) tourScrollTo(window.scrollY + shift);
     }
   }
   function tourWatch(on) {
@@ -4761,22 +4779,18 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var done = null; try { done = localStorage.getItem(tourKey()); } catch (e) {}
     return !done && S.ready && (!S.plan || !S.plan.days.length) && !Object.keys(S.workouts).length && !Object.keys(S.body).length;
   }
-  function tourHide() { tourStep = -1; var el = $("tour"); if (el) el.remove(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
-  function tourEnd() { tourStep = -1; try { localStorage.setItem(tourKey(), "1"); } catch (e) {} var el = $("tour"); if (el) el.remove(); setClose(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
-  /* v241: ruhige Hervorhebung ohne Reiterbewegung, Pulsieren oder Zoom. */
+  function tourHide() { tourScrollStop(); tourStep = -1; var el = $("tour"); if (el) el.remove(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
+  function tourEnd() { tourScrollStop(); tourStep = -1; try { localStorage.setItem(tourKey(), "1"); } catch (e) {} var el = $("tour"); if (el) el.remove(); setClose(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
+  /* v245: keine Reiteranimationen; Hervorhebung und bedarfsgerechtes Scrollen bleiben ruhig. */
   var TOURLOC = { home: "Reiter Ernährung", train: "Reiter Training", prog: "Reiter Fortschritt", body: "Reiter Körper", plan: "Reiter Plan", gear: "Zahnrad oben rechts", settings: "Einstellungen" }, tourHold = 0;
   function tourShow(i) {
+    tourScrollStop();
     var st = TOUR[i], tab = st[2], previousTab = S.tab, previousIndex = TABS.indexOf(S.tab), nextIndex = TABS.indexOf(tab);
     document.querySelectorAll(".tfocus").forEach(function (x) { x.classList.remove("tfocus"); }); document.body.classList.remove("tfocusing");
     if (tab !== "settings" && $("setp")) setClose();
     tourStep = i;
     if (tab === "settings") setOpen();
     else if (tab !== "gear") showTab(tab);
-    /* Nur zwischen Hauptreitern gleiten; innerhalb eines Reiters (z. B. Ernährung-Unterbereiche) bleibt alles ruhig. */
-    if (tab !== "settings" && previousTab !== tab && previousIndex >= 0 && nextIndex >= 0 && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) {
-      var pane = $("tab-" + tab), slideClass = nextIndex > previousIndex ? "tour-slide-forward" : "tour-slide-back";
-      if (pane) { pane.classList.remove("tour-slide-forward", "tour-slide-back"); void pane.offsetWidth; pane.classList.add(slideClass); pane.addEventListener("animationend", function () { pane.classList.remove(slideClass); }, { once: true }); }
-    }
     var el = $("tour"); if (!el) { el = document.createElement("div"); el.id = "tour"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Einführung"); document.body.appendChild(el); }
     document.body.classList.add("touring");
     var tl = tourList().filter(function (k) { return k >= tourFrom; }), last = tl[tl.length - 1];
