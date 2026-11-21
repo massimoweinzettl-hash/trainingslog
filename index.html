@@ -917,8 +917,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 242; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 243; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 243, tab: "home", text: "Der Rundgang zeigt jetzt zuerst das Zahnrad oben rechts und hebt es hervor. Erst nach dem Antippen öffnen sich die Einstellungen; danach folgt die Erklärung der Einstellungsbereiche." },
     { v: 242, tab: "home", text: "Beim Rundgang gleiten die Hauptreiter jetzt mit einem kurzen, dezenten Slide ineinander. Innerhalb eines Bereichs bleibt die Ansicht ruhig." },
     { v: 241, tab: "home", text: "Der Rundgang folgt jetzt der Hauptnavigation: Ernährung, Training, Fortschritt, Körper, Plan und zuletzt Einstellungen. Automatisches Scrollen und auffällige Animationen wurden deutlich reduziert." },
     { v: 240, tab: "home", text: "Die kleinen ✕ und der Bleistift in Ernährung (Reste, Essensliste, „Gericht berechnen“, Meal Prep) sind jetzt runde Knöpfe mit Rahmen – größer und leichter zu treffen." },
@@ -4718,7 +4719,8 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       function () { var P = S.person || {}, missing = !P.sex || !isN(P.year) || !isN(P.height) || !isN(P.act), weight = Object.keys(S.body).some(function (k) { return S.body[k] && S.body[k].weight != null; }); return !missing && weight ? [1, "Körperwerte und persönliche Angaben sind vorhanden"] : [0, "Körperwerte oder persönliche Angaben fehlen noch"]; }],
     ["Plan", "Hier legst du deine Trainingstage und die Übungen je Tag fest. Direkt darunter findest du den aufklappbaren Übungskatalog. Dort kannst du Übungen suchen, bearbeiten, bewerten, Trainingstagen zuordnen oder den Katalog anpassen.", "plan", function () { return [document.querySelector("#tab-plan")]; },
       function () { var n = S.plan && S.plan.days ? S.plan.days.length : 0; return n ? [1, "Plan mit " + n + (n === 1 ? " Trainingstag" : " Trainingstagen") + " vorhanden"] : [0, "Noch kein Trainingsplan angelegt"]; }],
-    ["Einstellungen", "Ganz zum Schluss findest du über das Zahnrad die Einstellungen: Sicherung, Export, Bericht, Profile, Hilfe und „Was ist neu?“. Hier kannst du deine Daten sichern und die App anpassen.", "settings", function () { return [document.querySelector("#setp .setmenu")]; },
+    ["Zahnrad", "Zum Schluss geht es zu den Einstellungen. Tippe auf das Zahnrad oben rechts – ich habe es für dich hervorgehoben.", "gear", function () { return [document.querySelector('.top button[data-act="setopen"]')]; }, null],
+    ["Einstellungen", "Hier findest du Sicherung, Export, Bericht, Profile, Hilfe und „Was ist neu?“. Du kannst deine Daten sichern und die App anpassen.", "settings", function () { return [document.querySelector("#setp .setmenu")]; },
       function () { return lastBackup() ? [1, "Backup ist gespeichert"] : [0, "Noch kein Backup gespeichert"]; }]
   ];
   function tourStat() {
@@ -4761,14 +4763,14 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   function tourHide() { tourStep = -1; var el = $("tour"); if (el) el.remove(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
   function tourEnd() { tourStep = -1; try { localStorage.setItem(tourKey(), "1"); } catch (e) {} var el = $("tour"); if (el) el.remove(); setClose(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
   /* v241: ruhige Hervorhebung ohne Reiterbewegung, Pulsieren oder Zoom. */
-  var TOURLOC = { home: "Reiter Ernährung", train: "Reiter Training", prog: "Reiter Fortschritt", body: "Reiter Körper", plan: "Reiter Plan", settings: "Zahnrad → Einstellungen" }, tourHold = 0;
+  var TOURLOC = { home: "Reiter Ernährung", train: "Reiter Training", prog: "Reiter Fortschritt", body: "Reiter Körper", plan: "Reiter Plan", gear: "Zahnrad oben rechts", settings: "Einstellungen" }, tourHold = 0;
   function tourShow(i) {
     var st = TOUR[i], tab = st[2], previousTab = S.tab, previousIndex = TABS.indexOf(S.tab), nextIndex = TABS.indexOf(tab);
     document.querySelectorAll(".tfocus").forEach(function (x) { x.classList.remove("tfocus"); }); document.body.classList.remove("tfocusing");
     if (tab !== "settings" && $("setp")) setClose();
     tourStep = i;
     if (tab === "settings") setOpen();
-    else showTab(tab);
+    else if (tab !== "gear") showTab(tab);
     /* Nur zwischen Hauptreitern gleiten; innerhalb eines Reiters (z. B. Ernährung-Unterbereiche) bleibt alles ruhig. */
     if (tab !== "settings" && previousTab !== tab && previousIndex >= 0 && nextIndex >= 0 && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) {
       var pane = $("tab-" + tab), slideClass = nextIndex > previousIndex ? "tour-slide-forward" : "tour-slide-back";
@@ -4779,7 +4781,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var tl = tourList().filter(function (k) { return k >= tourFrom; }), last = tl[tl.length - 1];
     el.innerHTML = '<p class="small muted tnum">Rundgang · ' + (tl.indexOf(i) + 1) + " von " + tl.length + (i > 0 && TOURLOC[tab] ? " · <b>" + TOURLOC[tab] + "</b>" : "") + "</p><h3>" + st[0] + "</h3><p>" + (tab === "train" && cardioOnly() ? "Unter dem Kalender trägst du Ausdauer ein: Sportart, Dauer und auf Wunsch die Strecke. Den Tag wählst du oben im Kalender, auch rückwirkend." : tab === "train" && ttype() === "both" ? st[1] + " Ausdauer (Laufen, Rad …) trägst du direkt unter dem Kalender ein." : i === 0 && foodOnly() ? "Der Trainingslog hält dein Essen und Gewicht fest. Der Rundgang führt dich durch die verfügbaren Bereiche der App." : st[1]) + "</p>" + (st[4] ? '<p class="tst"></p>' : "") + '<div class="row">' +
       (i > tourFrom ? '<button class="ghost" data-act="tourprev">Zurück</button>' : "") + '<button class="ghost" data-act="tourskip">' + (i === last ? "Schließen" : "Überspringen") + "</button>" +
-      '<button class="primary" data-act="tournext">' + (i === last ? "Fertig" : "Weiter") + "</button></div>";
+      '<button class="primary" data-act="tournext">' + (i === last ? "Fertig" : tab === "gear" ? "Zahnrad öffnen" : "Weiter") + "</button></div>";
     tourStat(); tourWatch(true); var hold = ++tourHold;
     setTimeout(function () { if (hold !== tourHold) return; tourHold = 0; if (tourStep === i) tourMark(true); }, 100);
   }
@@ -6937,7 +6939,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       fdn2.items.push(nit); scanRemember(fdn2, nit.id); foodSave(fdn2); S.homeSec = "food"; S.fOpen = nit.id; S.fFilter = ""; showTab("home");
       setTimeout(function () { var nf = document.querySelector('input[data-fi="name"][data-id="' + nit.id + '"]'); if (nf) { nf.scrollIntoView({ block: "center" }); nf.select(); } }, 80);
     }
-    else if (a === "setopen") setOpen();
+    else if (a === "setopen") { if (tourStep >= 0 && TOUR[tourStep] && TOUR[tourStep][2] === "gear") { var tgear = tourList(), ngear = tgear[tgear.indexOf(tourStep) + 1]; if (ngear != null) tourShow(ngear); else setOpen(); } else setOpen(); }
     else if (a === "setclose") { setClose(); if (S.tab === "set") setLeave(); } /* v236: „Fertig“ auf einer Einstellungs-Seite führt zurück, woher man kam */
     else if (a === "setgo") setGo(id);
     else if (a === "setback") setOpen();
@@ -7218,7 +7220,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
       renderAll(false);
     }
     else if (a === "phdel") { if (arm(b, "Sicher?")) { saveSettings(S.phases.filter(function (p) { return p.start !== id; })); renderAll(false); } }
-    else if (a === "tournext") { var tl2 = tourList(), nx = tl2[tl2.indexOf(tourStep) + 1]; if (nx == null) { tourEnd(); S.homeSec = "today"; showTab("home"); window.scrollTo(0, 0); } else tourShow(nx); } /* v239: nach „Fertig“ auf Ernährung → Heute */
+    else if (a === "tournext") { var tl2 = tourList(), nx = tl2[tl2.indexOf(tourStep) + 1]; if (nx == null) { tourEnd(); S.homeSec = "today"; showTab("home"); window.scrollTo(0, 0); } else tourShow(nx); } /* v243: „Zahnrad öffnen“ öffnet die nächste Station */
     else if (a === "tourprev") { var tl3 = tourList(), pv = tl3[tl3.indexOf(tourStep) - 1]; if (pv != null) tourShow(pv); }
     else if (a === "tourskip") tourEnd();
     else if (a === "sux") {
