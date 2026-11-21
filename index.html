@@ -742,7 +742,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 [data-look] .scene::after { content: ""; position: absolute; inset: 0; background: linear-gradient(color-mix(in srgb, var(--bg) 20%, transparent) 0, transparent 35%, color-mix(in srgb, var(--bg) 35%, transparent) 70%, var(--bg) 100%) }
 [data-look] .wrap { position: relative; z-index: 1 }
 [data-look] body::before, [data-look] .tabs { background: transparent; transition: background .2s }
-[data-look].scr body::before, [data-look].scr .tabs { background: var(--bg) }
+[data-look].scr body::before, [data-look].scr .tabs { background: color-mix(in srgb, var(--bg) 60%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px) }
 [data-look] .tabs button { border-bottom-color: transparent; color: color-mix(in srgb, var(--ink) 82%, transparent); text-shadow: 0 1px 5px rgba(0, 0, 0, .85) }
 [data-look] .tabico { filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .8)) }
 [data-look] .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); box-shadow: 0 6px 12px -8px var(--accent) }
@@ -791,7 +791,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 [data-skin="quark"] .scene svg { display: none }
 [data-skin="quark"] .wrap { position: relative; z-index: 1 }
 [data-skin="quark"] body::before, [data-skin="quark"] .tabs { background: transparent; transition: background .2s }
-[data-skin="quark"].scr body::before, [data-skin="quark"].scr .tabs { background: var(--bg) }
+[data-skin="quark"].scr body::before, [data-skin="quark"].scr .tabs { background: color-mix(in srgb, var(--bg) 92%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px) }
 [data-skin="quark"] .tabs button { color: #2d3a57; border-bottom-color: transparent }
 [data-skin="quark"] .tabs button .tabico { stroke: #2d3a57 }
 [data-skin="quark"] .tabs button[aria-selected="true"] { color: var(--accent); border-bottom: 2.5px solid var(--accent) }
@@ -917,9 +917,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 245; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 246; window.TL_VER = APP_VERSION;
   var CHANGES = [
-    { v: 245, tab: "home", text: "Der obere Navigationsbereich bleibt auch beim ersten Öffnen und beim Scrollen klar. Der transparente Unschärfefilter wurde durch einen deckenden Hintergrund ersetzt." },
+    { v: 246, tab: "home", text: "Die Änderung aus v245 am oberen Navigationsbereich wurde zurückgenommen. Die bisherige Darstellung ist wiederhergestellt." },
     { v: 244, tab: "home", text: "Im Rundgang wird der Hintergrund nur noch leicht abgedunkelt statt unscharf gezeichnet. Der obere Kopfbereich bleibt klar erkennbar." },
     { v: 243, tab: "home", text: "Der Rundgang zeigt jetzt zuerst das Zahnrad oben rechts und hebt es hervor. Erst nach dem Antippen öffnen sich die Einstellungen; danach folgt die Erklärung der Einstellungsbereiche." },
     { v: 242, tab: "home", text: "Beim Rundgang gleiten die Hauptreiter jetzt mit einem kurzen, dezenten Slide ineinander. Innerhalb eines Bereichs bleibt die Ansicht ruhig." },
