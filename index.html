@@ -259,7 +259,7 @@ button.xs { min-height: 32px; padding: 2px 10px }
 @media (prefers-reduced-motion: reduce) { .tab.tour-slide-forward, .tab.tour-slide-back { animation: none } }
 body.touring { padding-bottom: 230px }
 body.tfocusing .tab:not(.tfocus) > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing .tab .block:has(.tfocus):not(.tfocus) > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing #notice {
-  filter: blur(1px) grayscale(.35); opacity: .48; pointer-events: none; transition: opacity .18s, filter .18s }
+  filter: none; opacity: .48; pointer-events: none; transition: opacity .18s }
 body.tfocusing .tfocus { position: relative; outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 12px; scroll-margin-top: 90px; transition: outline-color .25s }
 .block > .mform:first-child { border-top: 0; padding-top: 0 }
 .foodblk p { margin: 0 }
@@ -917,8 +917,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 243; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 244; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 244, tab: "home", text: "Im Rundgang wird der Hintergrund nur noch leicht abgedunkelt statt unscharf gezeichnet. Der obere Kopfbereich bleibt klar erkennbar." },
     { v: 243, tab: "home", text: "Der Rundgang zeigt jetzt zuerst das Zahnrad oben rechts und hebt es hervor. Erst nach dem Antippen öffnen sich die Einstellungen; danach folgt die Erklärung der Einstellungsbereiche." },
     { v: 242, tab: "home", text: "Beim Rundgang gleiten die Hauptreiter jetzt mit einem kurzen, dezenten Slide ineinander. Innerhalb eines Bereichs bleibt die Ansicht ruhig." },
     { v: 241, tab: "home", text: "Der Rundgang folgt jetzt der Hauptnavigation: Ernährung, Training, Fortschritt, Körper, Plan und zuletzt Einstellungen. Automatisches Scrollen und auffällige Animationen wurden deutlich reduziert." },
