@@ -268,3 +268,5 @@ Repo ist öffentlich: hier nur technische Entscheidungen, keine persönlichen Da
 
 - v243 (Wunsch des Nutzers): Vor dem Öffnen der Einstellungen gibt es im Rundgang eine eigene Station „Zahnrad“. Der Zahnradknopf oben rechts wird hervorgehoben und die Karte fordert zum Antippen auf. Sowohl das Antippen des Zahnrads als auch „Zahnrad öffnen“ in der Karte führen anschließend zur Station „Einstellungen“; erst dort wird das Einstellungsmenü geöffnet und erklärt. Zurück von den Einstellungen führt wieder zur hervorgehobenen Zahnrad-Station.
 - v244: Rundgang: Unschärfefilter entfernt. Nicht relevante Inhalte werden weiterhin dezent abgedunkelt, bleiben aber scharf.
+
+- v245 (Wunsch des Nutzers): Rundgang beruhigt: interne Ziele werden nur dann nachgeführt, wenn sie durch die feste Rundgangskarte verdeckt oder außerhalb des sichtbaren Bereichs liegen. Das Scrollen läuft kontrolliert über 700 ms statt über browserabhängiges `scrollIntoView({behavior:"smooth"})`; große Bereichsmarkierungen lösen weiterhin kein Scrollen aus. Reiter-Slide-Animationen vollständig entfernt; Abblendung und Hervorhebung ohne Übergangseffekte. `prefers-reduced-motion` bleibt berücksichtigt.
