@@ -101,6 +101,27 @@
           "text": "Neues Design „Aurora“ (Einstellungen → Design) mit Akzentfarbe Violett oder Blau. Dazu viele Darstellungs- und Komfortverbesserungen."
         }
       ]
+    },
+    {
+      "v": 247,
+      "punkte": [
+        {
+          "tab": "home",
+          "text": "Koffein jetzt in Lila (mit Verlauf über den Tag), Kohlenhydrate in Mint, neues Design „Magerquark“, größere ✕-Knöpfe und ein ruhigerer Rundgang. Dazu viele Darstellungs- und Komfortverbesserungen."
+        },
+        {
+          "tab": "home",
+          "text": "Vergessenes Essen nachtragen: unter Heute ganz unten bei „Essen im Rückblick“ den Tag wählen und „+ Eintragen für diesen Tag“. Einträge antippen ändert die Menge nachträglich, die Werte rechnen sich neu."
+        },
+        {
+          "tab": "home",
+          "text": "Neu: die Glocke oben neben dem Zahnrad – dort stehen Backup-Erinnerung, „Vorrat fast leer“ und neue Versionen. Vorrat gibt es jetzt auch für Lebensmittel wie Whey (Ernährung → Vorrat): Die App zieht ab, was du einträgst, und zeigt, bis wann es reicht."
+        },
+        {
+          "tab": "home",
+          "text": "Neue Aufteilung: Den Reiter „Daten“ gibt es nicht mehr. Lebensmittel, Meal Prep, Supplemente und Vorrat stehen jetzt oben unter Ernährung, deine Angaben und die Makros unten unter Körper, der Übungskatalog im Plan. Sicherung, Export, Bericht, Profile und Hilfe erreichst du über das Zahnrad oben links."
+        }
+      ]
     }
   ]
 }
