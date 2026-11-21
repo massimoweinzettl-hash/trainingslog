@@ -246,19 +246,14 @@ button.xs { min-height: 32px; padding: 2px 10px }
 .linkbtn.bedit { padding: 0; font-size: inherit; white-space: nowrap }
 #datamsg:empty { display: none }
 #tour .tnum { margin: 0; font-size: 13px } #tour .tnum b { color: var(--accent); font-weight: 600 }
-@keyframes tslR { from { transform: translateX(45%); opacity: 0 } } @keyframes tslL { from { transform: translateX(-45%); opacity: 0 } }
-.tab.tslR { animation: tslR .36s cubic-bezier(.2, .8, .3, 1) } .tab.tslL { animation: tslL .36s cubic-bezier(.2, .8, .3, 1) }
-@keyframes tpulse { 0%, 100% { transform: scale(1) } 35% { transform: scale(1.16); background: var(--accent-soft) } 70% { transform: scale(1); background: var(--accent-soft) } } .tabs button.tpulse { animation: tpulse .9s ease .1s; border-radius: 10px }
+
 #tour .tst { font-size: 13.5px; font-weight: 600; color: var(--muted); margin: -4px 0 10px } #tour .tst.ok { color: var(--good) }
 .fsteps { display: flex; flex-direction: column; margin: 4px 0 } .fstep { display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; border-radius: 8px; min-height: 0; padding: 7px 2px; font-size: 15px; font-weight: 500; color: var(--ink) } .fstep .ck { flex: none; width: 18px; font-weight: 700; color: var(--good) } .fstep.todo .ck { color: var(--muted) } .fstep.todo span + span { text-decoration: underline; text-underline-offset: 2px; text-decoration-color: var(--accent) }
 .chart .wsell { stroke: var(--ink); stroke-width: 1; opacity: .55 } .chart .wselc { fill: none; stroke: var(--ink); stroke-width: 2 } .wleg b { color: var(--ink) } .wleg .wk { color: var(--s3); font-weight: 600 }
 #tour .row { justify-content: flex-end; gap: 6px }
 body.touring { padding-bottom: 230px }
-body.tfocusing .tab > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing .tab .block:has(.tfocus):not(.tfocus) > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing #notice {
-  filter: blur(2px) grayscale(.7); opacity: .3; pointer-events: none; transition: opacity .25s, filter .25s }
-@keyframes tzoom { 0% { transform: scale(.92); opacity: .4 } 60% { transform: scale(1.025); opacity: 1 } 100% { transform: scale(1) } }
-body.tfocusing .tfocus.tzoom { animation: tzoom .55s cubic-bezier(.2, .8, .3, 1) both }
-@media (prefers-reduced-motion: reduce) { body.tfocusing .tfocus.tzoom { animation: none } }
+body.tfocusing .tab:not(.tfocus) > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing .tab .block:has(.tfocus):not(.tfocus) > *:not(.tfocus):not(:has(.tfocus)), body.tfocusing #notice {
+  filter: blur(1px) grayscale(.35); opacity: .48; pointer-events: none; transition: opacity .18s, filter .18s }
 body.tfocusing .tfocus { position: relative; outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 12px; scroll-margin-top: 90px; transition: outline-color .25s }
 .block > .mform:first-child { border-top: 0; padding-top: 0 }
 .foodblk p { margin: 0 }
@@ -916,8 +911,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 240; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 241; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 241, tab: "home", text: "Der Rundgang folgt jetzt der Hauptnavigation: Ernährung, Training, Fortschritt, Körper, Plan und zuletzt Einstellungen. Automatisches Scrollen und auffällige Animationen wurden deutlich reduziert." },
     { v: 240, tab: "home", text: "Die kleinen ✕ und der Bleistift in Ernährung (Reste, Essensliste, „Gericht berechnen“, Meal Prep) sind jetzt runde Knöpfe mit Rahmen – größer und leichter zu treffen." },
     { v: 239, tab: "home", text: "Rundgang, Handbuch und die Erklärungen hinter dem blauen i zeigen jetzt überall die neue Aufteilung: Ernährung mit Heute, Lebensmittel, Meal Prep, Supplemente und Vorrat, deine Angaben und Makros unten unter Körper, der Übungskatalog im Plan, Sicherung, Export, Bericht, Profile und Hilfe über das Zahnrad. Neu unter Hilfe → Häufige Fragen: „Wo ist der Reiter Daten?“ Außerdem steht dort jetzt richtig, wie du vergessenes Essen nachträgst." },
     { v: 238, tab: "home", text: "Ernährung hat oben die Bereiche Heute, Lebensmittel, Meal Prep, Supplemente und Vorrat (vorher Reiter Daten). Beim Öffnen der App ist immer „Heute“ gewählt. Der Reiter Daten entfällt damit." },
@@ -4616,7 +4612,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   ];
   /* Erste Schritte als Liste zum Abhaken (v115): gleiche Prüfungen wie im Rundgang, Antippen öffnet die Station. */
   function firstSteps() {
-    var L = [[tourIdx("Deine Angaben"), "Deine Angaben eintragen"], [tourIdx("Dein Plan"), "Trainingsplan anlegen"], [tourIdx("Training eintragen"), "Erstes Training eintragen"], [tourIdx("Essen eintragen"), "Essen eintragen"], [tourIdx("Gewicht eintragen"), "Gewicht eintragen"], [tourIdx("Backup"), "Backup speichern"]].filter(function (x) { return tourList().indexOf(x[0]) >= 0; }), n = 0; /* v189: Stationen über den Titel, Reihenfolge des Rundgangs geändert */
+    var L = [[tourIdx("Körper"), "Deine Angaben eintragen"], [tourIdx("Plan"), "Trainingsplan anlegen"], [tourIdx("Training"), "Erstes Training eintragen"], [tourIdx("Ernährung"), "Essen eintragen"], [tourIdx("Körper"), "Gewicht eintragen"], [tourIdx("Einstellungen"), "Backup speichern"]].filter(function (x) { return x[0] >= 0 && TOUR[x[0]][4] && tourList().indexOf(x[0]) >= 0; }), n = 0; /* v241: Erste Schritte verweisen auf die neuen zusammenhängenden Bereiche */
     var rows = L.map(function (x) { var d = TOUR[x[0]][4](), ok = d[0]; if (ok) n++; return '<button type="button" class="fstep' + (ok ? "" : " todo") + '" data-act="tourgo" data-id="' + x[0] + '"><span class="ck">' + (ok ? "✓" : "○") + "</span><span>" + x[1] + "</span></button>"; }).join("");
     return "<p>" + (n === L.length ? "Alles erledigt, die App ist eingerichtet." : n + " von " + L.length + " erledigt. Tippe auf einen Punkt, die App zeigt dir die Stelle.") + '</p><div class="fsteps">' + rows + "</div>" +
       "<p><b>Ein normaler Tag:</b> morgens wiegen und unter „Körper“ eintragen. Essen unter „Ernährung“ eintragen, sobald du isst. " + (foodOnly() ? "" : "Im Studio unter „Training“ die Einheit starten, Sätze eintragen, am Ende „Training beenden“. ") + "Mehr braucht es nicht.</p>" +
@@ -4703,23 +4699,20 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Rundgang (v115: jede Station ist eine Aufgabe). [Titel, Text, Reiter, Ziel, Prüfung → [erledigt?, Statuszeile]] */
   /* v239: Stationen folgen der Navigation seit v236–v238: Ernährung (Bereiche Heute, Lebensmittel …), Körper → Angaben und Makros, Plan → Übungskatalog,
      Zahnrad → Sicherung und Hilfe. Der Ort steht in der Karte (TOURLOC). */
+  /* v241: Der Rundgang folgt der Hauptnavigation. Jeder Bereich wird als Einheit vorgestellt. */
   var TOUR = [
-    ["Willkommen", "Der Trainingslog hält Training, Essen und Gewicht fest und schlägt dir vor, wie es weitergeht. Der Rundgang führt dich durch alle Reiter und das Zahnrad oben. Wo es nötig ist, richtest du gleich das Wichtigste ein.", "home", null, null],
-    ["Dein Plan", "Wähle Tage pro Woche, Dauer und Geräte. Der Assistent baut den Plan, mit ↻ tauschst du Übungen. Tippe dann auf „Plan übernehmen“. Übungen kannst du später jederzeit tauschen.", "plan", function () { return [document.querySelector(".wiz") || document.querySelector("[data-act=wizopen]")]; },
-      function () { var n = S.plan && S.plan.days ? S.plan.days.length : 0; return n ? [1, "Plan steht: " + n + (n === 1 ? " Trainingstag" : " Trainingstage")] : [0, "Noch kein Plan. Ohne Plan gibt es keine Vorschläge im Training"]; }],
-    ["Training eintragen", "Im Studio: oben im Kalender den Tag antippen, „Training starten“, dann je Satz Gewicht und Wiederholungen eintragen. Gespeichert wird automatisch. Am Ende „Training beenden“. Ab der zweiten Einheit schlägt die App dir das Gewicht vor.", "train", function () { return [$("calwrap")]; },
-      function () { var n = Object.keys(S.workouts).length + Object.keys(S.cardio || {}).length; return n ? [1, "Erstes Training ist eingetragen"] : [0, "Machst du beim nächsten Training, jetzt einfach „Weiter“"]; }],
-    ["Essen eintragen", "Probier es gleich aus: ins Suchfeld tippen, Lebensmittel antippen, Menge angeben, „Eintragen“. Das Barcode-Symbol scannt Verpackungen, „Schätzen“ hilft ohne Waage, „Gericht berechnen“ bei selbst Gekochtem mit mehreren Portionen.", "home", function () { return [document.querySelector(".nadd"), document.querySelector(".nlinks")]; },
-      function () { var ok = Object.keys(S.nutri).some(function (k) { var n = S.nutri[k]; return n && n.entries && n.entries.length; }); return ok ? [1, "Dein erster Eintrag ist drin"] : [0, "Noch nichts eingetragen"]; }],
-    ["Gewicht eintragen", "Trag dein Gewicht regelmäßig ein, am besten morgens nach dem Aufstehen. Einzelne Werte schwanken, die App achtet auf den Verlauf. Nach zwei Wochen mit Gewicht und Essen kennt sie deinen echten Verbrauch.", "body", function () { return [$("bform")]; },
-      function () { var ok = Object.keys(S.body).some(function (k) { return S.body[k] && S.body[k].weight != null; }); return ok ? [1, "Dein Gewicht ist eingetragen"] : [0, "Noch kein Gewicht. Ohne Gewicht keine Kalorien"]; }],
-    ["Lebensmittel und Vorrat", "Oben unter „Ernährung“ wechselst du zwischen Heute, Lebensmittel, Meal Prep, Supplemente und Vorrat. Unter „Lebensmittel“ stehen alle Lebensmittel: antippen, um Werte von der Verpackung zu übernehmen. Unter „Meal Prep“ stellst du Mahlzeiten zusammen, unter „Supplemente“ und „Vorrat“ steht dein Vorratsschrank.", "food", function () { return [document.querySelector("#tab-home .hsec")].concat([].slice.call(document.querySelectorAll("#tab-home .fmanage"))); }, null],
-    ["Übungskatalog", "Unter dem Plan: alle Übungen nach Muskelgruppen, deine und die aus dem Katalog. Antippen, um Sätze, Wiederholungen, Schritt, Sterne und Schwerpunkt einzustellen oder sie einem Trainingstag zuzuordnen.", "ex", function () { return [$("excat")]; }, null],
-    ["Deine Angaben", "Aus diesen Angaben berechnet die App deine Kalorien und Makros. Prüfe sie kurz und tippe nach Änderungen auf „Speichern“. Darunter stellst du unter „Makros anpassen“ Eiweiß und Fett ein. Ändert sich später dein Alltag oder Training, passt du es hier unten im Reiter Körper an.", "me", function () { var x = $("pe-sex"), m = $("mc-pc"); return [x && x.closest(".block"), m && m.closest(".block")]; },
-      function () { var P = S.person || {}, m = [], w = false; Object.keys(S.body).forEach(function (k) { if (S.body[k] && S.body[k].weight != null) w = true; }); if (!P.sex) m.push("Geschlecht"); if (!isN(P.year)) m.push("Geburtsjahr"); if (!isN(P.height)) m.push("Größe"); if (!isN(P.act)) m.push("Alltag"); if (!w) m.push("Gewicht (Reiter Körper)"); return m.length ? [0, "Fehlt noch: " + m.join(", ")] : [1, "Vollständig, deine Kalorien werden berechnet"]; }],
-    ["Backup", "Deine Daten liegen nur auf diesem Gerät. Tippe auf „Backup speichern“ und leg die Datei zum Beispiel in iCloud Drive ab. Die App erinnert dich alle zwei Wochen über die Glocke oben daran. Später findest du das über das Zahnrad oben → Sicherung.", "save", function () { var x = document.querySelector("[data-act=pick]"); return [document.querySelector("#tab-set .setback"), x && x.closest(".block")]; },
-      function () { return lastBackup() ? [1, "Backup ist gespeichert"] : [0, "Noch kein Backup"]; }],
-    ["Hilfe", "Hier steht das Handbuch zu allen Reitern, Abschnitt antippen zum Aufklappen. Über das Zahnrad oben erreichst du außerdem Export, Bericht, Profile und „Was ist neu?“. Den Rundgang startest du hier mit „Einführung noch einmal zeigen“ jederzeit neu.", "help", function () { return [document.querySelector("#tab-set .setback"), document.querySelector("#tab-set .help")]; }, null]
+    ["Willkommen", "Der Trainingslog hält Training, Essen und Gewicht fest und schlägt dir vor, wie es weitergeht. Der Rundgang führt dich in der Reihenfolge der Hauptnavigation durch die App und endet bei den Einstellungen.", "home", null, null],
+    ["Ernährung", "Hier beginnt dein Alltag: Unter „Heute“ trägst du deine Mahlzeiten ein und siehst Kalorien und Makros. Oben wechselst du zu „Lebensmittel“ für die Datenbank, „Meal Prep“ für vorbereitete Mahlzeiten, „Supplemente“ und „Vorrat“. Diese fünf Bereiche gehören zusammen zum Reiter Ernährung.", "home", function () { return [document.querySelector("#tab-home .hsec"), document.querySelector("#tab-home .foodblk")]; },
+      function () { var ok = Object.keys(S.nutri).some(function (k) { var n = S.nutri[k]; return n && n.entries && n.entries.length; }); return ok ? [1, "Erste Mahlzeit ist eingetragen"] : [0, "Noch kein Essen eingetragen"]; }],
+    ["Training", "Hier planst und erfasst du deine Einheiten. Wähle im Kalender den Trainingstag, starte das Training und trage je Satz Gewicht und Wiederholungen ein. Die App speichert automatisch und schlägt dir bei folgenden Einheiten passende Gewichte vor.", "train", function () { return [document.querySelector("#tab-train")]; },
+      function () { var n = Object.keys(S.workouts).length + Object.keys(S.cardio || {}).length; return n ? [1, "Erstes Training ist eingetragen"] : [0, "Noch kein Training eingetragen"]; }],
+    ["Fortschritt", "Hier verfolgst du, wie sich deine Leistung und dein Training entwickeln. Diagramme, Kalender und Auswertungen zeigen dir Veränderungen über die Zeit – so erkennst du Trends statt nur einzelne Tageswerte.", "prog", function () { return [document.querySelector("#tab-prog")]; }, null],
+    ["Körper", "Hier findest du deine Körperwerte und deren Verlauf. Weiter unten stehen deine persönlichen Angaben für die Kalorienempfehlung und die Makroverteilung. Messwerte, Angaben und Makros gehören gemeinsam in diesen Bereich.", "body", function () { return [document.querySelector("#tab-body")]; },
+      function () { var P = S.person || {}, missing = !P.sex || !isN(P.year) || !isN(P.height) || !isN(P.act), weight = Object.keys(S.body).some(function (k) { return S.body[k] && S.body[k].weight != null; }); return !missing && weight ? [1, "Körperwerte und persönliche Angaben sind vorhanden"] : [0, "Körperwerte oder persönliche Angaben fehlen noch"]; }],
+    ["Plan", "Hier legst du deine Trainingstage und die Übungen je Tag fest. Direkt darunter findest du den aufklappbaren Übungskatalog. Dort kannst du Übungen suchen, bearbeiten, bewerten, Trainingstagen zuordnen oder den Katalog anpassen.", "plan", function () { return [document.querySelector("#tab-plan")]; },
+      function () { var n = S.plan && S.plan.days ? S.plan.days.length : 0; return n ? [1, "Plan mit " + n + (n === 1 ? " Trainingstag" : " Trainingstagen") + " vorhanden"] : [0, "Noch kein Trainingsplan angelegt"]; }],
+    ["Einstellungen", "Ganz zum Schluss findest du über das Zahnrad die Einstellungen: Sicherung, Export, Bericht, Profile, Hilfe und „Was ist neu?“. Hier kannst du deine Daten sichern und die App anpassen.", "settings", function () { return [document.querySelector("#setp .setmenu")]; },
+      function () { return lastBackup() ? [1, "Backup ist gespeichert"] : [0, "Noch kein Backup gespeichert"]; }]
   ];
   function tourStat() {
     var el = $("tour"), st = tourStep >= 0 && TOUR[tourStep], p = el && el.querySelector(".tst"); if (!p || !st || !st[4]) return;
@@ -4729,15 +4722,15 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Hervorheben: der beschriebene Bereich bleibt scharf (.tfocus), alles andere wird grau und unscharf (CSS über :has).
      Nach jedem Neuzeichnen wird die Markierung wieder gesetzt (MutationObserver). */
   var tourObs = null, tourRaf = 0;
-  function tourMark(scroll, noZoom) {
+  function tourMark(scroll) {
     document.querySelectorAll(".tfocus").forEach(function (x) { x.classList.remove("tfocus"); });
     var f = tourStep >= 0 && TOUR[tourStep][3], els = f ? f().filter(Boolean) : [];
     els.forEach(function (x) { x.classList.add("tfocus"); });
     document.body.classList.toggle("tfocusing", els.length > 0);
-    if (scroll && els[0]) {
-      els[0].scrollIntoView({ block: "start", behavior: noZoom ? "auto" : "smooth" });
-      /* Kurzer Zoom beim Schrittwechsel (nicht beim Neuzeichnen, sonst springt es bei jeder Eingabe). */
-      if (!noZoom) els.forEach(function (x) { x.classList.remove("tzoom"); void x.offsetWidth; x.classList.add("tzoom"); x.addEventListener("animationend", function () { x.classList.remove("tzoom"); }, { once: true }); });
+    if (scroll && els[0] && !els[0].classList.contains("tab")) {
+      var r = els[0].getBoundingClientRect(), safeBottom = window.innerHeight - 230;
+      /* Große Bereiche bleiben an ihrer aktuellen Position. Nur kleine, außerhalb liegende Ziele werden sanft nachgeführt. */
+      if (r.height < window.innerHeight * .8 && (r.bottom < 80 || r.top > safeBottom)) els[0].scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }
   function tourWatch(on) {
@@ -4751,7 +4744,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   }
   /* v128: im Modus „Nur Ernährung“ ohne die Stationen Plan und Training */
   function tourIdx(t) { for (var i = 0; i < TOUR.length; i++) if (TOUR[i][0] === t) return i; return -1; }
-  function tourList() { var l = []; TOUR.forEach(function (st, i) { if (!(foodOnly() && (st[2] === "plan" || st[2] === "train")) && !(cardioOnly() && st[2] === "plan")) { if (!((foodOnly() || cardioOnly()) && st[2] === "ex")) l.push(i); } }); return l; }
+  function tourList() { var l = []; TOUR.forEach(function (st, i) { if (!(foodOnly() && (st[2] === "plan" || st[2] === "train")) && !(cardioOnly() && st[2] === "plan")) l.push(i); }); return l; }
   var tourStep = -1, tourFrom = 0; /* tourFrom = 1: nach der Einrichtung ohne „Willkommen“ */
   function tourKey() { return "trainingslog-tour-" + PROF.active; }
   function tourDue() {
@@ -4759,37 +4752,24 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     return !done && S.ready && (!S.plan || !S.plan.days.length) && !Object.keys(S.workouts).length && !Object.keys(S.body).length;
   }
   function tourHide() { tourStep = -1; var el = $("tour"); if (el) el.remove(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
-  function tourEnd() { tourStep = -1; try { localStorage.setItem(tourKey(), "1"); } catch (e) {} var el = $("tour"); if (el) el.remove(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
-  /* v116 (Nutzer: Übergänge zu hart, Reiter nicht erkennbar): Ort in der Karte, Seite gleitet in Richtung des neuen Reiters,
-     Reiter pulsiert, Hervorhebung erst nach dem Gleiten (tourHold bremst solange den MutationObserver). */
-  var TOURLOC = { home: "Ernährung → Heute", train: "Reiter Training", body: "Reiter Körper", plan: "Reiter Plan", food: "Ernährung → Lebensmittel", ex: "Plan → Übungskatalog", me: "Körper → Angaben", save: "Zahnrad → Sicherung", help: "Zahnrad → Hilfe" }, tourHold = 0;
+  function tourEnd() { tourStep = -1; try { localStorage.setItem(tourKey(), "1"); } catch (e) {} var el = $("tour"); if (el) el.remove(); setClose(); tourWatch(false); tourMark(false); document.body.classList.remove("touring"); }
+  /* v241: ruhige Hervorhebung ohne Reiterbewegung, Pulsieren oder Zoom. */
+  var TOURLOC = { home: "Reiter Ernährung", train: "Reiter Training", prog: "Reiter Fortschritt", body: "Reiter Körper", plan: "Reiter Plan", settings: "Zahnrad → Einstellungen" }, tourHold = 0;
   function tourShow(i) {
-    var from = S.tab === "home" ? "home:" + (S.homeSec || "today") : S.tab === "set" ? "set:" + S.setSec : S.tab, fromI = TABS.indexOf(S.tab), firstCard = !$("tour");
+    var st = TOUR[i], tab = st[2];
     document.querySelectorAll(".tfocus").forEach(function (x) { x.classList.remove("tfocus"); }); document.body.classList.remove("tfocusing");
-    tourStep = i; var st = TOUR[i], tab = st[2];
-    if (tab === "food") { S.homeSec = "food"; showTab("home"); } /* v238: Ernährung → Lebensmittel */
-    else if (SSEC.some(function (x) { return x[0] === tab; })) { if (S.tab !== "set") S.setFrom = { tab: S.tab, y: 0 }; S.setSec = tab; showTab("set"); } /* v236 */
-    else if (tab === "ex") { S.exCatBox = true; showTab("plan"); } /* v237: Übungskatalog im Plan */
-    else if (tab === "me") showTab("body"); /* v237: Angaben unter Körper */
-    else if (tab === "plan") {
-      if (!S.plan) { S.plan = { kind: "plan", fav3: 1, m58: 1, days: [] }; planChanged(true); }
-      if (!S.plan.days.length && !S.wiz) wizStart();
-      showTab("plan");
-    } else { if (tab === "home") S.homeSec = "today"; showTab(tab); }
-    if (!(from.indexOf("set:") === 0 && S.tab === "set")) window.scrollTo(0, 0);
+    if (tab !== "settings" && $("setp")) setClose();
+    tourStep = i;
+    if (tab === "settings") setOpen();
+    else showTab(tab);
     var el = $("tour"); if (!el) { el = document.createElement("div"); el.id = "tour"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Einführung"); document.body.appendChild(el); }
     document.body.classList.add("touring");
-    var to = S.tab === "home" ? "home:" + (S.homeSec || "today") : S.tab === "set" ? "set:" + S.setSec : S.tab, hop = (from.indexOf("set:") === 0 && to.indexOf("set:") === 0) || (from.indexOf("home:") === 0 && to.indexOf("home:") === 0), moved = to !== from && !firstCard && i > 0 && !hop, rm = /* hop (v190, seit v238 für Ernährung und Zahnrad): innerhalb derselben Seite wandert nur die Hervorhebung, ohne Gleiten und Zoom */ window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (moved && !rm) {
-      var pane = $("tab-" + S.tab), tb = document.querySelector('.tabs button[data-tab="' + S.tab + '"]'), cls = TABS.indexOf(S.tab) < fromI ? "tslL" : "tslR";
-      pane.classList.remove("tslL", "tslR"); void pane.offsetWidth; pane.classList.add(cls); pane.addEventListener("animationend", function () { pane.classList.remove(cls); }, { once: true });
-      if (tb) { tb.classList.remove("tpulse"); void tb.offsetWidth; tb.classList.add("tpulse"); tb.addEventListener("animationend", function () { tb.classList.remove("tpulse"); }, { once: true }); }
-    }
     var tl = tourList().filter(function (k) { return k >= tourFrom; }), last = tl[tl.length - 1];
-    el.innerHTML = '<p class="small muted tnum">Rundgang · ' + (tl.indexOf(i) + 1) + " von " + tl.length + (i > 0 && TOURLOC[tab] ? " · <b>" + TOURLOC[tab] + "</b>" : "") + "</p><h3>" + st[0] + "</h3><p>" + (st[2] === "train" && cardioOnly() ? "Unter dem Kalender trägst du Ausdauer ein: Sportart, Dauer und auf Wunsch die Strecke, dann „Eintragen“. Den Tag wählst du oben im Kalender, auch rückwirkend. Tage mit Ausdauer bekommen mehr Kalorien." : st[2] === "train" && ttype() === "both" ? st[1] + " Ausdauer (Laufen, Rad …) trägst du direkt unter dem Kalender ein." : i === 0 && foodOnly() ? "Der Trainingslog hält dein Essen und Gewicht fest und rechnet dir aus, wie viel heute noch drin ist. Der Rundgang führt dich durch " + (["", "eine", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun"][tl.length - 1] || tl.length - 1) + " Stationen. Wo es nötig ist, richtest du gleich das Wichtigste ein." : st[1]) + "</p>" + (st[4] ? '<p class="tst"></p>' : "") + '<div class="row">' +
+    el.innerHTML = '<p class="small muted tnum">Rundgang · ' + (tl.indexOf(i) + 1) + " von " + tl.length + (i > 0 && TOURLOC[tab] ? " · <b>" + TOURLOC[tab] + "</b>" : "") + "</p><h3>" + st[0] + "</h3><p>" + (tab === "train" && cardioOnly() ? "Unter dem Kalender trägst du Ausdauer ein: Sportart, Dauer und auf Wunsch die Strecke. Den Tag wählst du oben im Kalender, auch rückwirkend." : tab === "train" && ttype() === "both" ? st[1] + " Ausdauer (Laufen, Rad …) trägst du direkt unter dem Kalender ein." : i === 0 && foodOnly() ? "Der Trainingslog hält dein Essen und Gewicht fest. Der Rundgang führt dich durch die verfügbaren Bereiche der App." : st[1]) + "</p>" + (st[4] ? '<p class="tst"></p>' : "") + '<div class="row">' +
       (i > tourFrom ? '<button class="ghost" data-act="tourprev">Zurück</button>' : "") + '<button class="ghost" data-act="tourskip">' + (i === last ? "Schließen" : "Überspringen") + "</button>" +
       '<button class="primary" data-act="tournext">' + (i === last ? "Fertig" : "Weiter") + "</button></div>";
-    tourStat(); tourWatch(true); var hold = ++tourHold; setTimeout(function () { if (hold !== tourHold) return; tourHold = 0; if (tourStep === i) tourMark(true, hop && !firstCard); }, moved && !rm ? 420 : 60);
+    tourStat(); tourWatch(true); var hold = ++tourHold;
+    setTimeout(function () { if (hold !== tourHold) return; tourHold = 0; if (tourStep === i) tourMark(true); }, 100);
   }
   function exViewHtml() {
     return tip("allex", "Wofür ist diese Ansicht?", "Hier änderst du Sätze, Wiederholungsbereich, Schritt, Bewertung und Schwerpunkt jeder Übung an einer Stelle, egal in welchem Trainingstag sie steht. Außerdem kannst du Übungen zusammenführen oder löschen und den Katalog verschlanken.") +
