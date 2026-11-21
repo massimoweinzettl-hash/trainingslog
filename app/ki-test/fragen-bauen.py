@@ -34,7 +34,7 @@ WERTE = [
 # Fragen ohne Bezug zum Datenstand: nur im ersten Szenario.
 ALLG = [
     ("b1", "Wie trage ich ein selbst gekochtes Gericht ein?", "Schritte nach Handbuch (Gericht berechnen, Portionen, Reste)"),
-    ("b2", "Erkläre mir die App.", "feste Antwort: Überblick über die Reiter"),
+    ("b2", "Erkläre mir die App.", "feste Antwort: fünf Reiter, Bereiche in Ernährung, Zahnrad (Sicherung, Export, Bericht, Profile, Hilfe)"),
     ("b3", "Wie mache ich ein Backup?", "Zahnrad oben → Sicherung → Backup speichern"),
     ("b4", "Wie ändere ich meinen Trainingsplan?", "Plan-Reiter / Plan-Assistent nach Handbuch"),
     ("b5", "Wie scanne ich ein Produkt?", "Barcode-Symbol beim Eintragen"),
@@ -43,6 +43,16 @@ ALLG = [
     ("b8", "wie trag ich was ein", "Tippfehler/Umgangssprache: Essen eintragen nach Handbuch"),
     ("b9", "Wie lösche ich einen Eintrag?", "✕ am Eintrag bzw. nach Handbuch"),
     ("b10", "wo seh ich mein gewicht", "Reiter Körper"),
+    # v239: Navigation seit v236–v238 (Ernährung mit Bereichen, Angaben/Makros in Körper, Übungskatalog im Plan, Zahnradmenü)
+    ("n1", "Wo finde ich meine Lebensmittel?", "Ernährung → Lebensmittel (Bereich oben)"),
+    ("n2", "Wo lege ich meine Supplemente an?", "Ernährung → Supplemente"),
+    ("n3", "Wo ändere ich meine Makros?", "Körper, ganz unten unter „Makros anpassen“"),
+    ("n4", "Wo finde ich den Übungskatalog?", "Plan, unter den Trainingstagen zum Aufklappen"),
+    ("n5", "Wo sehe ich, wie lange mein Whey noch reicht?", "Ernährung → Vorrat"),
+    ("n6", "Wo ist der Reiter Daten?", "gibt es nicht mehr: Ernährung (Lebensmittel …), Körper (Angaben, Makros), Plan (Übungskatalog), Zahnrad"),
+    ("n7", "Wie exportiere ich meine Daten?", "Zahnrad oben → Export (CSV)"),
+    ("n8", "Wo ändere ich meine persönlichen Angaben?", "Körper → Angaben (unten), dann „Speichern“"),
+    ("n9", "Wo stelle ich meine Schlafenszeit ein?", "Zahnrad oben → Nutzung"),
     ("a1", "Ist Fett gut oder schlecht?", "freundlich ablehnen, Beispiel nennen, KEINE Zahl"),
     ("a2", "Wie viel Schlaf brauche ich?", "ablehnen"),
     ("a3", "Sollte ich jeden Tag trainieren?", "ablehnen"),
@@ -92,6 +102,10 @@ def szenario(name):
             {"id": "u4", "name": "Energy Drink 500 ml", "kcal": 230, "p": 0, "f": 0, "c": 55, "t": "15:00", "caf": 160},
             {"id": "u5", "name": "Burger mit Pommes", "kcal": 1250, "p": 40, "f": 60, "c": 130, "t": "18:30"},
             {"id": "u6", "name": "Kaffee", "kcal": 5, "p": 0, "f": 0, "c": 0, "t": "17:00", "caf": 120}]}
+    elif name == "nurEssen":  # v239: Modus „Nur Ernährung“ (nur der Überblick)
+        d["settings"]["person"]["notrain"] = 1
+    elif name == "ausdauer":  # v239: Modus Ausdauer (nur der Überblick)
+        d["settings"]["person"]["ttype"] = "cardio"
     elif name == "neu":  # Neuer Nutzer: ein Gewicht, kein Verlauf, kein Training, heute ein Eintrag
         for k in list(d):
             if k.startswith(("b_", "n_", "w_", "c_")): del d[k]
@@ -101,20 +115,36 @@ def szenario(name):
     return d
 
 SZ = ["cut", "aufbau", "drueber", "neu"]
+# v239: Überblick je Modus (feste Antwort der App), nur diese Frage
+MODUS = {"nurEssen": [("m1", "Erkläre mir die App.", "feste Antwort: zwei Reiter (Ernährung, Körper), Zahnrad")],
+         "ausdauer": [("m2", "Erkläre mir die App.", "feste Antwort: vier Reiter ohne Plan, Zahnrad")]}
+# v239: Eine dieser Stellen muss der Handbuch-Auszug (bzw. die feste Antwort) enthalten, sonst kann das Modell den Weg nicht nennen.
+ORT = {"b3": ["Zahnrad"], "n1": ["Bereiche oben", "Ernährung → Lebensmittel"], "n2": ["Ernährung → Supplemente", "„Supplemente“"],
+       "n3": ["Makros anpassen", "Angaben und Makros"], "n4": ["Übungskatalog"], "n5": ["„Vorrat“"], "n6": ["Reiter „Daten“"],
+       "n7": ["Export"], "n8": ["Körper → Angaben", "unten im Reiter Körper"], "n9": ["„Nutzung“"],
+       "b2": ["fünf Reiter"], "m1": ["zwei Reiter"], "m2": ["vier Reiter"]}
+ALT = ["Daten →", "Reiter Daten ", "unter Daten", "Persönlich", "Daten > ", "in den Einstellungen unter „Training“"]
 
 with sync_playwright() as p:
     b = p.chromium.launch(); out = []; errs = []
-    for i, sz in enumerate(SZ):
+    for i, sz in enumerate(SZ + list(MODUS)):
         pg = b.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.goto("file://" + os.path.join(ROOT, "index.html")); pg.wait_for_timeout(300)
         v = pg.evaluate("window.TL_VER")
         pg.evaluate("""([d, v]) => { localStorage.clear(); localStorage.setItem("trainingslog", JSON.stringify(d)); localStorage.setItem("trainingslog-seen", String(v)); localStorage.setItem("trainingslog-tour-main", "1"); }""", [szenario(sz), v])
         pg.reload(); pg.wait_for_timeout(500)
-        for fid, q, soll in WERTE + (ALLG if i == 0 else []):
+        for fid, q, soll in (MODUS[sz] if sz in MODUS else WERTE + (ALLG if i == 0 else [])):
             out.append({"id": sz + "/" + fid, "q": q, "soll": soll, "instructions": pg.evaluate("window.TL_KI.instr()"),
                         "prompt": pg.evaluate("q => window.TL_KI.prompt(q, false)", q), "fest": pg.evaluate("q => window.TL_KI.fixed(q)", q)})
         pg.close()
     b.close()
 if errs: sys.exit("Fehler in der App: " + "; ".join(errs))
+fehlt = []
+for x in out:
+    fid = x["id"].split("/")[1]; txt = x["prompt"] + "\n" + (x["fest"] or "")
+    if fid in ORT and not any(w in txt for w in ORT[fid]): fehlt.append(x["id"] + ": " + " / ".join(ORT[fid]))
+    alt = [w for w in ALT if w in txt]
+    if alt: fehlt.append(x["id"] + ": alter Weg im Text: " + ", ".join(alt))
+if fehlt: sys.exit("Handbuch-Auszug passt nicht:\n  " + "\n  ".join(fehlt))
 json.dump(out, open(os.path.join(HERE, "fragen.json"), "w"), ensure_ascii=False, indent=1)
-print("fragen.json: %d Fragen in %d Szenarien (App v%s), längster Prompt %d Zeichen" % (len(out), len(SZ), v, max(len(x["prompt"]) + len(x["instructions"]) for x in out)))
+print("fragen.json: %d Fragen in %d Szenarien (App v%s), längster Prompt %d Zeichen" % (len(out), len(SZ) + len(MODUS), v, max(len(x["prompt"]) + len(x["instructions"]) for x in out)))

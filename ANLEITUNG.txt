@@ -43,6 +43,24 @@ WICHTIG
 - Auf dem PC dieselbe Adresse öffnen und das Backup über das Zahnrad
   oben > "Sicherung" einspielen, um die Daten dort zu sehen.
 - App aktualisieren: geänderte Dateien wieder über "Upload files" hochladen.
-  Die neue Fassung erscheint beim übernächsten Öffnen der App.
+  Beim nächsten Öffnen meldet die App "Update bereit": "Jetzt aktualisieren"
+  lädt die neue Fassung, "Später" wartet bis zum nächsten Start.
 - Das Repository ist öffentlich: Jeder kann den Programmcode sehen und die
   leere App öffnen, aber niemand deine Trainingsdaten.
+
+
+WO FINDE ICH WAS? (Stand Version 239)
+-------------------------------------
+- Ernährung: oben die Bereiche Heute (Essen eintragen, Kalorienziel,
+  Rückblick), Lebensmittel, Meal Prep, Supplemente und Vorrat.
+- Training: Kalender, Einheit starten, Sätze bzw. Ausdauer eintragen.
+- Fortschritt: ob du stärker wirst.
+- Körper: Gewicht, Maße, Phasen; ganz unten deine Angaben für die
+  Kalorienempfehlung und "Makros anpassen".
+- Plan: Trainingstage und Übungen, darunter der Übungskatalog zum
+  Aufklappen und ganz unten "Plan-Code einfügen".
+- Zahnrad oben: Sicherung, Export, Bericht, Profile, Hilfe, "Was ist neu?",
+  Darstellung, Nutzung (Training, Schlafenszeit, Wasser) und die Einführung.
+- Glocke oben: Nachrichten der App (Backup, Vorrat fast leer, neue Version).
+- Im Modus "Nur Ernährung" gibt es nur Ernährung und Körper, im Modus
+  "Ausdauer" entfällt der Plan.
