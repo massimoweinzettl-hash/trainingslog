@@ -2,7 +2,7 @@
 
 Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Repo arbeiten (Claude, ChatGPT/Codex). **Zuerst lesen, bei jeder Änderung mitpflegen.** Kurz halten: nur der aktuelle Stand, keine Geschichte (die steht in `VERLAUF.md`). Das Repo ist öffentlich – hier nichts Persönliches eintragen.
 
-**Stand:** v264 (22.11.2026)
+**Stand:** v265 (22.11.2026)
 
 ## Vor jeder Arbeit
 1. `git pull` und `git log --oneline -15`: Hat der andere Assistent seit dem letzten Mal etwas geändert? Dann diese Änderungen zuerst durchsehen und Auffälligkeiten dem Besitzer melden, nicht ungefragt im fremden Bereich umbauen.
@@ -27,7 +27,7 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
 - Antworten an den Besitzer auf Deutsch, kurz; Terminal-Befehle als kopierbaren Codeblock.
 
 ## Technik
-- **Alles in `index.html`** (HTML, CSS, JS in einer IIFE, kein Build). Einzige Bibliothek: `zxing.min.js` (Barcode). `sw.js` = Service Worker (Offline-Cache, Updates). Schriften und Icons im Repo.
+- **Alles in `index.html`** (HTML, CSS, JS in einer IIFE, kein Build). Einzige Bibliothek: `zxing.min.js` (Barcode). `sw.js` = Service Worker (Offline-Cache, Updates). Schriften und Icons im Repo. Neue Dateien, die offline da sein müssen (z. B. Bilder in `maskottchen/`), in `sw.js` (`FILES`, dann `CACHE` hochzählen), in `SWC`/`SWF` in `index.html` und in `app/copy-web.mjs` eintragen.
 - **Daten nur lokal** (IndexedDB „trainingslog“ + Journal in localStorage, Reserve im alten localStorage). Schreiben nur über `put()`/`persist()`. Bestehende Daten müssen nach Updates lesbar bleiben (Migrationen); neue Felder auch in der Import-Prüfung (`importText`/`clean`) erlauben.
 - Docs: `workout` (`w_<Datum>_<Tag>`), `body` (`b_<Datum>`), `nutri` (`n_<Datum>`, Einträge mit `p`, `kcal`, `f`, `c`, `n` = Nährstoffvektor nach `NUTK`, `it`/`amt` = Lebensmittel und Menge), `settings`, `food` (eigene Lebensmittel, Favoriten, Meal Prep, Präparate, Gerichte), `cardio` (`c_<Datum>_<id>`), `plan`.
 - **Farben nur über CSS-Tokens** (`:root`, Dunkel-Blöcke, Design-Blöcke `data-look`/`data-skin`). Makros: Protein `--pr` Orange, Fett `--m-f` Gelb, Kohlenhydrate `--m-c` Neon Mint, Koffein `--caf` Lila.
@@ -54,7 +54,7 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
   - **Plan:** Sätze pro Muskelgruppe, Trainingstage, Plan teilen/Plan-Code, Assistent, Übungskatalog.
 - **Zahnrad:** Design, Hell/Dunkel, Farbenblind, Haptik, Trainingsart; Daten & Hilfe (Sicherung, Export, Bericht, Profile, Hilfe, Was ist neu?).
 - **Modi:** Kraft, Ausdauer (ohne Plan), beides, „Nur Ernährung“ (nur Ernährung und Körper) – `TABS_FOOD`/`TABS_CARDIO`.
-- **Designs:** Standard, Magerquark (`data-skin="quark"`, hell), Hähnchen, Reis & Brokkoli (`data-skin="huhn"`, hell, seit v259), Sky Blue (`data-skin="sky"`, hell, seit v263, ersetzt „Gym Kawaii“; je Reiter ein Küken über `html[data-tab]`, seit v264 eine Figur im Kawaii-/Chibi-Stil in fünf Posen, 220×108 px; Bilder nur über `python3 app/design/sky-gen.py --apply index.html` ändern, nicht von Hand; Dunkelmodus später), Aurora, Diät (`data-look="hell"`), Aufbau (`data-look="winter"`). Designs mit eigenem `data-skin` stehen in `SKINS` (Wert = erzwungenes Hell/Dunkel oder "" = folgt der Einstellung); interne Kennungen nicht umbenennen (Merker beim Nutzer).
+- **Designs:** Standard, Magerquark (`data-skin="quark"`, hell; seit v265 je Reiter ein Quarkbecher als fertiges Bild `maskottchen/quark-*.png`, erzeugt mit `app/design/quark-maskottchen.py` aus der Vorlage des Besitzers), Hähnchen, Reis & Brokkoli (`data-skin="huhn"`, hell, seit v259), Sky Blue (`data-skin="sky"`, hell, seit v263, ersetzt „Gym Kawaii“; je Reiter ein Küken über `html[data-tab]`, seit v264 eine Figur im Kawaii-/Chibi-Stil in fünf Posen, 220×108 px; Bilder nur über `python3 app/design/sky-gen.py --apply index.html` ändern, nicht von Hand; Dunkelmodus später), Aurora, Diät (`data-look="hell"`), Aufbau (`data-look="winter"`). Designs mit eigenem `data-skin` stehen in `SKINS` (Wert = erzwungenes Hell/Dunkel oder "" = folgt der Einstellung); interne Kennungen nicht umbenennen (Merker beim Nutzer).
 - **Rundgang** (`TOUR`): Willkommen → Ernährung → Training → Fortschritt → Körper → Plan → Zahnrad → Einstellungen.
 
 ## Offen

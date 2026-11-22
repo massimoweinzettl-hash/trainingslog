@@ -819,6 +819,20 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 [data-skin="quark"] .fmhead { background: var(--qtint); border: 1px solid #e0e8f7; border-radius: 12px; padding: 4px 6px 4px 4px }
 [data-skin="quark"] .fmhead input:not([type="checkbox"]) { background: transparent }
 [data-skin="quark"] .cupboard { background: var(--qtint); border-color: #e0e8f7 }
+/* v265 (Konzept des Nutzers „Magerquark-Maskottchen“, Vorlage aus ChatGPT): je Reiter ein Quarkbecher über der Reiterleiste –
+   fertige Bilder maskottchen/quark-*.png (aus der Vorlage ausgeschnitten, Marken-Etikett entfernt; app/design/quark-maskottchen.py).
+   Platz zwischen Glocke und Speicher-Hinweis; in der iPhone-App (KI-Knopf, .haski, Hinweis „gespeichert“ entfällt) mittig.
+   Bei einem Speicher-Fehler tritt der Becher zurück, damit die Meldung lesbar bleibt. Einstellungen ohne Becher. */
+[data-skin="quark"] .top { position: relative; min-height: 84px }
+[data-skin="quark"] .top::after { content: ""; position: absolute; left: 100px; top: -12px; width: 122px; height: 108px; pointer-events: none;
+  background: url("maskottchen/quark-home.png") no-repeat center / contain }
+[data-skin="quark"] .top.haski::after { left: 50%; transform: translateX(-50%) }
+[data-skin="quark"][data-tab="train"] .top::after { background-image: url("maskottchen/quark-train.png") }
+[data-skin="quark"][data-tab="prog"] .top::after { background-image: url("maskottchen/quark-prog.png") }
+[data-skin="quark"][data-tab="body"] .top::after { background-image: url("maskottchen/quark-body.png") }
+[data-skin="quark"][data-tab="plan"] .top::after { background-image: url("maskottchen/quark-plan.png") }
+[data-skin="quark"][data-tab="set"] .top::after, [data-skin="quark"] .top:has(.sync.err)::after { display: none } [data-skin="quark"][data-tab="set"] .top { min-height: 0 }
+@media (max-width: 380px) { [data-skin="quark"] .top::after { left: 92px; width: 90px; height: 80px; top: -2px } [data-skin="quark"] .top.haski::after { left: 50% } }
 /* v259 (Vorlage des Nutzers aus ChatGPT): Design „Hähnchen, Reis & Brokkoli“ – warmes Creme, Orange als Akzent, Grün als Zweitfarbe,
    gezeichnete Hähnchenkeule, Reisschale und Brokkoli oben, orange-grüne Schwünge an den Karten und unten. Hell wie Magerquark (data-skin="huhn").
    Links und i bleiben blau wie in der Vorlage. Alles selbst gezeichnet (SVG). */
@@ -1024,8 +1038,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 264; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 265; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 265, tab: "home", text: "Design „Magerquark“: Je Reiter steht jetzt ein kleiner Quarkbecher über der Leiste – mit Shake, Reis und Brokkoli, beim Bizeps, mit Pokal, mit Maßband und als Coach." },
     { v: 264, tab: "home", text: "Design „Sky Blue“: Die Küken sind neu gezeichnet – rundlicher und knuffiger, mit großen glänzenden Augen, rosigen Wangen und weichen Schattierungen. In allen Reitern ist es jetzt dieselbe Figur, und sie ist etwas größer." },
     { v: 263, tab: "home", text: "Neues Design „Sky Blue“: ruhiges Hellblau, klare Schrift, blaue Diagramme – und je Reiter ein Küken: Shake mit Reis und Brokkoli, Bizeps, Pokal, Maßband und Coach mit Pfeife. Es ersetzt „Gym Kawaii“." },
     { v: 262, tab: "home", text: "Essen im Rückblick: Mahlzeiten auf- und zuklappen springt nicht mehr, die Überschrift bleibt, wo sie ist. Der Rückblick merkt sich auf/zu getrennt von „Heute“." },
@@ -2096,7 +2111,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
      (Start: alle 30 min, Rückkehr in die App: alle 5 min), erscheint der Hinweis #upd in der Mitte (seit v85). */
   /* Seit v100 (Fable-Prüfung): Update leert den Cache nicht mehr (sonst fehlten offline zxing/Körperkarte), sondern legt die neue
      index.html vorher in den Cache. Ohne Netz kein Neuladen, damit keine leere Seite entsteht. SWC muss zu CACHE in sw.js passen. */
-  var SWC = "trainingslog-v4", SWF = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./inter.woff2", "./space-grotesk.woff2", "./zxing.min.js", "./koerperkarte.png", "./koerperkarte-licht.jpg"];
+  var SWC = "trainingslog-v5", SWF = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./inter.woff2", "./space-grotesk.woff2", "./zxing.min.js", "./koerperkarte.png", "./koerperkarte-licht.jpg", "./maskottchen/quark-home.png", "./maskottchen/quark-train.png", "./maskottchen/quark-prog.png", "./maskottchen/quark-body.png", "./maskottchen/quark-plan.png"];
   function cacheHeal() { /* fehlende Offline-Dateien nachladen (z. B. nach altem Update mit Cache-Leeren) */
     if (!window.caches || navigator.onLine === false || location.protocol === "file:" || !("serviceWorker" in navigator)) return;
     caches.open(SWC).then(function (c) { SWF.forEach(function (f) { c.match(f, { ignoreSearch: true }).then(function (h) { if (!h) c.add(f).catch(function () {}); }); }); }).catch(function () {});
