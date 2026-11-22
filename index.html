@@ -1021,8 +1021,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 261; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 262; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 262, tab: "home", text: "Essen im Rückblick: Mahlzeiten auf- und zuklappen springt nicht mehr, die Überschrift bleibt, wo sie ist. Der Rückblick merkt sich auf/zu getrennt von „Heute“." },
     { v: 261, tab: "home", text: "Neues Design „Gym Kawaii“: Violett mit süßen Küken im Gym – je Reiter ein anderes (Hantel, Bizeps, schlafend). Es folgt Hell/Dunkel. Dazu: Die Reiterleiste zittert beim Scrollen nicht mehr." },
     { v: 260, tab: "home", text: "Essensliste nach Mahlzeiten: Frühstück, Mittag, Abendessen und Snacks, automatisch nach Uhrzeit. Überschrift antippen klappt ein und aus, eingeklappt stehen rechts die Makros. Zum Verschieben einen Eintrag gedrückt halten und auf eine andere Mahlzeit ziehen – oder Eintrag antippen und die Mahlzeit wählen." },
     { v: 259, tab: "home", text: "Neues Design „Hähnchen, Reis & Brokkoli“: warmes Creme mit Orange und Grün, Hähnchenkeule, Reis und Brokkoli oben. Die Designs „Hölle“ und „Winter Arc“ heißen jetzt „Diät“ und „Aufbau“. Zahnrad → Design." },
@@ -3325,7 +3326,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     if (!ent.length) return h + '<p class="small muted">Keine Einträge an diesem Tag.</p>' + addb;
     var s = ent.reduce(function (a, e) { return { k: a.k + (e.kcal || 0), p: a.p + (e.p || 0) }; }, { k: 0, p: 0 });
     h += '<p class="small"><b>' + nf(s.k) + " kcal</b> · " + nf(s.p) + " g Eiweiß" + (goal ? ' · Ziel ' + nf(goal) + ' kcal <b class="' + (s.k > goal * 1.1 ? "eover" : s.k <= goal ? "eok" : "") + '">' + (s.k > goal ? "+" : "−") + nf(Math.abs(s.k - goal)) + "</b>" : "") + "</p>";
-    return h + nListHtml(ent, d, foodDoc()) + addb; /* v215: wie unter Ernährung – Uhrzeit, ✕, Gericht antippen = Zutaten */
+    return h + nListHtml(ent, d, foodDoc(), "r") + addb; /* v215: wie unter Ernährung – Uhrzeit, ✕, Gericht antippen = Zutaten */
   }
   /* Vitamine & Mineralstoffe (seit v99): heute oder Schnitt der letzten 7 Tage mit Einträgen. */
   /* Tägliche Einnahme (seit v101, Wunsch des Nutzers): food.daily = [{id, item, amt, from, to?}], zählt automatisch an jedem Tag
@@ -6189,14 +6190,14 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   function mzAuto(t) { if (!HMRE.test(t || "")) return "s"; var m = +t.slice(0, 2) * 60 + +t.slice(3, 5); return m >= 300 && m < 630 ? "f" : m >= 660 && m < 870 ? "m" : m >= 1050 ? "a" : "s"; }
   function mzOf(e) { return /^[fmas]$/.test(e.mz) ? e.mz : mzAuto(e.t); }
   function mzOpen() { try { var o = JSON.parse(localStorage.getItem("trainingslog-mzopen") || "{}"); return o && typeof o === "object" ? o : {}; } catch (x) { return {}; } }
-  function mzIsOpen(k) { var o = mzOpen(); return o[k] !== 0; }
+  function mzIsOpen(k) { var o = mzOpen(); return o[k] !== 0; } /* k = f|m|a|s (Heute) bzw. rf|rm|ra|rs (Rückblick) */
   function mzSum(list) { var sm = { p: 0, f: 0, c: 0, k: 0, cf: 0 }; list.forEach(function (e) { sm.p += e.p || 0; sm.k += e.kcal || 0; sm.cf += e.caf || 0; if (e.f != null) sm.f += e.f; if (e.c != null) sm.c += e.c; }); return sm; }
-  function nListHtml(ent, date, fd) {
+  function nListHtml(ent, date, fd, ctx) { /* ctx "r" = Essen im Rückblick: eigener Auf-/Zu-Merker (v261) */
     if (!ent.length) return "";
     var grp = {}; MZ.forEach(function (g) { grp[g[0]] = []; }); ent.forEach(function (e) { grp[mzOf(e)].push(e); });
     return '<ul class="nlist" data-nd="' + date + '">' + MZ.map(function (g) {
-      var list = grp[g[0]], op = mzIsOpen(g[0]), sm = mzSum(list);
-      var head = '<li class="ngrp' + (op ? " open" : "") + '" data-mz="' + g[0] + '"><button class="ngbtn" data-act="mztog" data-id="' + g[0] + '" aria-expanded="' + op + '"><span class="ngchev" aria-hidden="true">' + (op ? "▾" : "▸") + "</span><b>" + g[1] + "</b>" + (list.length ? '<span class="muted small">' + list.length + "</span>" : "") + "</button>" +
+      var mk = (ctx || "") + g[0], list = grp[g[0]], op = mzIsOpen(mk), sm = mzSum(list);
+      var head = '<li class="ngrp' + (op ? " open" : "") + '" data-mz="' + g[0] + '"><button class="ngbtn" data-act="mztog" data-id="' + mk + '" aria-expanded="' + op + '"><span class="ngchev" aria-hidden="true">' + (op ? "▾" : "▸") + "</span><b>" + g[1] + "</b>" + (list.length ? '<span class="muted small">' + list.length + "</span>" : "") + "</button>" +
         (!op && list.length ? '<span class="nnm ngsum">' + nMac(sm.p, sm.f, sm.c, '<span class="nkc">' + Math.round(sm.k).toLocaleString("de-DE") + " kcal</span>") + "</span>" : !op && !list.length ? '<span class="muted small ngsum">–</span>' : "") + "</li>";
       if (!op) return head;
       if (!list.length) return head + '<li class="ngempty muted small" data-mz="' + g[0] + '">Noch nichts' + (date === today() ? " – zum Verschieben einen Eintrag gedrückt halten und hierher ziehen." : "") + "</li>";
@@ -7036,10 +7037,10 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* v260 (Wunsch des Nutzers): Einträge per Drag and drop in eine andere Mahlzeit ziehen. Kurz gedrückt halten (450 ms, ohne zu bewegen),
      dann folgt eine Kopie dem Finger; über einer Mahlzeit (auch eingeklappt) loslassen. Eigene Umsetzung mit Touch- und Mausereignissen,
      weil HTML-Drag-and-drop auf dem iPhone mit dem Finger nicht geht. Während des Ziehens kein Scrollen und kein Reiterwechsel. */
-  function mzMove(date, eid, mz) {
+  function mzMove(date, eid, mz, rb) {
     var nd = clone(S.nutri["n_" + date]); if (!nd || !/^[fmas]$/.test(mz)) return;
     nd.entries.forEach(function (e) { if (e.id === eid) { if (mz === mzAuto(e.t)) delete e.mz; else e.mz = mz; } });
-    put("n_" + date, nd); var o = mzOpen(); if (o[mz] === 0) { o[mz] = 1; try { localStorage.setItem("trainingslog-mzopen", JSON.stringify(o)); } catch (x) {} }
+    put("n_" + date, nd); var o = mzOpen(), mk = (rb ? "r" : "") + mz; if (o[mk] === 0) { o[mk] = 1; try { localStorage.setItem("trainingslog-mzopen", JSON.stringify(o)); } catch (x) {} }
     var y = window.scrollY; renderHome(); window.scrollTo(0, y);
   }
   var ND = null, NDCLICK = 0;
@@ -7058,7 +7059,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     if (y < 70) window.scrollBy(0, -12); else if (y > window.innerHeight - 70) window.scrollBy(0, 12);
   }
   function ndCancel() { if (!ND) return; clearTimeout(ND.tm); if (ND.g) ND.g.remove(); if (ND.li) ND.li.classList.remove("ndrag"); document.body.classList.remove("ndragging"); if (ND.ul) ND.ul.querySelectorAll(".ndrop").forEach(function (h) { h.classList.remove("ndrop"); }); ND = null; }
-  function ndEnd() { if (!ND) return; var on = ND.on, d = ND.date, id = ND.id, mz = ND.mz, from = ND.from; ndCancel(); if (!on) return; NDCLICK = Date.now(); if (mz && mz !== from) mzMove(d, id, mz); }
+  function ndEnd() { if (!ND) return; var on = ND.on, d = ND.date, id = ND.id, mz = ND.mz, from = ND.from, rb = !!ND.ul.closest("#eatbox"); ndCancel(); if (!on) return; NDCLICK = Date.now(); if (mz && mz !== from) mzMove(d, id, mz, rb); }
   function ndDown(ev, x, y) {
     var li = ev.target.closest && ev.target.closest(".nlist li.nent"); if (!li || !S.ready || ev.target.closest("input, select, textarea, .rbtn")) return;
     var ul = li.closest(".nlist"); ND = { li: li, ul: ul, id: li.dataset.eid, from: li.dataset.mz, date: ul.dataset.nd || today(), x: x, y: y, on: false };
@@ -7538,7 +7539,11 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     }
     else if (a === "exclear") { S.exFilter = ""; var fi = $("exfilter"); fi.value = ""; b.hidden = true; $("exlist").innerHTML = exListHtml(); fi.focus(); }
     else if (a === "hsec") { S.homeSec = id; renderHome(); window.scrollTo(0, 0); } /* v238 */
-    else if (a === "mztog") { var mo = mzOpen(); mo[id] = mzIsOpen(id) ? 0 : 1; try { localStorage.setItem("trainingslog-mzopen", JSON.stringify(mo)); } catch (x) {} var y1 = window.scrollY; renderHome(); window.scrollTo(0, y1); } /* v260 */
+    else if (a === "mztog") { /* v260; v261: angetippte Überschrift bleibt an ihrer Stelle (Nutzer: im Rückblick sprang es nach oben) */
+      var mo = mzOpen(), ul0 = b.closest(".nlist"), inRb = !!b.closest("#eatbox"), top0 = b.getBoundingClientRect().top; mo[id] = mzIsOpen(id) ? 0 : 1; try { localStorage.setItem("trainingslog-mzopen", JSON.stringify(mo)); } catch (x) {}
+      var y1 = window.scrollY; renderHome(); window.scrollTo(0, y1);
+      var nb = document.querySelector((inRb ? "#eatbox " : "#tab-home ") + '.nlist[data-nd="' + (ul0 ? ul0.dataset.nd : "") + '"] button[data-act="mztog"][data-id="' + id + '"]');
+      if (nb) window.scrollBy(0, nb.getBoundingClientRect().top - top0); }
     else if (a === "fmtog") { S.mpEx = S.mpEx || {}; S.mpEx[id] = !S.mpEx[id]; var y0 = window.scrollY; renderHome(); window.scrollTo(0, y0); } /* v258 */
     else if (a === "bsec") { bodySecGo(id); window.scrollTo(0, 0); } /* v257 */
     else if (a === "exgo") exCatGo(id); /* v237: Übungskatalog im Plan */
@@ -7841,7 +7846,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
       if (nv > 0 && nv <= 5000) { var fdq = foodDoc(); ndq.entries = ndq.entries.map(function (e) { return e.id !== nid ? e : t.dataset.ne ? nReAmt(e, fdq, nv) : nReQ(e, Math.min(nv, 20)); }); put("n_" + ned, ndq); }
       var yq = window.scrollY; renderHome(); window.scrollTo(0, yq);
     }
-    else if (t.dataset.nmz) { mzMove(t.dataset.nd || today(), t.dataset.nmz, t.value); } /* v260 */
+    else if (t.dataset.nmz) { mzMove(t.dataset.nd || today(), t.dataset.nmz, t.value, !!t.closest("#eatbox")); } /* v260 */
     else if (t.dataset.nt) {
       var ntd = t.dataset.nd || today(), nd2 = clone(S.nutri["n_" + ntd]); if (!nd2) return;
       nd2.entries.forEach(function (e) { if (e.id === t.dataset.nt) { if (HMRE.test(t.value)) e.t = t.value; else delete e.t; } });
