@@ -2,7 +2,7 @@
 
 Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Repo arbeiten (Claude, ChatGPT/Codex). **Zuerst lesen, bei jeder Änderung mitpflegen.** Kurz halten: nur der aktuelle Stand, keine Geschichte (die steht in `VERLAUF.md`). Das Repo ist öffentlich – hier nichts Persönliches eintragen.
 
-**Stand:** v254 (22.11.2026)
+**Stand:** v255 (22.11.2026)
 
 ## Vor jeder Arbeit
 1. `git pull` und `git log --oneline -15`: Hat der andere Assistent seit dem letzten Mal etwas geändert? Dann diese Änderungen zuerst durchsehen und Auffälligkeiten dem Besitzer melden, nicht ungefragt im fremden Bereich umbauen.
@@ -44,8 +44,8 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
 - Vor dem Veröffentlichen den Weg des Nutzers selbst durchklicken, nicht nur die neue Funktion.
 
 ## Aufbau der App
-- **Kopfzeile:** oben links Zahnrad (Einstellungen), KI-Knopf (nur iPhone-App), Glocke (Hinweise, neue Version); rechts Status und Versionsnummer.
-- **Reiter:** Ernährung · Training · Fortschritt · Körper · Plan (Wischen zwischen Reitern).
+- **Kopfzeile** (scrollt mit, nicht fest): links Zahnrad, Mitte Name des aktuellen Reiters (`#toptitle`, in Designs mit Motto darunter), rechts KI-Knopf (nur iPhone-App) und Glocke. Version und Speicherstatus stehen im Zahnradmenü unter „App“; ein Speicherfehler erscheint als rote Zeile unter der Kopfzeile.
+- **Reiterleiste fest unten** (seit v255): Ernährung · Training · Fortschritt · Körper · Plan, aktiver Reiter in Akzentfarbe; Wischen zwischen Reitern. Bei offener Tastatur ausgeblendet (`body.kbd`). Rundgang-Karte und Fehlermeldung sitzen über der Leiste. Feste Elemente unten immer über der Leiste platzieren.
   - **Ernährung** mit Bereichen Heute · Lebensmittel · Meal Prep · Supplemente · Vorrat. *Heute:* Koffein, Trinken, Kalorien und Makros, Eintragen (Suche, Scan, Schätzen, Gericht berechnen), Liste, Vitamine & Mineralstoffe (Zeile antippen = Quellen), Essen im Rückblick (immer offen, Nachtragen für frühere Tage).
   - **Training:** Kalender, Einheit eintragen, Übungen ersetzen/hinzufügen, Training beenden; Ausdauer.
   - **Fortschritt:** Kraft nach Körperbereichen (Körperkarte), Verlauf je Übung, Rekorde, Ausdauer.
@@ -57,6 +57,6 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
 - **Rundgang** (`TOUR`): Willkommen → Ernährung → Training → Fortschritt → Körper → Plan → Zahnrad → Einstellungen.
 
 ## Offen
-- **Rundgang (v241–v246):** (1) Karte sagt Zahnrad „oben rechts“, es sitzt oben links; (2) Station „Fortschritt“ erscheint im Modus „Nur Ernährung“, obwohl der Reiter fehlt; (3) Start aus einem anderen Ernährungsbereich lässt diesen offen, die Karte erklärt aber „Heute“. Der Besitzer entscheidet, wer das behebt.
+- **Rundgang (v241–v246):** (1) „Zahnrad oben rechts“ ist seit v255 behoben; (2) Station „Fortschritt“ erscheint im Modus „Nur Ernährung“, obwohl der Reiter fehlt; (3) Start aus einem anderen Ernährungsbereich lässt diesen offen, die Karte erklärt aber „Heute“. Der Besitzer entscheidet, wer das behebt.
 - Markenprodukte ohne Nährstoffwerte (z. B. Haferflocken einer Marke) haben keine Ballaststoffe/Vitamine – Übernahme vom Grundlebensmittel angeboten, nicht beauftragt.
 - Kohlenhydrat-Mint und das Grün abgehakter Supplemente liegen nah beieinander – Besitzer prüft.
