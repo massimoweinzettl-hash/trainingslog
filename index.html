@@ -531,11 +531,11 @@ body.reporting { overflow: hidden }
 .dlamt { display: flex; flex-direction: row; align-items: center; gap: 6px; font-size: 12px } .dlamt input { width: 56px } .dlamt select { width: auto; min-width: 64px; min-height: 36px; padding: 4px 8px; font-size: 14px }
 .dlamt input.dlfrom { width: 7.4em; min-height: 36px; padding: 4px 6px; font-size: 14px; font-variant-numeric: tabular-nums; background: var(--sunken); border: 0; border-radius: 8px; color: var(--ink) } .dlfrom::-webkit-calendar-picker-indicator { display: none }
 .fitem .fnut { margin-top: 4px; grid-column: 1 / -1 } .fnut summary { cursor: pointer; color: var(--accent) } .fnutg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 6px } .fnutg label { font-size: 11.5px; line-height: 1.2; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px }
-.nutrow[data-ns] { cursor: pointer; border-radius: 6px; -webkit-tap-highlight-color: transparent } .nutrow.nso .nl > span { font-weight: 600 }
-.nsrc { font-size: 12px; padding: 0 0 8px 120px; margin-top: -1px } .nsrc > div { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 2px 0; border-bottom: 1px solid var(--line) }
+.nutrow[data-ns] { cursor: pointer; border-radius: 6px; -webkit-tap-highlight-color: transparent } .nutrow .nl > .nchev { flex: none; overflow: visible; color: var(--muted); font-size: 11px; margin-left: -1px } /* v251 (Wunsch des Nutzers): Pfeil wie beim Wasser */ .nutrow.nso .nl > span { font-weight: 600 }
+.nsrc { font-size: 12px; padding: 0 0 8px 136px; margin-top: -1px } .nsrc > div { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 2px 0; border-bottom: 1px solid var(--line) }
 .nsrc > div:last-of-type { border-bottom: 0 } .nsrc > div > span { min-width: 0; overflow-wrap: anywhere } .nsrc > div > b { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums } .nsrc > div.s > b, .nsrc > div.s > span { opacity: .72 } .nsrc p { margin: 2px 0 }
-.nutsub { font-size: 12px; color: var(--muted); padding: 0 0 4px 120px; margin-top: -2px } .nutsub b { font-weight: 600 } .nutsub.sch b { color: hsl(var(--h) var(--nut-s) calc(var(--nut-tl) + var(--lb, 0) * var(--nut-lk) * .5%)) }
-.nutrow { display: grid; grid-template-columns: 112px minmax(0, 1fr) 104px; align-items: center; gap: 8px; font-size: 13px; padding: 3px 0 }
+.nutsub { font-size: 12px; color: var(--muted); padding: 0 0 4px 136px; margin-top: -2px } .nutsub b { font-weight: 600 } .nutsub.sch b { color: hsl(var(--h) var(--nut-s) calc(var(--nut-tl) + var(--lb, 0) * var(--nut-lk) * .5%)) }
+.nutrow { display: grid; grid-template-columns: 128px minmax(0, 1fr) 104px; align-items: center; gap: 8px; font-size: 13px; padding: 3px 0 }
 .nutrow .nl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis } .nutrow .nv { text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums }
 .nutrow .nb { height: 8px; border-radius: 4px; background: var(--sunken); overflow: hidden; display: flex } .nutrow .nb i { display: block; height: 100%; background: var(--accent) } .nutrow .nb i:first-child { border-radius: 4px 0 0 4px } .nutrow .nb i:last-child { border-top-right-radius: 4px; border-bottom-right-radius: 4px }
 .nutrow .nb i.sup { opacity: .42; margin-left: 2px; border-radius: 0 4px 4px 0 } /* v159: Präparate in derselben Farbe wie Essen, nur blasser (statt grau) */ :root { --supc: #8f98a8 } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --supc: #7a8496 } } :root[data-theme="dark"], [data-look] { --supc: #7a8496 }
@@ -918,8 +918,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 250; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 251; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 251, tab: "home", text: "Vitamine & Mineralstoffe: kleiner Pfeil ▾ an jedem Nährstoff zeigt, dass man ihn antippen und die Quellen aufklappen kann." },
     { v: 250, tab: "home", text: "Vitamine & Mineralstoffe: Tippe auf einen Nährstoff, dann siehst du darunter, woher er kommt – alle Einträge und Präparate, sortiert nach Menge (im 7-Tage-Schnitt gleiche Lebensmittel zusammengefasst)." },
     { v: 249, tab: "home", text: "Eigene Lebensmittel ohne Vitamin- und Ballaststoffwerte übernehmen die Werte des gleichnamigen Lebensmittels aus der Bibliothek (z. B. deine Haferflocken). Bisherige Einträge werden nachgerechnet. In der Suche stehen Grundlebensmittel jetzt vor Markenprodukten." },
     { v: 248, tab: "home", text: "„Essen im Rückblick“ unter Heute ist jetzt immer offen, das Aufklappen entfällt." },
@@ -3286,7 +3287,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
         var tot = Math.min(100, pc), fd = ref ? Math.min(tot, fv / ref * 100) : tot, sp = tot - fd;
         return '<span class="nb"><i class="' + cls + '" style="' + st + "width:" + fd.toFixed(1) + '%"></i>' + (sp > 0.05 ? '<i class="sup ' + cls + '" style="' + st + "width:" + sp.toFixed(1) + '%"></i>' : "") + "</span>"; })();
       var nso = !!(S.nsOpen && S.nsOpen[k[0]]);
-      h += '<div class="nutrow' + (x > 0.5 ? " sch" : "") + (sv > 0 ? " two" : "") + (nso ? " nso" : "") + '" data-ns="' + k[0] + '" role="button" tabindex="0" aria-expanded="' + nso + '"' + (x > 0.5 ? ' style="' + st + '"' : "") + '><span class="nl"><span>' + (k[0] === "sfa" ? "Ges. Fette" : k[1]) + "</span>" + ib("nu-" + k[0]) + "</span>" + bar +
+      h += '<div class="nutrow' + (x > 0.5 ? " sch" : "") + (sv > 0 ? " two" : "") + (nso ? " nso" : "") + '" data-ns="' + k[0] + '" role="button" tabindex="0" aria-expanded="' + nso + '"' + (x > 0.5 ? ' style="' + st + '"' : "") + '><span class="nl"><span>' + (k[0] === "sfa" ? "Ges. Fette" : k[1]) + '</span><span class="nchev" aria-hidden="true">' + (nso ? "▴" : "▾") + "</span>" + ib("nu-" + k[0]) + "</span>" + bar +
         '<span class="nv">' + fmt(val) + (k[6] === "info" ? "" : " / " + fmt(k[0] === "sfa" ? Math.round(ref) : ref)) + " " + k[2] + (sv > 0 ? '<span class="nvs"><i class="dot f ' + cls + '" style="' + st + '"></i>' + fmt(rnd(fv)) + ' + <i class="dot f s ' + cls + '" style="' + st + '"></i>' + fmt(rnd(sv)) + "</span>" : "") + "</span></div>" +
         itx("nu-" + k[0], nutInfo(i, ref) + (uls && sv > 0 ? " Heute aus Präparaten: " + fmt(rnd(sv)) + " " + k[2] + " von höchstens " + fmt(uls) + " " + k[2] + "." : ""));
       if (i === IO3) { var ve = r.n && r.n[IEPA] ? r.n[IEPA] / dv : 0, vd = r.n && r.n[IDHA] ? r.n[IDHA] / dv : 0, vr = v - ve - vd;
