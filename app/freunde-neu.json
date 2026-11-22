@@ -122,6 +122,27 @@
           "text": "Neue Aufteilung: Den Reiter „Daten“ gibt es nicht mehr. Lebensmittel, Meal Prep, Supplemente und Vorrat stehen jetzt oben unter Ernährung, deine Angaben und die Makros unten unter Körper, der Übungskatalog im Plan. Sicherung, Export, Bericht, Profile und Hilfe erreichst du über das Zahnrad oben links."
         }
       ]
+    },
+    {
+      "v": 269,
+      "punkte": [
+        {
+          "tab": "home",
+          "text": "Neues Standard-Design „Magerquark“: In jedem Reiter steht oben ein kleiner Quarkbecher – morgens beim Frühstück, tagsüber beim Training und nachts schläft er im Sternenbett. Es gibt ihn hell und dunkel (Nachtblau). Das bisherige Aussehen heißt jetzt „Klassisch“, dazu kommen „Hähnchen, Reis & Brokkoli“ und „Sky Blue“ (Zahnrad → Design)."
+        },
+        {
+          "tab": "home",
+          "text": "Die Essensliste ist nach Frühstück, Mittag, Abendessen und Snacks sortiert, jede Mahlzeit lässt sich einklappen. Einträge verschiebst du durch Gedrückthalten und Ziehen. Bei Vitamine & Mineralstoffe zeigt ein Tipp auf eine Zeile, aus welchen Lebensmitteln der Wert kommt."
+        },
+        {
+          "tab": "body",
+          "text": "Körper ist jetzt wie Ernährung in Bereiche aufgeteilt: Übersicht, Messungen, Phasen, Kalorien und Angaben – mit neuen Bildern, wo genau gemessen wird."
+        },
+        {
+          "tab": "data",
+          "text": "Zahlenfelder markieren beim Antippen den alten Wert – einfach lostippen. Neue Symbole in der Reiterleiste und viele kleine Verbesserungen."
+        }
+      ]
     }
   ]
 }

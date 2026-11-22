@@ -1,11 +1,12 @@
 # Design „Magerquark“: Quark-Maskottchen je Reiter (seit v265, Vorlagen seit v266 einzeln, Schlaf-Serie seit v268).
 # Quelle: Einzelbilder des Nutzers aus ChatGPT (1254 × 1254 px, transparent, ohne Markennamen) in
 # app/design/quark-vorlagen/{home,train,prog,body,plan}.png (Tag) und nacht-{…}.png (schlafend, ab Schlafenszeit bis 6 Uhr;
-# bei nacht-home war ein Karomuster ins Bild gemalt – einmalig entfernt). Dieses Skript richtet alle zehn Becher aneinander aus
+# bei nacht-home war ein Karomuster ins Bild gemalt – einmalig entfernt) und morgen-{…}.png (6–10 Uhr, seit v269).
+# Dieses Skript richtet alle fünfzehn Becher aneinander aus
 # (Mitte und Unterkante des Deckeltexts „Speisequark Magerstufe“), schneidet alle fünf auf dieselbe Fläche zu und
 # schreibt kleine PNGs mit 256 Farben:
 #   python3 app/design/quark-maskottchen.py app/design/quark-vorlagen maskottchen
-# Ergebnis: maskottchen/quark-{…}.png und quark-nacht-{…}.png, eingebunden in index.html über
+# Ergebnis: maskottchen/quark-{…}.png, quark-nacht-{…}.png und quark-morgen-{…}.png, eingebunden in index.html über
 # [data-skin="quark"] … .top::after, offline über sw.js (FILES) und SWF in index.html, iPhone-App über app/copy-web.mjs.
 import sys
 import numpy as np
@@ -26,12 +27,15 @@ def anchor(a):
     ty, tx = np.where(txt)
     return (tx.min() + tx.max()) / 2, ty.max(), tx.max() - tx.min()
 
-SETS = [("", "quark-"), ("nacht-", "quark-nacht-")]      # (Vorlagen-Präfix, Ausgabe-Präfix)
+SETS = [("", "quark-"), ("nacht-", "quark-nacht-"), ("morgen-", "quark-morgen-")]      # (Vorlagen-Präfix, Ausgabe-Präfix)
 
 def main(src, out):
     jobs = [(pre_in + n, pre_out + n) for pre_in, pre_out in SETS for n in NAMES]
     imgs = [np.array(Image.open(f"{src}/{i}.png").convert("RGBA")) for i, o in jobs]
     anc = [anchor(a.astype(int)) for a in imgs]
+    # Verdeckt etwas den Anfang des Schriftzugs (z. B. die Kappe), Mitte vom rechten Rand aus bestimmen
+    mw = float(np.median([w for cx, by, w in anc]))
+    anc = [(cx, by, w) if w >= 0.95 * mw else (cx + w / 2 - mw / 2, by, w) for cx, by, w in anc]
     for (n, _), (cx, by, w) in zip(jobs, anc):
         print(f"{n}: Textmitte x {cx:.0f}, Unterkante y {by}, Breite {w}")
     # Ausdehnung jeder Figur relativ zum Anker → gemeinsame Fläche

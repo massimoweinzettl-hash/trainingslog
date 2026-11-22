@@ -3,7 +3,8 @@
 import { mkdirSync, copyFileSync, rmSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 const files = ["index.html", "manifest.webmanifest", "sw.js", "inter.woff2", "space-grotesk.woff2", "icon-192.png", "icon-512.png", "apple-touch-icon.png", "SCHRIFTEN-LIZENZ.txt", "zxing.min.js", "ZXING-LIZENZ.txt", "koerperkarte.png", "koerperkarte-licht.jpg",
   "maskottchen/quark-home.png", "maskottchen/quark-train.png", "maskottchen/quark-prog.png", "maskottchen/quark-body.png", "maskottchen/quark-plan.png",
-  "maskottchen/quark-nacht-home.png", "maskottchen/quark-nacht-train.png", "maskottchen/quark-nacht-prog.png", "maskottchen/quark-nacht-body.png", "maskottchen/quark-nacht-plan.png"];
+  "maskottchen/quark-nacht-home.png", "maskottchen/quark-nacht-train.png", "maskottchen/quark-nacht-prog.png", "maskottchen/quark-nacht-body.png", "maskottchen/quark-nacht-plan.png",
+  "maskottchen/quark-morgen-home.png", "maskottchen/quark-morgen-train.png", "maskottchen/quark-morgen-prog.png", "maskottchen/quark-morgen-body.png", "maskottchen/quark-morgen-plan.png"];
 rmSync("www", { recursive: true, force: true });
 mkdirSync("www");
 mkdirSync("www/maskottchen");   // v265: Quark-Maskottchen

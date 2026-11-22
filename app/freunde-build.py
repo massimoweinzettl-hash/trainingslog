@@ -38,6 +38,7 @@ STORE = {
     '"trainingslog-planclosed"', '"trainingslog-calview"', '"trainingslog-tour-"',
     '"trainingslog-theme"', '"trainingslog-cvd"', '"trainingslog-haptik"', '"trainingslog-hapst"', '"trainingslog-acc"',  # v137/v138: Hell/Dunkel, Farbenblind-Modus
     '"trainingslog-errors"',  # v177: Fehlerprotokoll
+    '"trainingslog-mzopen"',  # v260: auf-/zugeklappte Mahlzeiten
     '"trainingslog-meas-"',   # v204: Hinweis „Verbrauch jetzt gemessen“ (je Profil)
     '"trainingslog-bell-"',   # v226: ausgeblendete Nachrichten der Glocke (je Profil)
 }

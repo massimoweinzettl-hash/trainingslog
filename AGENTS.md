@@ -2,7 +2,7 @@
 
 Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Repo arbeiten (Claude, ChatGPT/Codex). **Zuerst lesen, bei jeder Änderung mitpflegen.** Kurz halten: nur der aktuelle Stand, keine Geschichte (die steht in `VERLAUF.md`). Das Repo ist öffentlich – hier nichts Persönliches eintragen.
 
-**Stand:** v268 (22.11.2026)
+**Stand:** v269 (22.11.2026)
 
 ## Vor jeder Arbeit
 1. `git pull` und `git log --oneline -15`: Hat der andere Assistent seit dem letzten Mal etwas geändert? Dann diese Änderungen zuerst durchsehen und Auffälligkeiten dem Besitzer melden, nicht ungefragt im fremden Bereich umbauen.
@@ -35,7 +35,7 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
 - Lebensmittel: Bibliothek `FOODLIB` im Code, Nährstoffe `NUTR` (Bundeslebensmittelschlüssel 4.0), Markenprodukte `PROD` (Open Food Facts). Eigene Lebensmittel ohne Nährstoffwerte nutzen die Bibliothekswerte gleichen Namens (`nutSrc`/`nutTwin`).
 - Keine persönlichen Daten in den Code. Keine fremden Bilder; Piktogramme und Symbole sind eigene SVGs.
 - **iPhone-App:** Capacitor (`package.json`, `capacitor.config.json`, `app/copy-web.mjs`); `ios/`, `www/`, `node_modules/` nur lokal beim Besitzer. Lokale KI „Frag die App“ nur dort (Plugin `app/ki-plugin`, Apples On-Device-Modell); in der Web-App kein KI-Knopf.
-- **Freunde-Version** `freunde/`: eingefrorene Kopie, nur auf ausdrückliche Ansage des Besitzers neu erzeugen (`python3 app/freunde-build.py`, Zusammenfassung in `app/freunde-neu.json`).
+- **Freunde-Version** `freunde/` (Stand v269): eingefrorene Kopie, nur auf ausdrückliche Ansage des Besitzers neu erzeugen (`python3 app/freunde-build.py`, Zusammenfassung in `app/freunde-neu.json`; neue `"trainingslog…"`-Speicherschlüssel dort in `STORE` eintragen, sonst bricht das Skript ab).
 
 ## Tests
 - Playwright/Chromium in iPhone-Größe (440 × 956, Touch, hell und dunkel) über `file:///…/index.html`.
@@ -54,7 +54,7 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
   - **Plan:** Sätze pro Muskelgruppe, Trainingstage, Plan teilen/Plan-Code, Assistent, Übungskatalog.
 - **Zahnrad:** Design, Hell/Dunkel, Farbenblind, Haptik, Trainingsart; Daten & Hilfe (Sicherung, Export, Bericht, Profile, Hilfe, Was ist neu?).
 - **Modi:** Kraft, Ausdauer (ohne Plan), beides, „Nur Ernährung“ (nur Ernährung und Körper) – `TABS_FOOD`/`TABS_CARDIO`.
-- **Designs:** Magerquark ist seit v268 das Standard-Design (ohne Merker `trainingslog-look` → „quark“; das frühere „Standard“ heißt „Klassisch“, Kennung "", gemerkt als „std“). Magerquark (`data-skin="quark"`, seit v267 hell und dunkel „Nachtblau“ – folgt Hell/Dunkel, Farben über Tokens `--q…`; seit v265 je Reiter ein Quarkbecher als fertiges Bild `maskottchen/quark-*.png`, nachts (`html[data-night]`, Schlafenszeit bis 6 Uhr, `nightSet()`) schlafend `quark-nacht-*.png`; erzeugt mit `app/design/quark-maskottchen.py` aus den Einzelvorlagen in `app/design/quark-vorlagen/`; bei geänderten Bildern `CACHE` in `sw.js` und `SWC` hochzählen), Hähnchen, Reis & Brokkoli (`data-skin="huhn"`, hell, seit v259), Sky Blue (`data-skin="sky"`, hell, seit v263, ersetzt „Gym Kawaii“; je Reiter ein Küken über `html[data-tab]`, seit v264 eine Figur im Kawaii-/Chibi-Stil in fünf Posen, 220×108 px; Bilder nur über `python3 app/design/sky-gen.py --apply index.html` ändern, nicht von Hand; Dunkelmodus später), Aurora, Diät (`data-look="hell"`), Aufbau (`data-look="winter"`). Designs mit eigenem `data-skin` stehen in `SKINS` (Wert = erzwungenes Hell/Dunkel oder "" = folgt der Einstellung); interne Kennungen nicht umbenennen (Merker beim Nutzer).
+- **Designs:** Magerquark ist seit v268 das Standard-Design (ohne Merker `trainingslog-look` → „quark“; das frühere „Standard“ heißt „Klassisch“, Kennung "", gemerkt als „std“). Magerquark (`data-skin="quark"`, seit v267 hell und dunkel „Nachtblau“ – folgt Hell/Dunkel, Farben über Tokens `--q…`; seit v265 je Reiter ein Quarkbecher als fertiges Bild `maskottchen/quark-*.png`, nachts (`html[data-night]`, Schlafenszeit bis 6 Uhr, `nightSet()`) schlafend `quark-nacht-*.png`, morgens (`html[data-morning]`, 6–10 Uhr) `quark-morgen-*.png`; erzeugt mit `app/design/quark-maskottchen.py` aus den Einzelvorlagen in `app/design/quark-vorlagen/`; bei geänderten Bildern `CACHE` in `sw.js` und `SWC` hochzählen), Hähnchen, Reis & Brokkoli (`data-skin="huhn"`, hell, seit v259), Sky Blue (`data-skin="sky"`, hell, seit v263, ersetzt „Gym Kawaii“; je Reiter ein Küken über `html[data-tab]`, seit v264 eine Figur im Kawaii-/Chibi-Stil in fünf Posen, 220×108 px; Bilder nur über `python3 app/design/sky-gen.py --apply index.html` ändern, nicht von Hand; Dunkelmodus später), Aurora, Diät (`data-look="hell"`), Aufbau (`data-look="winter"`). Designs mit eigenem `data-skin` stehen in `SKINS` (Wert = erzwungenes Hell/Dunkel oder "" = folgt der Einstellung); interne Kennungen nicht umbenennen (Merker beim Nutzer).
 - **Rundgang** (`TOUR`): Willkommen → Ernährung → Training → Fortschritt → Körper → Plan → Zahnrad → Einstellungen.
 
 ## Offen

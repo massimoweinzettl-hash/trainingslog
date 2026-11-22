@@ -2,7 +2,7 @@
 /* Trainingslog – Service Worker: macht die App offline nutzbar.
    Antwortet aus dem Cache und holt im Hintergrund die neue Fassung. Anfragen mit dem Parameter „fresh“
    (Versionsprüfung der App) gehen direkt ans Netz. CACHE nur ändern, wenn sich FILES ändert – dann auch SWC/SWF in index.html anpassen (cacheHeal). */
-const CACHE = "tlfreunde-v247";
+const CACHE = "tlfreunde-v269";
 const FILES = [
   "./",
   "./index.html",
@@ -14,7 +14,22 @@ const FILES = [
   "./space-grotesk.woff2",
   "./zxing.min.js",
   "./koerperkarte.png",
-  "./koerperkarte-licht.jpg"
+  "./koerperkarte-licht.jpg",
+  "./maskottchen/quark-home.png",
+  "./maskottchen/quark-train.png",
+  "./maskottchen/quark-prog.png",
+  "./maskottchen/quark-body.png",
+  "./maskottchen/quark-plan.png",
+  "./maskottchen/quark-nacht-home.png",
+  "./maskottchen/quark-nacht-train.png",
+  "./maskottchen/quark-nacht-prog.png",
+  "./maskottchen/quark-nacht-body.png",
+  "./maskottchen/quark-nacht-plan.png",
+  "./maskottchen/quark-morgen-home.png",
+  "./maskottchen/quark-morgen-train.png",
+  "./maskottchen/quark-morgen-prog.png",
+  "./maskottchen/quark-morgen-body.png",
+  "./maskottchen/quark-morgen-plan.png"
 ];
 
 self.addEventListener("install", (event) => {
