@@ -865,11 +865,11 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 
   <!-- v193 (Wunsch des Nutzers): Haptik beim Reiterwechsel – verdeckter iOS-Schalter in jedem Reiter; Klick geht weiter an den Reiter -->
   <div class="tabs" role="tablist">
-    <button role="tab" data-tab="home" aria-selected="true"><svg class="tabico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v7.5a2 2 0 0 0 2 2V21M5 3v5.5M9 3v5.5"/><path d="M17 21V3c-2.2 1.2-3.3 3.6-3.3 6.6 0 2.4.9 3.9 3.3 4.4"/></svg><span>Ernährung</span><input type="checkbox" switch class="hapsw" tabindex="-1" aria-hidden="true"></button>
-    <button role="tab" data-tab="train" aria-selected="false"><svg class="tabico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 21H16a4.5 4.5 0 0 0 4.5-4.5V6a3 3 0 0 0-6 0v5.2C13 8.2 9 7.4 6.6 9.6c-1.4 1.3-2.7 2-4.1 2.2"/><path d="M14.5 7.6h6"/><path d="M8.6 16c1.6-1 3.4-1 4.8.2"/></svg><span>Training</span><input type="checkbox" switch class="hapsw" tabindex="-1" aria-hidden="true"></button>
-    <button role="tab" data-tab="prog" aria-selected="false"><svg class="tabico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 19.5h17"/><path d="M5 16l4.5-4.5 3.5 3 6.5-7"/><path d="M15 7h4.5v4.5"/></svg><span>Fortschritt</span><input type="checkbox" switch class="hapsw" tabindex="-1" aria-hidden="true"></button>
-    <button role="tab" data-tab="body" aria-selected="false"><svg class="tabico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.6" r="2.1"/><path d="M12 7.4v6.4"/><path d="M5 9.4c2.4 1 4.7 1.5 7 1.5s4.6-.5 7-1.5"/><path d="M8.6 21l1.8-7.2h3.2l1.8 7.2"/></svg><span>Körper</span><input type="checkbox" switch class="hapsw" tabindex="-1" aria-hidden="true"></button>
-    <button role="tab" data-tab="plan" aria-selected="false"><svg class="tabico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3h6v1.5"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4.5"/></svg><span>Plan</span><input type="checkbox" switch class="hapsw" tabindex="-1" aria-hidden="true"></button>
+    <button role="tab" data-tab="home" aria-selected="true"><svg class="tabico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 3v5.2a2.5 2.5 0 0 0 5 0V3"/><path d="M8 3v18"/><path d="M16.5 21V13.2"/><path d="M16.5 13.2c-1.7 0-2.8-2.3-2.8-5.1S14.8 3 16.5 3s2.8 2.3 2.8 5.1-1.1 5.1-2.8 5.1z"/></svg><span>Ernährung</span><input type="checkbox" switch class="hapsw" tabindex="-1" aria-hidden="true"></button>
+    <button role="tab" data-tab="train" aria-selected="false"><svg class="tabico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12h8"/><rect x="5.2" y="6" width="2.8" height="12" rx="1.1"/><rect x="16" y="6" width="2.8" height="12" rx="1.1"/><rect x="2.4" y="8.5" width="2.8" height="7" rx="1"/><rect x="18.8" y="8.5" width="2.8" height="7" rx="1"/></svg><span>Training</span><input type="checkbox" switch class="hapsw" tabindex="-1" aria-hidden="true"></button>
+    <button role="tab" data-tab="prog" aria-selected="false"><svg class="tabico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.8" y="12.5" width="4.4" height="8" rx="1.2"/><rect x="9.8" y="8" width="4.4" height="12.5" rx="1.2"/><rect x="15.8" y="3.5" width="4.4" height="17" rx="1.2"/></svg><span>Fortschritt</span><input type="checkbox" switch class="hapsw" tabindex="-1" aria-hidden="true"></button>
+    <button role="tab" data-tab="body" aria-selected="false"><svg class="tabico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="3.6"/><path d="M4.8 20.5c0-4 3.2-6.6 7.2-6.6s7.2 2.6 7.2 6.6z"/></svg><span>Körper</span><input type="checkbox" switch class="hapsw" tabindex="-1" aria-hidden="true"></button>
+    <button role="tab" data-tab="plan" aria-selected="false"><svg class="tabico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4.5" width="14" height="16.5" rx="2.2"/><rect x="9" y="2.7" width="6" height="3.6" rx="1.1"/><path d="M8.8 13.6l2.3 2.3 4.3-4.6"/></svg><span>Plan</span><input type="checkbox" switch class="hapsw" tabindex="-1" aria-hidden="true"></button>
   </div>
 
   <div id="notice" class="note" hidden></div>
@@ -918,8 +918,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 251; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 252; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 252, tab: "home", text: "Neue Symbole in der Reiterleiste: Besteck, Hantel, Balken, Person und Klemmbrett mit Haken." },
     { v: 251, tab: "home", text: "Vitamine & Mineralstoffe: kleiner Pfeil ▾ an jedem Nährstoff zeigt, dass man ihn antippen und die Quellen aufklappen kann." },
     { v: 250, tab: "home", text: "Vitamine & Mineralstoffe: Tippe auf einen Nährstoff, dann siehst du darunter, woher er kommt – alle Einträge und Präparate, sortiert nach Menge (im 7-Tage-Schnitt gleiche Lebensmittel zusammengefasst)." },
     { v: 249, tab: "home", text: "Eigene Lebensmittel ohne Vitamin- und Ballaststoffwerte übernehmen die Werte des gleichnamigen Lebensmittels aus der Bibliothek (z. B. deine Haferflocken). Bisherige Einträge werden nachgerechnet. In der Suche stehen Grundlebensmittel jetzt vor Markenprodukten." },
