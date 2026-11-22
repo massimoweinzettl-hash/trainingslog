@@ -507,8 +507,8 @@ button.danger, button.ghost.danger { color: var(--bad); font-weight: 650 } butto
 .tpick { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px; background: var(--sunken); margin: 8px 0 }
 .tpick p { margin: 0 }
 .tpres { display: flex; flex-direction: column; gap: 2px; max-height: 420px; overflow-y: auto } .tpres .tpg > .tpitem { width: 100% } .tpres .fcat { margin: 6px 0 2px } #cbr-ni { max-height: min(55vh, 440px) }
-.nutdet summary, .eatdet summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px }
-.nutdet summary::-webkit-details-marker, .eatdet summary::-webkit-details-marker { display: none }
+.nutdet summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px }
+.nutdet summary::-webkit-details-marker { display: none }
 .nutdet summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px } .nutdet summary h2 { margin: 0 }
 .nutdet summary::after { content: "›"; font-size: 22px; line-height: 1; color: var(--muted); transform: rotate(90deg); transition: transform .15s } .nutdet[open] summary::after { transform: rotate(-90deg) } .nutdet[open] summary { margin-bottom: 8px }
 .nutp { margin-bottom: 6px }
@@ -540,10 +540,7 @@ body.reporting { overflow: hidden }
 .nutrow .nv .nvs { display: block; font-size: 11px; line-height: 1.2 } .nvs .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin: 0 3px 0 0; vertical-align: 0 } .nvs .dot.f { background: var(--accent) } .nvs .dot.f.sc { background: hsl(var(--h) var(--nut-s) calc(var(--nut-l) + var(--lb, 0) * var(--nut-lk) * 1%)) } :root[data-cvd] .nvs .dot.f:not(.sc) { background: var(--cvd-low) } .nvs .dot.s { opacity: .42; margin-left: 1px }
 .nutleg { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin: 2px 0 4px } .nutleg i { display: inline-block; width: 16px; height: 8px; border-radius: 3px; background: var(--accent); margin-right: 5px; vertical-align: 0 } .nutleg i.sup { opacity: .42 } .nutleg i.sc { background: hsl(var(--h) var(--nut-s) calc(var(--nut-l) + var(--lb, 0) * var(--nut-lk) * 1%)) } .nutleg { flex-wrap: wrap; row-gap: 2px }
 .nutrow .nb i.full, .nutrow .nb i.ok { background: var(--good) } .nutrow .nb i.over { background: var(--bad) } .nutrow .nb i.sc { background: hsl(var(--h) var(--nut-s) calc(var(--nut-l) + var(--lb, 0) * var(--nut-lk) * 1%)) } .nutrow.sch .nv { color: hsl(var(--h) var(--nut-s) calc(var(--nut-tl) + var(--lb, 0) * var(--nut-lk) * .5%)); font-weight: 600 } .nuthil { color: var(--warn); margin: 4px 0 0 } .nutrow .nbinfo { background: none }
-.eatdet summary h2 { margin: 0 }
-.eatdet summary::after { content: "›"; font-size: 22px; line-height: 1; color: var(--muted); transform: rotate(90deg); transition: transform .15s }
-.eatdet[open] summary::after { transform: rotate(-90deg) }
-.eatdet[open] summary { margin-bottom: 8px }
+.eatdet > h2 { margin: 0 0 8px }
 .flib { border-top: 1px solid var(--line) } .flib summary { padding: 10px 2px; font-weight: 600; cursor: pointer }
 .tpitem { display: flex; align-items: center; gap: 10px; text-align: left; background: var(--surface); color: var(--ink); border: 0; border-radius: 10px; padding: 6px 10px; min-height: 44px; font: 500 15px var(--body) }
 .tpitem > span:nth-of-type(1) { flex: 1; min-width: 0 }
@@ -918,8 +915,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 247; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 248; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 248, tab: "home", text: "„Essen im Rückblick“ unter Heute ist jetzt immer offen, das Aufklappen entfällt." },
     { v: 247, tab: "home", text: "Kohlenhydrate haben jetzt überall die Farbe Neon Mint – in der Essensliste, im Makrobalken, in der Makroverteilung und in den Diagrammen." },
     { v: 246, tab: "home", text: "Die Änderung aus v245 am oberen Navigationsbereich wurde zurückgenommen. Die bisherige Darstellung ist wiederhergestellt." },
     { v: 244, tab: "home", text: "Im Rundgang wird der Hintergrund nur noch leicht abgedunkelt statt unscharf gezeichnet. Der obere Kopfbereich bleibt klar erkennbar." },
@@ -6781,8 +6779,8 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     h += m58Card(); /* v226: Umzugs-Karte steht jetzt unter der Glocke */
     h += '<div class="block foodblk">' + foodBlock(t, E, E ? di : null, E ? mc : null, head, stats) + "</div>";
     h += '<details class="block nutdet"' + (S.nutOpen ? " open" : "") + '><summary><h2>Vitamine &amp; Mineralstoffe</h2></summary><div id="nutbox">' + (S.nutOpen ? nutBlock(E, di) : "") + "</div></details>";
-    /* Seit v91 (Wunsch des Nutzers) hier statt unter „Körper“, zugeklappt, damit oben das Eintragen bleibt. */
-    h += '<details class="block eatdet"' + (S.eatOpen ? " open" : "") + '><summary><h2>Essen im Rückblick</h2></summary><div id="eatbox">' + (S.eatOpen ? eatBlock() : "") + "</div></details>";
+    /* Seit v91 hier statt unter „Körper“; seit v248 (Wunsch des Nutzers) dauerhaft eingeblendet, ohne Einklappen. */
+    h += '<div class="block eatdet"><h2>Essen im Rückblick</h2><div id="eatbox">' + eatBlock() + "</div></div>";
     /* Apple Health steht seit v83 nur noch unter „Körper“ bei den Messwerten. */
     el.innerHTML = hsecHtml() + h; fdRestore(); if (keepY != null) { window.scrollTo(0, keepY); var eb1 = ebTop != null && $("eatbox"); if (eb1) window.scrollBy(0, eb1.getBoundingClientRect().top - ebTop); } document.querySelectorAll('#tab-home .cafscroll').forEach(function (c) { c.scrollLeft = Math.max(0, +c.dataset.now - c.clientWidth * 0.45); });
   }
@@ -7682,7 +7680,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     if (ev.target && ev.target.classList && ev.target.classList.contains("mpdet")) { S.mpOpen = ev.target.open; return; }
     if (ev.target && ev.target.id === "excat") { S.exCatBox = ev.target.open; return; } /* v237 */
     if (ev.target && ev.target.classList && ev.target.classList.contains("nutdet")) { S.nutOpen = ev.target.open; if (S.nutOpen && $("nutbox") && !$("nutbox").innerHTML) $("nutbox").innerHTML = nutBlock(); return; }
-    if (ev.target && ev.target.classList && ev.target.classList.contains("eatdet")) { S.eatOpen = ev.target.open; if (S.eatOpen && $("eatbox") && !$("eatbox").innerHTML) $("eatbox").innerHTML = eatBlock(); return; } var t = ev.target; if (t && t.classList && t.classList.contains("fsupp")) { S.fsOpen = t.open; return; } if (t && t.classList && t.classList.contains("exo")) { S.exOwnOpen = S.exOwnOpen || {}; S.exOwnOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("exg")) { S.exCatOpen = S.exCatOpen || {}; S.exCatOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("tpg")) { S.tpOpen = S.tpOpen || {}; S.tpOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("warm") && t.dataset.wu) WOPEN[t.dataset.wu] = t.open; if (t && t.classList && t.classList.contains("flib")) { S.fLibOpen = S.fLibOpen || {}; S.fLibOpen[t.dataset.g] = t.open; } }, true);
+    var t = ev.target; if (t && t.classList && t.classList.contains("fsupp")) { S.fsOpen = t.open; return; } if (t && t.classList && t.classList.contains("exo")) { S.exOwnOpen = S.exOwnOpen || {}; S.exOwnOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("exg")) { S.exCatOpen = S.exCatOpen || {}; S.exCatOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("tpg")) { S.tpOpen = S.tpOpen || {}; S.tpOpen[t.dataset.g] = t.open; return; } if (t && t.classList && t.classList.contains("warm") && t.dataset.wu) WOPEN[t.dataset.wu] = t.open; if (t && t.classList && t.classList.contains("flib")) { S.fLibOpen = S.fLibOpen || {}; S.fLibOpen[t.dataset.g] = t.open; } }, true);
   window.addEventListener("pagehide", function () { saveDraft(); if (planTimer) planChanged(true); });
   /* Tageswechsel (v121 zusammengefasst): beim Zurückkehren in die App und, falls sie über Mitternacht sichtbar offen bleibt
      (z. B. am PC), alle 30 s. Lief gerade ein Training (in den letzten 3 Stunden geändert), bleibt es offen; sonst springt alles
