@@ -918,8 +918,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 252; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 253; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 253, tab: "home", text: "Zahlenfelder: Beim Antippen wird der vorhandene Wert (z. B. die 0) markiert – einfach lostippen, er wird ersetzt. Nochmal tippen setzt den Cursor wie gewohnt." },
     { v: 252, tab: "home", text: "Neue Symbole in der Reiterleiste: Besteck, Hantel, Balken, Person und Klemmbrett mit Haken." },
     { v: 251, tab: "home", text: "Vitamine & Mineralstoffe: kleiner Pfeil ▾ an jedem Nährstoff zeigt, dass man ihn antippen und die Quellen aufklappen kann." },
     { v: 250, tab: "home", text: "Vitamine & Mineralstoffe: Tippe auf einen Nährstoff, dann siehst du darunter, woher er kommt – alle Einträge und Präparate, sortiert nach Menge (im 7-Tage-Schnitt gleiche Lebensmittel zusammengefasst)." },
@@ -7541,6 +7542,16 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var cr = $("cbr-" + a.dataset.cb); if (!cr || cr.hidden) return;
     cbKept = a.dataset.cb; a.blur();
   }, { passive: true });
+  /* v253 (Wunsch des Nutzers): Zahlenfelder beim Antippen ganz markieren, damit die Eingabe den vorhandenen Wert (oft „0“) ersetzt,
+     statt erst löschen oder den Cursor setzen zu müssen. iOS hebt die Markierung beim mouseup nach dem Fokus wieder auf → einmal abfangen. */
+  var numSel = null;
+  document.addEventListener("focusin", function (ev) {
+    var t = ev.target, im = t && t.getAttribute && t.getAttribute("inputmode");
+    if (!(t.tagName === "INPUT" && (im === "decimal" || im === "numeric") && !t.readOnly && t.value)) return;
+    numSel = t; var sel = function () { if (document.activeElement === t) try { t.setSelectionRange(0, t.value.length); } catch (e) {} };
+    sel(); setTimeout(sel, 0); setTimeout(function () { if (numSel === t) numSel = null; }, 600);
+  });
+  document.addEventListener("mouseup", function (ev) { if (numSel && ev.target === numSel) { ev.preventDefault(); numSel = null; } });
   document.addEventListener("focusin", function (ev) {
     var t = ev.target; if (!S.ready || !t.classList || !t.classList.contains("cbq")) return;
     if (cbKept === t.dataset.cb) { cbKept = null; return; }

@@ -2,7 +2,7 @@
 
 Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Repo arbeiten (Claude, ChatGPT/Codex). **Zuerst lesen, bei jeder Änderung mitpflegen.** Kurz halten: nur der aktuelle Stand, keine Geschichte (die steht in `VERLAUF.md`). Das Repo ist öffentlich – hier nichts Persönliches eintragen.
 
-**Stand:** v252 (22.11.2026)
+**Stand:** v253 (22.11.2026)
 
 ## Vor jeder Arbeit
 1. `git pull` und `git log --oneline -15`: Hat der andere Assistent seit dem letzten Mal etwas geändert? Dann diese Änderungen zuerst durchsehen und Auffälligkeiten dem Besitzer melden, nicht ungefragt im fremden Bereich umbauen.
@@ -23,6 +23,7 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
 - **Ehrlich statt geschönt:** Rechnungen realistisch, Vereinfachungen offen benennen, aber nicht verkomplizieren.
 - **Offline zuverlässig:** Alles Wesentliche ohne Internet; Online-Abfragen (Open Food Facts) nur als Zusatz, Ergebnisse lokal speichern.
 - **Auswahlrad statt Tippen** für Werte mit festen Stufen (`selWheel`, `<select>`), nicht beim Satz-Eintragen und bei Essensmengen.
+- **Zahlenfelder** bekommen `inputmode="decimal"` bzw. `"numeric"`: Dann markiert die App beim Antippen den vorhandenen Wert automatisch (v253), die Eingabe ersetzt ihn. Neue Zahlenfelder immer mit `inputmode` anlegen.
 - Antworten an den Besitzer auf Deutsch, kurz; Terminal-Befehle als kopierbaren Codeblock.
 
 ## Technik
