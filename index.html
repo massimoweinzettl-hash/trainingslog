@@ -21,6 +21,7 @@
 html { -webkit-text-size-adjust: 100% }
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px) }
 :root { --caf: #ac55ff } /* v227 (Wunsch des Nutzers): Koffein-Farbe „Electric Purple“ – Punkt in Einträgen/Lebensmittelliste und Koffeinkurve, in allen Designs gleich */
+:root { --ms-green: #1f9a4b; --ms-green-soft: color-mix(in srgb, var(--ms-green) 13%, var(--surface)); --ms-body: var(--surface); --ms-card-line: color-mix(in srgb, var(--ms-green) 22%, var(--line)) } /* v254: Messstellen-Karte, Grün nach Vorlage, in allen Designs gleich */
 /* v247 (Wunsch des Nutzers): Kohlenhydrate „Neon Mint“ #00C99A (--m-c) in allen Designs gleich, hell und dunkel */
 /* Layout: eine schmale Spalte wie ein Trainingsheft; oben Tabs, darunter pro Übung ein Block mit Satz-Zeilen. */
 :root {
@@ -671,8 +672,12 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 /* ---------- Designs (seit v94, Wunsch des Nutzers): Standard / Hölle / Winter Arc. Nur Optik, jederzeit über
    den Berg-Knopf oben oder Zahnrad → Darstellung zurück auf Standard. Beide Designs sind dunkel. ---------- */
 .top { align-items: center } .top .topr { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.3 }
-.msinfo:not([hidden]) { display: flex; gap: 14px; align-items: center; grid-column: 1 / -1; margin: -2px 0 4px } .msfig { width: 96px; height: 128px; flex: none } .msbody > * { fill: var(--sunken); stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; stroke-opacity: .85 } .mstape { fill: none; stroke: var(--accent); stroke-width: 3.2 }
-.mstx { flex: 1; background: var(--accent-soft); border-radius: 14px; padding: 10px 12px; color: var(--ink); font-size: 14px; line-height: 1.4 } .mstx b { display: block; font-size: 16px; margin-bottom: 2px }
+/* v254: Messstellen-Karte nach Vorlage des Nutzers – Figur auf grünlichem Feld, rundes Symbol, Titel + Text. Grün = --ms-green (eigener Token, hell/dunkel). */
+.msinfo:not([hidden]) { display: flex; gap: 12px; align-items: center; grid-column: 1 / -1; margin: -2px 0 4px; padding: 0 12px 0 0; border: 1px solid var(--ms-card-line); border-radius: 16px; background: var(--surface); overflow: hidden; font-style: normal }
+.msfigw { flex: none; width: 104px; align-self: stretch; display: flex; align-items: center; justify-content: center; background: var(--ms-green-soft); border-radius: 0 16px 16px 0; padding: 8px 4px }
+.msfig { width: 94px; height: 118px } .msbody { fill: var(--ms-body); stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; stroke-opacity: .9 } .mstape { fill: none; stroke: var(--ms-green); stroke-width: 3.4 }
+.msic { flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--ms-green-soft); display: flex; align-items: center; justify-content: center } .msic svg { width: 26px; height: 26px; fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round }
+.mstx { flex: 1; min-width: 0; padding: 10px 0; color: var(--ink); font-size: 14px; line-height: 1.4 } .mstx b { display: block; font-size: 17px; margin-bottom: 2px } .mstx .msall { display: block; margin-top: 4px; font-size: 12px; color: var(--muted) }
 .wline { --wc: #2f7fc6 } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wline { --wc: #6eb4f0 } } :root[data-theme="dark"] .wline, [data-look] .wline { --wc: #6eb4f0 }
 .wline { display: flex; flex-direction: column; gap: 6px; padding: 2px 0 10px; border-bottom: 1px solid var(--line) } .whead { display: flex; align-items: center; gap: 8px } .wtx { flex: 1; display: inline-flex; align-items: center; gap: 6px; font-size: 14px } .wtx .ic { width: 18px; height: 18px; color: var(--wc) }
 [data-nohap] .tabs .hapsw, [data-nathap] .tabs .hapsw { display: none }
@@ -918,8 +923,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 253; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 254; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 254, tab: "body", text: "Messstellen für die Umfänge neu gestaltet: Beim blauen i neben Arm, Brust, Taille, Hals, Hüfte und Oberschenkel siehst du jetzt eine Karte mit Figur, Maßband und kurzer Anleitung." },
     { v: 253, tab: "home", text: "Zahlenfelder: Beim Antippen wird der vorhandene Wert (z. B. die 0) markiert – einfach lostippen, er wird ersetzt. Nochmal tippen setzt den Cursor wie gewohnt." },
     { v: 252, tab: "home", text: "Neue Symbole in der Reiterleiste: Besteck, Hantel, Balken, Person und Klemmbrett mit Haken." },
     { v: 251, tab: "home", text: "Vitamine & Mineralstoffe: kleiner Pfeil ▾ an jedem Nährstoff zeigt, dass man ihn antippen und die Quellen aufklappen kann." },
@@ -3510,26 +3516,37 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
   }
 
   /* ---------- Körper ---------- */
-  /* v135 (Wunsch des Nutzers): Abbildung je Umfang hinter dem i. Eigene SVG-Figur, Maßband (Akzentfarbe) an der Messstelle.
-     MEASH[k] = [Ellipse cx, cy, rx, ry, Drehung, Text]. */
-  var MEAS_ALL = "Morgens messen, Band anliegend, nicht einschneidend.";
+  /* v135 (Wunsch des Nutzers): Abbildung je Umfang hinter dem i. v254 (Vorlage des Nutzers aus ChatGPT, nachgezeichnet):
+     Karte mit Figur (helle Umrisslinie, grünes Maßband) auf grünlichem Feld, rundes Symbol, Titel und Text.
+     MEASH[k] = [[Ellipse cx, cy, rx, ry, Drehung], Text, Symbol]. */
+  var MEAS_ALL = "Morgens nach normalem Ausatmen messen, Band locker, nicht einschneidend.";
+  var MSIC = {
+    arm: '<path d="M8.5 20.5c-2.6-1.7-3.6-5.4-2.6-8.6l2.4-6.4c.5-1.3 1.9-1.9 3.1-1.3l.9.5c1 .6 1.2 1.9.6 2.8l-1.6 2.6"/><path d="M11.3 10.1c2.6-1.3 6.2-.6 7.6 2.1 1.6 3-.2 6.8-3.6 7.9-2.3.8-4.8.8-6.8.4"/><path d="M12.2 13.6c1 .7 2.5.8 3.6.2"/>',
+    chest: '<path d="M4.5 6.5c0 6 1.6 9.5 4.3 9.5 1.6 0 2.6-.9 3.2-2.4.6 1.5 1.6 2.4 3.2 2.4 2.7 0 4.3-3.5 4.3-9.5"/><path d="M4.5 16h15"/><path d="M4 16.5c-.6-2-.6-4 0-6M20 16.5c.6-2 .6-4 0-6"/>',
+    waist: '<ellipse cx="9" cy="10" rx="5.5" ry="5.5"/><circle cx="9" cy="10" r="1.8"/><path d="M9 15.5h11.5v-4H14"/><path d="M16 15.5v-1.6M18.4 15.5v-1.6"/>',
+    neck: '<ellipse cx="12" cy="8.5" rx="3.9" ry="4.6"/><path d="M9.6 12.3c.2 1.6-.4 2.6-2.6 3.3-2 .6-3 1.8-3 4.4M14.4 12.3c-.2 1.6.4 2.6 2.6 3.3 2 .6 3 1.8 3 4.4"/>',
+    hip: '<path d="M7 4c-2 3.6-2.4 7.8-.4 11.8L8 20M17 4c2 3.6 2.4 7.8.4 11.8L16 20"/><path d="M10 13l2 2.4 2-2.4M12 15.4V19"/>',
+    thigh: '<path d="M7.5 4c-1.3 5-1.3 10.6 0 16M16.5 4c1.3 5 1.3 10.6 0 16"/><path d="M7.4 8.8h9.2" stroke-dasharray="1.6 1.7"/>'
+  };
   var MEASH = {
-    arm: [[29.5, 57, 8, 3.4, -14], "Oberarm an der dicksten Stelle, Arm locker hängend."],
-    chest: [[60, 56, 22, 4.5, 0], "Waagerecht unter den Achseln auf Höhe der Brustwarzen, nach normalem Ausatmen."],
-    waist: [[60, 80, 18, 4, 0], "Auf Höhe des Bauchnabels, Bauch entspannt, nach normalem Ausatmen."],
-    waistw: [[60, 74, 17, 3.8, 0], "An der schmalsten Stelle der Taille (meist etwas über dem Bauchnabel), Bauch entspannt, nach normalem Ausatmen."], /* v137: Navy-Methode Frauen */
-    neck: [[60, 33, 7.5, 2.6, 6], "Direkt unter dem Kehlkopf, Band vorne leicht nach unten geneigt."],
-    hip: [[60, 96, 22, 4.5, 0], "An der breitesten Stelle des Pos, Füße zusammen."],
-    thigh: [[49, 113, 9.5, 3.2, 0], "Dickste Stelle knapp unter dem Po, Gewicht auf beiden Beinen."]
+    arm: [[33.6, 72, 4.9, 1.8, -4], "Oberarm an der dicksten Stelle, Arm locker hängend.", "arm"],
+    chest: [[60, 63, 22.5, 3, 0], "Waagerecht unter den Achseln auf Höhe der Brustwarzen.", "chest"],
+    waist: [[60, 88, 19.5, 3, 0], "Auf Höhe des Bauchnabels, Bauch entspannt.", "waist"],
+    waistw: [[60, 80, 19, 3, 0], "An der schmalsten Stelle der Taille (meist etwas über dem Bauchnabel), Bauch entspannt.", "waist"], /* v137: Navy-Methode Frauen */
+    neck: [[60, 37.5, 6.8, 1.9, 0], "Direkt unter dem Kehlkopf, Band vorne leicht nach unten geneigt.", "neck"],
+    hip: [[60, 108, 21.5, 3.4, 0], "An der breitesten Stelle des Pos, Füße zusammen.", "hip"],
+    thigh: [[49.6, 129.5, 9.3, 2.4, 0], "Dickste Stelle knapp unter dem Po, Gewicht auf beiden Beinen.", "thigh"]
   };
   function measFig(k) {
     var e = MEASH[k][0];
-    return '<svg class="msfig" viewBox="0 0 120 160" aria-hidden="true"><g class="msbody">' +
-      '<circle cx="60" cy="17" r="11"/><path d="M54 27h12v9h-12z"/>' +
-      '<path d="M40 40q20-7 40 0l3 22q-2 20 -3 30l3 10q-23 6-46 0l3-10q-1-10-3-30z"/>' +
-      '<path d="M40 41q-9 2-12 10l-6 34q-1 5 3 6t5-4l6-30z"/><path d="M80 41q9 2 12 10l6 34q1 5-3 6t-5-4l-6-30z"/>' +
-      '<path d="M37 101q12 6 22 2l-2 52h-11l-5-30z"/><path d="M83 101q-12 6-22 2l2 52h11l5-30z"/></g>' +
-      '<ellipse class="mstape" cx="' + e[0] + '" cy="' + e[1] + '" rx="' + e[2] + '" ry="' + e[3] + '" transform="rotate(' + e[4] + " " + e[0] + " " + e[1] + ')"/></svg>';
+    return '<span class="msfigw"><svg class="msfig" viewBox="0 0 120 150" aria-hidden="true">' +
+      '<path class="msbody" d="M54 33.5Q54.5 41 46 43Q36 45 33 52Q30 62 29 80L26.5 111Q26.5 116 29.2 116Q32 116 32.3 111.5L36 80Q37.8 70 40 64Q42.4 78 41.4 92Q39.4 104 40.2 116L42 150H57L59 124.5Q60 121.5 61 124.5L63 150H78L79.8 116Q80.6 104 78.6 92Q77.6 78 80 64Q82.2 70 84 80L87.7 111.5Q88 116 90.8 116Q93.5 116 93.5 111L91 80Q90 62 87 52Q84 45 74 43Q65.5 41 66 33.5Z"/>' +
+      '<ellipse class="msbody" cx="60" cy="23" rx="10.5" ry="12.5"/>' +
+      '<ellipse class="mstape" cx="' + e[0] + '" cy="' + e[1] + '" rx="' + e[2] + '" ry="' + e[3] + '" transform="rotate(' + e[4] + " " + e[0] + " " + e[1] + ')"/></svg></span>';
+  }
+  function measCard(k, label) {
+    var mh = MEASH[k];
+    return measFig(k) + '<span class="msic"><svg viewBox="0 0 24 24" aria-hidden="true">' + MSIC[mh[2]] + '</svg></span><span class="mstx"><b>' + label + "</b>" + mh[1] + '<span class="msall">' + MEAS_ALL + "</span></span>";
   }
   var BF = [["weight", "Gewicht", "kg"], ["fat", "Körperfett", "%"], ["arm", "Arm", "cm"], ["chest", "Brust", "cm"], ["waist", "Taille", "cm"], ["neck", "Hals", "cm"], ["hip", "Hüfte", "cm"], ["thigh", "Oberschenkel", "cm"]];
   var BM = BF.concat([["ffm", "Fettfreie Masse", "kg"]]);
@@ -3539,7 +3556,7 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
     var list = Object.keys(S.body).map(function (k) { return S.body[k]; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     if (!keepForm || !$("bform")) {
       el.innerHTML = '<div class="block" id="wcorr"></div><div class="block" id="phstat"></div><div class="block" id="bform"><h2>Gewicht, Körperfett und Umfänge eintragen</h2><div class="bgrid"><label class="full">Datum<input type="date" id="b-date" value="' + today() + '" max="' + today() + '"></label>' +
-        BF.map(function (f) { var mh = MEASH[f[0]]; if (f[0] === "waist" && S.person && S.person.sex === "w") mh = MEASH.waistw; return mh ? "<label><span>" + f[1] + " (" + f[2] + ")" + ib("ms-" + f[0]) + '</span><input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>' + itx("ms-" + f[0], measFig(f[0] === "waist" && mh === MEASH.waistw ? "waistw" : f[0]) + '<span class="mstx"><b>' + f[1] + ":</b>" + mh[1] + " " + MEAS_ALL + "</span>").replace('class="small muted itext"', 'class="small muted itext msinfo"') : "<label>" + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
+        BF.map(function (f) { var mh = MEASH[f[0]]; if (f[0] === "waist" && S.person && S.person.sex === "w") mh = MEASH.waistw; return mh ? "<label><span>" + f[1] + " (" + f[2] + ")" + ib("ms-" + f[0]) + '</span><input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>' + itx("ms-" + f[0], measCard(f[0] === "waist" && mh === MEASH.waistw ? "waistw" : f[0], f[1])).replace('class="small muted itext"', 'class="small muted itext msinfo"') : "<label>" + f[1] + " (" + f[2] + ')<input id="b-' + f[0] + '" inputmode="decimal" autocomplete="off"></label>'; }).join("") +
         '</div><div class="row" style="align-items:center"><button class="primary" data-act="bsave">Speichern</button><span class="small muted" id="bmsg">Leere Felder werden übersprungen.</span></div><div class="hbox" id="hbody"></div></div><div id="bout" style="display:flex;flex-direction:column;gap:16px"></div>' +
         '<div class="block"><h2>Phasen</h2><div class="row"><label style="flex:1 1 130px">Neue Phase<select id="ph-type"><option value="">Bitte wählen</option><option value="bulk">Aufbau</option><option value="cut">Cut</option><option value="maintain">Halten</option></select></label><label style="flex:1 1 150px">Start<input type="date" id="ph-date" value="' + today() + '" max="' + today() + '"></label><label style="flex:1 1 130px">Übergang<select id="ph-ramp"><option value="0">Ohne</option><option value="14">2 Wochen</option><option value="21">3 Wochen</option><option value="28">4 Wochen</option></select></label><button data-act="phstart">Phase starten</button></div><span class="small muted" id="phmsg">Eine Phase gilt ab ihrem Startdatum, bis die nächste beginnt.</span><div id="phlist"></div></div><div class="block" id="kcalbox"></div><div id="pbox" class="pbox"></div>'; /* v237: Angaben + Makros */
     }
