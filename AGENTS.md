@@ -2,7 +2,7 @@
 
 Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Repo arbeiten (Claude, ChatGPT/Codex). **Zuerst lesen, bei jeder Änderung mitpflegen.** Kurz halten: nur der aktuelle Stand, keine Geschichte (die steht in `VERLAUF.md`). Das Repo ist öffentlich – hier nichts Persönliches eintragen.
 
-**Stand:** v256 (22.11.2026)
+**Stand:** v257 (22.11.2026)
 
 ## Vor jeder Arbeit
 1. `git pull` und `git log --oneline -15`: Hat der andere Assistent seit dem letzten Mal etwas geändert? Dann diese Änderungen zuerst durchsehen und Auffälligkeiten dem Besitzer melden, nicht ungefragt im fremden Bereich umbauen.
@@ -50,7 +50,7 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
   - **Ernährung** mit Bereichen Heute · Lebensmittel · Meal Prep · Supplemente · Vorrat. *Heute:* Koffein, Trinken, Kalorien und Makros, Eintragen (Suche, Scan, Schätzen, Gericht berechnen), Liste, Vitamine & Mineralstoffe (Zeile antippen = Quellen), Essen im Rückblick (immer offen, Nachtragen für frühere Tage).
   - **Training:** Kalender, Einheit eintragen, Übungen ersetzen/hinzufügen, Training beenden; Ausdauer.
   - **Fortschritt:** Kraft nach Körperbereichen (Körperkarte), Verlauf je Übung, Rekorde, Ausdauer.
-  - **Körper:** Gewichtskorridor, Phasen (Cut/Aufbau/Halten mit Übergang), Messwerte, Kalorien und Makros, persönliche Angaben, Makroverteilung.
+  - **Körper** mit Bereichen wie Ernährung (seit v257, `BSEC`, `S.bodySec`, Start „Übersicht“): Übersicht (Gewichtskorridor, Phase/Ziel, Eintragen) · Messungen (Verläufe, Tabelle) · Phasen · Kalorien (Tabelle, Makroverteilung) · Angaben. Alle Blöcke bleiben im DOM, sichtbar ist nur der Bereich (`data-bsec` je Block, `#tab-body[data-sec]`); neue Blöcke im Körper brauchen ein `data-bsec`. Sprünge in einen Bereich über `bodySecGo(sec)`.
   - **Plan:** Sätze pro Muskelgruppe, Trainingstage, Plan teilen/Plan-Code, Assistent, Übungskatalog.
 - **Zahnrad:** Design, Hell/Dunkel, Farbenblind, Haptik, Trainingsart; Daten & Hilfe (Sicherung, Export, Bericht, Profile, Hilfe, Was ist neu?).
 - **Modi:** Kraft, Ausdauer (ohne Plan), beides, „Nur Ernährung“ (nur Ernährung und Körper) – `TABS_FOOD`/`TABS_CARDIO`.
