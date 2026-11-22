@@ -154,6 +154,7 @@ def main():
     (OUT / "index.html").write_text(index, encoding="utf-8")
     (OUT / "sw.js").write_text(sw, encoding="utf-8")
     for f in assets:
+        (OUT / f).parent.mkdir(parents=True, exist_ok=True)   # v268: Unterordner wie maskottchen/
         shutil.copyfile(ROOT / f, OUT / f)
     print("freunde/ bereit: Version %d, Cache %s, %d Dateien" % (version, cache, len(assets) + 2))
 
