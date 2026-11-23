@@ -45,10 +45,14 @@ ALLG = [
     ("b10", "wo seh ich mein gewicht", "Reiter Körper"),
     # v239: Navigation seit v236–v238 (Ernährung mit Bereichen, Angaben/Makros in Körper, Übungskatalog im Plan, Zahnradmenü)
     ("n1", "Wo finde ich meine Lebensmittel?", "Ernährung → Lebensmittel (Bereich oben)"),
-    ("n2", "Wo lege ich meine Supplemente an?", "Ernährung → Supplemente"),
+    ("n2", "Wo lege ich meine Supplemente an?", "Ernährung → Vorrat, „+ Präparat“ (seit v277 kein eigener Bereich Supplemente mehr)"),
     ("n3", "Wo ändere ich meine Makros?", "Körper, ganz unten unter „Makros anpassen“"),
     ("n4", "Wo finde ich den Übungskatalog?", "Plan, unter den Trainingstagen zum Aufklappen"),
-    ("n5", "Wo sehe ich, wie lange mein Whey noch reicht?", "Ernährung → Vorrat"),
+    ("n5", "Wo sehe ich, wie lange mein Whey noch reicht?", "Ernährung → Vorrat (Zahl auf dem Brett im Vorratsschrank)"),
+    # v283: Vorratsschrank (v277–v282)
+    ("v1", "Wie ändere ich die Reihenfolge im Vorratsschrank?", "Behälter gedrückt halten und ziehen"),
+    ("v2", "Wie mache ich einen Behälter im Vorratsschrank kleiner?", "Behälter antippen → „Größe im Schrank“ klein"),
+    ("v3", "Was bedeutet die rote Zahl beim Vorrat?", "so viele Sachen reichen höchstens 7 Tage oder sind leer (wie Einkaufszettel)"),
     ("n6", "Wo ist der Reiter Daten?", "gibt es nicht mehr: Ernährung (Lebensmittel …), Körper (Angaben, Makros), Plan (Übungskatalog), Zahnrad"),
     ("n7", "Wie exportiere ich meine Daten?", "Zahnrad oben → Export (CSV)"),
     ("n8", "Wo ändere ich meine persönlichen Angaben?", "Körper → Angaben (unten), dann „Speichern“"),
@@ -119,8 +123,8 @@ SZ = ["cut", "aufbau", "drueber", "neu"]
 MODUS = {"nurEssen": [("m1", "Erkläre mir die App.", "feste Antwort: zwei Reiter (Ernährung, Körper), Zahnrad")],
          "ausdauer": [("m2", "Erkläre mir die App.", "feste Antwort: vier Reiter ohne Plan, Zahnrad")]}
 # v239: Eine dieser Stellen muss der Handbuch-Auszug (bzw. die feste Antwort) enthalten, sonst kann das Modell den Weg nicht nennen.
-ORT = {"b3": ["Zahnrad"], "n1": ["Bereiche oben", "Ernährung → Lebensmittel"], "n2": ["Ernährung → Supplemente", "„Supplemente“"],
-       "n3": ["Makros anpassen", "Angaben und Makros"], "n4": ["Übungskatalog"], "n5": ["„Vorrat“"], "n6": ["Reiter „Daten“"],
+ORT = {"b3": ["Zahnrad"], "n1": ["Bereiche oben", "Ernährung → Lebensmittel"], "n2": ["„+ Präparat“", "Ernährung → Vorrat"], "v1": ["gedrückt halten und ziehen"], "v2": ["Größe im Schrank"], "v3": ["Einkaufszettel"],
+       "n3": ["Makros anpassen", "Angaben und Makros"], "n4": ["Übungskatalog"], "n5": ["„Vorrat“", "Ernährung → Vorrat"], "n6": ["Reiter „Daten“"],
        "n7": ["Export"], "n8": ["Körper → Angaben", "unten im Reiter Körper"], "n9": ["„Nutzung“"],
        "b2": ["fünf Reiter"], "m1": ["zwei Reiter"], "m2": ["vier Reiter"]}
 ALT = ["Daten →", "Reiter Daten ", "unter Daten", "Persönlich", "Daten > ", "in den Einstellungen unter „Training“"]
