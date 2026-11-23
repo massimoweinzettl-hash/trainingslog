@@ -1,7 +1,7 @@
 /* Trainingslog – Service Worker: macht die App offline nutzbar.
    Antwortet aus dem Cache und holt im Hintergrund die neue Fassung. Anfragen mit dem Parameter „fresh“
    (Versionsprüfung der App) gehen direkt ans Netz. CACHE nur ändern, wenn sich FILES ändert – dann auch SWC/SWF in index.html anpassen (cacheHeal). */
-const CACHE = "trainingslog-v10";
+const CACHE = "trainingslog-v11";
 const FILES = [
   "./",
   "./index.html",
@@ -38,7 +38,26 @@ const FILES = [
   "./maskottchen/quark-kaffee-train.png",
   "./maskottchen/quark-kaffee-prog.png",
   "./maskottchen/quark-kaffee-body.png",
-  "./maskottchen/quark-kaffee-plan.png"
+  "./maskottchen/quark-kaffee-plan.png",
+  "./vorrat/schrank.png",
+  "./vorrat/flocken.png",
+  "./vorrat/reis.png",
+  "./vorrat/nudeln.png",
+  "./vorrat/whey.png",
+  "./vorrat/fischdose.png",
+  "./vorrat/erdnuss.png",
+  "./vorrat/oel.png",
+  "./vorrat/obstkorb.png",
+  "./vorrat/eier.png",
+  "./vorrat/becher.png",
+  "./vorrat/beeren.png",
+  "./vorrat/karton.png",
+  "./vorrat/kapseldose.png",
+  "./vorrat/beutel.png",
+  "./vorrat/tropfen.png",
+  "./vorrat/schachtel.png",
+  "./vorrat/riegelbox.png",
+  "./vorrat/riegel.png"
 ];
 
 self.addEventListener("install", (event) => {

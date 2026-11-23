@@ -6,10 +6,12 @@ const files = ["index.html", "manifest.webmanifest", "sw.js", "inter.woff2", "sp
   "maskottchen/quark-nacht-home.png", "maskottchen/quark-nacht-train.png", "maskottchen/quark-nacht-prog.png", "maskottchen/quark-nacht-body.png", "maskottchen/quark-nacht-plan.png",
   "maskottchen/quark-morgen-home.png", "maskottchen/quark-morgen-train.png", "maskottchen/quark-morgen-prog.png", "maskottchen/quark-morgen-body.png", "maskottchen/quark-morgen-plan.png",
   "maskottchen/quark-mittag-home.png", "maskottchen/quark-mittag-train.png", "maskottchen/quark-mittag-prog.png", "maskottchen/quark-mittag-body.png", "maskottchen/quark-mittag-plan.png",
-  "maskottchen/quark-kaffee-home.png", "maskottchen/quark-kaffee-train.png", "maskottchen/quark-kaffee-prog.png", "maskottchen/quark-kaffee-body.png", "maskottchen/quark-kaffee-plan.png"];
+  "maskottchen/quark-kaffee-home.png", "maskottchen/quark-kaffee-train.png", "maskottchen/quark-kaffee-prog.png", "maskottchen/quark-kaffee-body.png", "maskottchen/quark-kaffee-plan.png",
+  "vorrat/schrank.png", "vorrat/flocken.png", "vorrat/reis.png", "vorrat/nudeln.png", "vorrat/whey.png", "vorrat/fischdose.png", "vorrat/erdnuss.png", "vorrat/oel.png", "vorrat/obstkorb.png", "vorrat/eier.png", "vorrat/becher.png", "vorrat/beeren.png", "vorrat/karton.png", "vorrat/kapseldose.png", "vorrat/beutel.png", "vorrat/tropfen.png", "vorrat/schachtel.png", "vorrat/riegelbox.png", "vorrat/riegel.png"];
 rmSync("www", { recursive: true, force: true });
 mkdirSync("www");
 mkdirSync("www/maskottchen");   // v265: Quark-Maskottchen
+mkdirSync("www/vorrat");        // v277: Vorratsschrank
 for (const f of files) if (existsSync(f)) copyFileSync(f, "www/" + f);
 const iconDir = "ios/App/App/Assets.xcassets/AppIcon.appiconset";
 if (existsSync(iconDir)) { copyFileSync("app/AppIcon-1024.png", iconDir + "/AppIcon-512@2x.png"); console.log("App-Symbol eingesetzt"); }
