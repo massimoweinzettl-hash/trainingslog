@@ -1,6 +1,6 @@
 # Design „Vorratsschrank“ (seit v277, Vorlagen des Nutzers aus ChatGPT nach Claudes Vorgaben):
 # app/design/vorratsschrank/schrank.png (leerer Schrank, 3 Böden), lebensmittel.png (12 Behälter, 3×4), supplemente.png (6 Behälter, 2×3),
-# alle mit echter Transparenz. Das Skript schneidet den Schrank zu, zerlegt die Sammelbilder an den leeren Zeilen/Spalten und schreibt
+# quark-sitzend.png (unser Quark-Maskottchen sitzend, seit v278), alle mit echter Transparenz. Das Skript schneidet den Schrank zu, zerlegt die Sammelbilder an den leeren Zeilen/Spalten und schreibt
 # kleine PNGs (256 Farben) nach vorrat/. Aufruf:  python3 app/design/vorratsschrank.py
 # Danach die Seitenverhältnisse (Ausgabe „VS_AR“) in index.html übernehmen. Eingebunden über vsManage() in index.html,
 # offline über sw.js (FILES), SWF in index.html und app/copy-web.mjs.
@@ -41,7 +41,11 @@ def split(path, names):
 def main():
     ar = {}
     s = Image.open(f"{SRC}/schrank.png").convert("RGBA").crop(SCHRANK_BOX); small(s, f"{OUT}/schrank.png")
-    for d in (split(f"{SRC}/lebensmittel.png", FOOD), split(f"{SRC}/supplemente.png", SUPP)):
+    q = Image.open(f"{SRC}/quark-sitzend.png").convert("RGBA"); qa = np.array(q); qm = qa[..., 3] > 24; ys, xs = np.where(qm)
+    qc = qa[ys.min():ys.max() + 1, xs.min():xs.max() + 1].copy(); qc[..., 3][qc[..., 3] <= 24] = 0
+    seat = 947 - ys.min()   # Unterkante des Bechers (Sitzfläche) zwischen den Beinen, gemessen in der Vorlage
+    print("Quark: Sitzlinie bei %.3f der Höhe (VS_SEAT)" % (seat / qc.shape[0]))
+    for d in ({"quark": Image.fromarray(qc, "RGBA")}, split(f"{SRC}/lebensmittel.png", FOOD), split(f"{SRC}/supplemente.png", SUPP)):
         for n, im in d.items():
             w = round(im.width * ICON_H / im.height); ar[n] = [w, ICON_H]
             small(im.convert("RGBa").resize((w, ICON_H), Image.LANCZOS).convert("RGBA"), f"{OUT}/{n}.png")

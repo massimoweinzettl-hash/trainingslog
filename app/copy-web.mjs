@@ -7,7 +7,7 @@ const files = ["index.html", "manifest.webmanifest", "sw.js", "inter.woff2", "sp
   "maskottchen/quark-morgen-home.png", "maskottchen/quark-morgen-train.png", "maskottchen/quark-morgen-prog.png", "maskottchen/quark-morgen-body.png", "maskottchen/quark-morgen-plan.png",
   "maskottchen/quark-mittag-home.png", "maskottchen/quark-mittag-train.png", "maskottchen/quark-mittag-prog.png", "maskottchen/quark-mittag-body.png", "maskottchen/quark-mittag-plan.png",
   "maskottchen/quark-kaffee-home.png", "maskottchen/quark-kaffee-train.png", "maskottchen/quark-kaffee-prog.png", "maskottchen/quark-kaffee-body.png", "maskottchen/quark-kaffee-plan.png",
-  "vorrat/schrank.png", "vorrat/flocken.png", "vorrat/reis.png", "vorrat/nudeln.png", "vorrat/whey.png", "vorrat/fischdose.png", "vorrat/erdnuss.png", "vorrat/oel.png", "vorrat/obstkorb.png", "vorrat/eier.png", "vorrat/becher.png", "vorrat/beeren.png", "vorrat/karton.png", "vorrat/kapseldose.png", "vorrat/beutel.png", "vorrat/tropfen.png", "vorrat/schachtel.png", "vorrat/riegelbox.png", "vorrat/riegel.png"];
+  "vorrat/schrank.png", "vorrat/quark.png", "vorrat/flocken.png", "vorrat/reis.png", "vorrat/nudeln.png", "vorrat/whey.png", "vorrat/fischdose.png", "vorrat/erdnuss.png", "vorrat/oel.png", "vorrat/obstkorb.png", "vorrat/eier.png", "vorrat/becher.png", "vorrat/beeren.png", "vorrat/karton.png", "vorrat/kapseldose.png", "vorrat/beutel.png", "vorrat/tropfen.png", "vorrat/schachtel.png", "vorrat/riegelbox.png", "vorrat/riegel.png"];
 rmSync("www", { recursive: true, force: true });
 mkdirSync("www");
 mkdirSync("www/maskottchen");   // v265: Quark-Maskottchen

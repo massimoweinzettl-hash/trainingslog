@@ -1,7 +1,7 @@
 /* Trainingslog – Service Worker: macht die App offline nutzbar.
    Antwortet aus dem Cache und holt im Hintergrund die neue Fassung. Anfragen mit dem Parameter „fresh“
    (Versionsprüfung der App) gehen direkt ans Netz. CACHE nur ändern, wenn sich FILES ändert – dann auch SWC/SWF in index.html anpassen (cacheHeal). */
-const CACHE = "trainingslog-v11";
+const CACHE = "trainingslog-v12";
 const FILES = [
   "./",
   "./index.html",
@@ -40,6 +40,7 @@ const FILES = [
   "./maskottchen/quark-kaffee-body.png",
   "./maskottchen/quark-kaffee-plan.png",
   "./vorrat/schrank.png",
+  "./vorrat/quark.png",
   "./vorrat/flocken.png",
   "./vorrat/reis.png",
   "./vorrat/nudeln.png",
