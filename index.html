@@ -347,7 +347,7 @@ body.cardioonly .tabs button[data-tab="plan"] { display: none }
 .calday.sch { color: var(--ink); font-weight: 600 }
 .lab { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 500; color: var(--muted) }
 
-.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; gap: 4px; background: var(--bg); padding-block: 6px; overflow-x: auto; overflow-y: hidden; overscroll-behavior: contain; -webkit-transform: translateZ(0); transform: translateZ(0) } /* v261: kein eigenes senkrechtes Scrollen/Federn der Leiste, eigene Ebene gegen Zittern beim Scrollen (iOS) */
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; gap: 4px; background: var(--bg); padding-block: 6px } /* v273: kein eigener Scrollbereich und keine eigene Ebene mehr (overflow/translateZ aus v261 ließen die klebende Leiste in Safari beim Scrollen zittern); fünf Reiter passen immer in die Breite */
 .tabs button { flex: 1 1 auto; white-space: nowrap; border-radius: 0; padding: 10px 6px; border: 0; border-bottom: 2px solid var(--line); background: none; color: var(--muted);
   font: 600 14px var(--body); cursor: pointer }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent) }
@@ -1074,8 +1074,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 272; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 273; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 273, tab: "home", text: "Die Reiterleiste oben sollte beim Scrollen nicht mehr zittern." },
     { v: 272, tab: "home", text: "Neue Zeiten für die Quarkbecher: Morgen 6–9 Uhr, Tag 9–12 Uhr, Mittag 12–14:30 Uhr, Kaffeezeit 15–17 Uhr." },
     { v: 271, tab: "home", text: "Kaffeezeit: Von 15 bis 17 Uhr gönnen sich die Quarkbecher Kaffee und Kuchen – mit Hantelbank-Pause, Pokal, Maßband und Coach-Klemmbrett." },
     { v: 270, tab: "home", text: "Mahlzeit: Von 11 bis halb drei machen die Quarkbecher Mittagspause – mit Mittagessen, Shake, Wochenplan, Maßband und Meal-Prep-Box." },
