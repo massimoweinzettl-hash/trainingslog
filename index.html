@@ -714,6 +714,9 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 .vsinfo { position: absolute; right: 2%; top: 2%; } .vsinfo .ibtn { margin: 0 }
 .vsnotel { margin: 4px 0 8px; padding: 8px 10px; border-radius: 12px; background: var(--sunken); display: flex; flex-wrap: wrap; gap: 6px; align-items: center } .vsnotel > p { margin: 0; flex-basis: 100% }
 .vsdet { margin-top: 6px }
+.vsit.vsdrag { opacity: .3 } .vsghost { position: fixed; z-index: 80; pointer-events: none; transform: scale(1.12); filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .35)) }
+.vsmark { flex: 0 0 auto; align-self: flex-start; width: 3px; height: var(--ia); margin: 0 -1px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 6px var(--accent) }
+.chips.hsec button { position: relative } .hbadge { position: absolute; top: -7px; right: -5px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #e5484d; color: #fff; font: 700 11px/18px var(--body); text-align: center; box-shadow: 0 0 0 2px var(--bg) }
 .cupboard { background: var(--sunken); border-radius: 12px; padding: 8px 10px 4px; margin: 4px 0 8px } .cupboard > p { margin: 0 0 2px }
 .cbrow2 { display: flex; align-items: flex-end; gap: 10px; width: 100%; background: none; border: 0; border-bottom: 3px solid var(--line); border-radius: 0; padding: 6px 0 3px; min-height: 0; text-align: left; font-weight: 400; color: var(--ink) } .cbrow2:last-child { border-bottom-color: transparent } .cbrow2 .cbchev { margin-left: auto; align-self: center } .cbrow2.off .cbn { color: var(--muted) } .cbrow2.open { border-bottom: 0 } .scard.inshelf { border-bottom: 3px solid var(--line); padding-bottom: 6px }
 .cbn { flex: 0 0 34%; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center }
@@ -1098,8 +1101,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 280; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 281; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 281, tab: "home", text: "Vorratsschrank: Behälter kurz gedrückt halten und ziehen, um die Reihenfolge zu ändern – Lebensmittel auch aufs andere Brett. Am Bereich „Vorrat“ zeigt eine rote Zahl, wie viel bald leer ist." },
     { v: 280, tab: "home", text: "Neue Reihenfolge der Bereiche unter Ernährung: Heute, Vorrat, Meal Prep, Lebensmittel." },
     { v: 279, tab: "home", text: "Vorratsschrank: Beim Quark steht die Plakette mit den Tagen jetzt vor seinen Beinen." },
     { v: 278, tab: "home", text: "Im Vorratsschrank sitzt jetzt unser Quark-Maskottchen auf dem Brett, wenn du Quark auf Vorrat hast – die Beine baumeln über die Kante." },
@@ -4604,6 +4608,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
           if (Array.isArray(x.n) && x.n.length >= 21 && x.n.length <= NUTK.length && x.n.every(function (v) { return v === null || isN(v); })) ci.n = x.n; return ci;
         });
         return { kind: "food", v: d.v === 5 || d.v === 4 || d.v === 3 || d.v === 2 ? d.v : 0, items: items,
+          vso: d.vso && typeof d.vso === "object" ? ["s", "a", "b"].reduce(function (o, k) { o[k] = (Array.isArray(d.vso[k]) ? d.vso[k] : []).filter(function (x) { return typeof x === "string" && (fid[x] || LIBMAP[x]); }).slice(0, 200); return o; }, {}) : undefined, /* v281: Reihenfolge im Vorratsschrank */
           fav: (Array.isArray(d.fav) ? d.fav : []).filter(function (x) { return typeof x === "string" && (fid[x] || LIBMAP[x]); }).slice(0, 300),
           daily: (Array.isArray(d.daily) ? d.daily : []).filter(function (x) { return x && typeof x.id === "string" && typeof x.item === "string" && (fid[x.item] || LIBMAP[x.item]) && isN(x.amt) && x.amt > 0 && DRE.test(x.from) && (x.to == null || DRE.test(x.to)); }).slice(0, 30).map(function (x) { var o = { id: x.id.slice(0, 40), item: x.item, amt: x.amt, from: x.from }; if (x.to) o.to = x.to; if (isN(x.every) && x.every >= 2 && x.every <= 14) o.every = Math.round(x.every); return o; }),
           scan: (Array.isArray(d.scan) ? d.scan : []).filter(function (x) { return typeof x === "string" && (fid[x] || LIBMAP[x]); }).slice(0, 2000),
@@ -6991,24 +6996,33 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   function vsIt(fd, it, sup, k) {
     var ic = vsIcon(fd, it, sup), ar = VS_AR[ic], sh = VS_SH[k], hh = (sh[1] - sh[0]) * 0.86 * VS_REL[ic], tg = vsTag(fd, it, sup), op = S.fOpen === it.id;
     var al = esc(it.name) + (tg ? ", " + (tg[0] === "–" ? "noch kein Verbrauch" : tg[0] === "Pause" ? "pausiert" : tg[0] === "leer" ? "leer" : "reicht noch " + tg[0].replace(" T", " Tage")) : "");
-    return '<button class="vsit' + (op ? " sel" : "") + (sup && !suppAct(fd, it.id) ? " off" : "") + '" data-act="fiopen" data-id="' + it.id + '" aria-expanded="' + op + '" aria-label="' + al + '">' +
-      '<span class="vsim"><img src="vorrat/' + ic + '.png" width="' + ar[0] + '" height="' + ar[1] + '" alt="" style="height:' + (hh / 13.16).toFixed(2) + "cqw" + (ic === "quark" ? ";margin-bottom:-" + ((hh * (1 - VS_SEAT) - 6) / 13.16).toFixed(2) + "cqw" : "") + '"></span>' + /* v278: Quark sitzt, Beine hängen über die Brettkante */
+    return '<button class="vsit' + (op ? " sel" : "") + (sup && !suppAct(fd, it.id) ? " off" : "") + '" data-act="fiopen" data-vs="' + (sup ? "s" : "f") + '" data-id="' + it.id + '" aria-expanded="' + op + '" aria-label="' + al + '">' +
+      '<span class="vsim"><img src="vorrat/' + ic + '.png" draggable="false" width="' + ar[0] + '" height="' + ar[1] + '" alt="" style="height:' + (hh / 13.16).toFixed(2) + "cqw" + (ic === "quark" ? ";margin-bottom:-" + ((hh * (1 - VS_SEAT) - 6) / 13.16).toFixed(2) + "cqw" : "") + '"></span>' + /* v278: Quark sitzt, Beine hängen über die Brettkante */
       '<span class="vstw">' + (tg ? '<span class="vstag ' + tg[1] + '">' + tg[0] + "</span>" : "") + "</span></button>";
   }
   function vsShelf(fd, list, sup, k) { var sh = VS_SH[k];
-    return '<div class="vsshelf" style="top:' + (sh[0] / 13.16).toFixed(2) + "cqw;height:" + ((sh[2] + 30 - sh[0]) / 13.16).toFixed(2) + "cqw;--ia:" + ((sh[1] + 8 - sh[0]) / 13.16).toFixed(2) + "cqw;--ta:" + ((sh[2] - sh[1] - 16) / 13.16).toFixed(2) + 'cqw"><div class="vsrow">' +
+    return '<div class="vsshelf" data-sh="' + k + '" style="top:' + (sh[0] / 13.16).toFixed(2) + "cqw;height:" + ((sh[2] + 30 - sh[0]) / 13.16).toFixed(2) + "cqw;--ia:" + ((sh[1] + 8 - sh[0]) / 13.16).toFixed(2) + "cqw;--ta:" + ((sh[2] - sh[1] - 16) / 13.16).toFixed(2) + 'cqw"><div class="vsrow">' +
       list.map(function (x) { return vsIt(fd, x, sup, k); }).join("") + "</div></div>"; }
   function vsLow(fd, sp, fv) { var o = [];
     sp.forEach(function (x) { var g = vsTag(fd, x, true); if (g && g[1] === "low") o.push([x, g[0]]); }); fv.forEach(function (x) { var g = vsTag(fd, x, false); if (g && g[1] === "low") o.push([x, g[0]]); });
     return o.sort(function (a, b) { return (parseInt(a[1], 10) || 0) - (parseInt(b[1], 10) || 0); }); }
-  function vsManage(fd) {
+  /* v281: Inhalt des Schranks an einer Stelle – Supplemente (aktiv, dann pausiert), Lebensmittel mit Vorrat, Vorlagen, knappe Sachen.
+     Reihenfolge per Ziehen (fd.vso = {s, a, b}: oberes Brett, Brett 2, Brett 3); Neues hinten an, Lebensmittel auf Brett 2, solange dort < 5 stehen. */
+  function vsLists(fd) {
     var byN = function (a, b) { return a.name.localeCompare(b.name, "de"); }, sp = foodAll(fd).filter(function (x) { return isSupp(fd, x); }),
-      on = sp.filter(function (x) { return suppAct(fd, x.id); }).sort(byN), off = sp.filter(function (x) { return !suppAct(fd, x.id) && !x.lib; }).sort(byN), tpl = sp.filter(function (x) { return !suppAct(fd, x.id) && x.lib; }).sort(byN),
-      mine = on.concat(off), fv = foodAll(fd).filter(function (x) { return x.vor && !isSupp(fd, x); }).sort(byN), half = fv.length > 5 ? Math.ceil(fv.length / 2) : fv.length, low = vsLow(fd, mine, fv);
-    var h = '<h2 class="vshid">Vorrat</h2><div class="vs" role="group" aria-label="Vorratsschrank">' + vsShelf(fd, mine, true, 0) + vsShelf(fd, fv.slice(0, half), false, 1) + vsShelf(fd, fv.slice(half), false, 2) +
+      on = sp.filter(function (x) { return suppAct(fd, x.id); }).sort(byN), off = sp.filter(function (x) { return !suppAct(fd, x.id) && !x.lib; }).sort(byN),
+      mine = on.concat(off), fv = foodAll(fd).filter(function (x) { return x.vor && !isSupp(fd, x); }).sort(byN), o = fd.vso, sh;
+    if (!o) { var half = fv.length > 5 ? Math.ceil(fv.length / 2) : fv.length; sh = [mine, fv.slice(0, half), fv.slice(half)]; }
+    else { var used = {}, pick = function (ids, pool) { var r = []; (ids || []).forEach(function (id) { var x = pool.filter(function (y) { return y.id === id; })[0]; if (x && !used[id]) { used[id] = 1; r.push(x); } }); return r; };
+      sh = [pick(o.s, mine), pick(o.a, fv), pick(o.b, fv)]; mine.forEach(function (x) { if (!used[x.id]) sh[0].push(x); }); fv.forEach(function (x) { if (!used[x.id]) (sh[1].length < 5 ? sh[1] : sh[2]).push(x); }); }
+    return { sh: sh, mine: mine, fv: fv, tpl: sp.filter(function (x) { return !suppAct(fd, x.id) && x.lib; }).sort(byN), low: vsLow(fd, mine, fv) };
+  }
+  function vsManage(fd) {
+    var L = vsLists(fd), mine = L.mine, fv = L.fv, tpl = L.tpl, low = L.low;
+    var h = '<h2 class="vshid">Vorrat</h2><div class="vs" role="group" aria-label="Vorratsschrank">' + vsShelf(fd, L.sh[0], true, 0) + vsShelf(fd, L.sh[1], false, 1) + vsShelf(fd, L.sh[2], false, 2) +
       '<button class="vsnote" data-act="vsnote" aria-expanded="' + !!S.vsNote + '" aria-label="Einkaufszettel' + (low.length ? ": " + low.length + " bald leer" : "") + '">' + (low.length ? "<b>" + low.length + "</b>" : "") + "</button>" +
       '<span class="vsinfo">' + ib("vsi") + "</span></div>" +
-      itx("vsi", "Oben deine Supplemente, darunter Lebensmittel-Vorräte wie Whey. Die Zahl auf dem Brett: so viele Tage reicht es noch (rot ab 7 Tagen, „–“ = noch kein Verbrauch eingetragen). Behälter antippen = alle Angaben darunter: bei Supplementen Inhalt, Einnahme und Vorrat, bei Lebensmitteln Packungen und Behälter. Die App zieht bei Supplementen jede Einnahme ab, bei Lebensmitteln, was du unter „Heute“ einträgst (auch in Meal Prep und Gerichten), und rechnet aus deinem Schnitt der letzten 14 Tage, bis wann es reicht. Der Einkaufszettel an der Tür zeigt, was bald leer ist.");
+      itx("vsi", "Oben deine Supplemente, darunter Lebensmittel-Vorräte wie Whey. Behälter kurz gedrückt halten und ziehen, um die Reihenfolge zu ändern (Lebensmittel auch aufs andere Brett). Die Zahl auf dem Brett: so viele Tage reicht es noch (rot ab 7 Tagen, „–“ = noch kein Verbrauch eingetragen). Behälter antippen = alle Angaben darunter: bei Supplementen Inhalt, Einnahme und Vorrat, bei Lebensmitteln Packungen und Behälter. Die App zieht bei Supplementen jede Einnahme ab, bei Lebensmitteln, was du unter „Heute“ einträgst (auch in Meal Prep und Gerichten), und rechnet aus deinem Schnitt der letzten 14 Tage, bis wann es reicht. Der Einkaufszettel an der Tür zeigt, was bald leer ist.");
     if (S.vsNote) h += '<div class="vsnotel"><p class="small"><b>Einkaufszettel</b> – bald leer</p>' + (low.length ? low.map(function (l) { return '<button class="ghost xs" data-act="fiopen" data-id="' + l[0].id + '">' + esc(shortName(l[0].name)) + ' <span class="slow">' + (l[1] === "leer" ? "leer" : "noch " + l[1].replace(" T", (parseInt(l[1], 10) === 1 ? " Tag" : " Tage"))) + "</span></button>"; }).join("") : '<p class="small muted">Nichts wird knapp – alles reicht noch länger als 7 Tage.</p>') + "</div>";
     var oi = S.fOpen && (mine.concat(fv).filter(function (x) { return x.id === S.fOpen; })[0]);
     if (oi) { var os = isSupp(fd, oi), shv = os ? suppShelf(fd, oi) : fvShelf(fd, oi);
@@ -7063,7 +7077,8 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* v238 (Freigabe des Nutzers): Ernährung mit Unterbereichen Heute | Lebensmittel | Meal Prep | Supplemente | Vorrat (S.homeSec, beim Start „Heute“).
      Die Inhalte stammen aus dem früheren Reiter Daten (Essen), je Bereich ein Block. */
   var HSEC = [["today", "Heute"], ["vor", "Vorrat"], ["meal", "Meal Prep"], ["food", "Lebensmittel"]]; /* v280: Reihenfolge nach Wunsch des Nutzers */ /* v277: Supplemente und Vorrat zusammen im Vorratsschrank */
-  function hsecHtml() { var cur = S.homeSec || "today"; return '<div class="chips hsec" role="group" aria-label="Bereich">' + HSEC.map(function (x) { return '<button data-act="hsec" data-id="' + x[0] + '" aria-pressed="' + (x[0] === cur) + '">' + x[1] + "</button>"; }).join("") + "</div>"; }
+  function hsecHtml() { var cur = S.homeSec || "today", nl = vsLists(foodDoc()).low.length; /* v281 (Wunsch des Nutzers): rote Zahl am Vorrat = was ≤ 7 Tage reicht oder leer ist (wie Einkaufszettel) */
+    return '<div class="chips hsec" role="group" aria-label="Bereich">' + HSEC.map(function (x) { var b = x[0] === "vor" && nl ? nl : 0; return '<button data-act="hsec" data-id="' + x[0] + '" aria-pressed="' + (x[0] === cur) + '"' + (b ? ' aria-label="' + x[1] + ", " + b + ' bald leer"' : "") + ">" + x[1] + (b ? '<b class="hbadge" aria-hidden="true">' + b + "</b>" : "") + "</button>"; }).join("") + "</div>"; }
   function homeSecHtml(sec, fd) {
     if (sec === "food") return '<div class="block fmanage">' + foodItemsHtml(fd) + "</div>";
     if (sec === "meal") return '<div class="block fmanage mpblock">' + mealHtml(fd) + "</div>";
@@ -7212,7 +7227,37 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
      Reiterleiste zitterte (Meldung des Nutzers). Jetzt nur noch an den Essenslisten (.nlist), überall sonst scrollt Safari frei. */
   function ndTouchMove(ev) { if (!ND) return; if (ND.on) ev.preventDefault(); ndMove(ev.touches[0].clientX, ev.touches[0].clientY); }
   function ndBind() { document.querySelectorAll(".nlist:not([data-ndb])").forEach(function (u) { u.dataset.ndb = "1"; u.addEventListener("touchmove", ndTouchMove, { passive: false }); }); }
-  var ndBindT = 0; new MutationObserver(function () { if (!ndBindT) ndBindT = setTimeout(function () { ndBindT = 0; ndBind(); }, 0); }).observe(document.body, { childList: true, subtree: true });
+  /* v281 (Wunsch des Nutzers): Reihenfolge im Vorratsschrank per Gedrückthalten (400 ms) und Ziehen. Supplemente nur auf dem oberen Brett,
+     Lebensmittel auf Brett 2 und 3. Nicht-passiver touchmove-Hörer nur am Schrank (.vs), wie bei den Essenslisten (v274). */
+  var VD = null, VDCLICK = 0;
+  function vdDown(ev, x, y) { var b = ev.target.closest && ev.target.closest(".vs .vsit"); if (!b || !S.ready) return;
+    VD = { b: b, id: b.dataset.id, sup: b.dataset.vs === "s", x: x, y: y, on: false }; VD.tm = setTimeout(function () { if (VD && !VD.on) vdStart(x, y); }, 400); }
+  function vdStart(x, y) { var r = VD.b.getBoundingClientRect(), im = VD.b.querySelector("img"), g = im.cloneNode(true), ir = im.getBoundingClientRect();
+    g.className = "vsghost"; g.style.cssText = "left:" + ir.left + "px;top:" + ir.top + "px;width:" + ir.width + "px;height:" + ir.height + "px"; document.body.appendChild(g);
+    VD.on = true; VD.g = g; VD.dx = x - ir.left; VD.dy = y - ir.top; VD.b.classList.add("vsdrag"); VD.m = document.createElement("span"); VD.m.className = "vsmark"; SW = null; haptic(); vdMove(x, y); }
+  function vdTarget(x, y) { var cab = document.querySelector(".vs"), cr = cab.getBoundingClientRect(), yi = (y - cr.top) / cr.width * 1316, k = yi < VS_SH[1][0] ? 0 : yi < VS_SH[2][0] ? 1 : 2;
+    if (VD.sup) k = 0; else if (k === 0) k = 1; return k; }
+  function vdMove(x, y) {
+    if (!VD) return; if (!VD.on) { if (Math.abs(x - VD.x) > 8 || Math.abs(y - VD.y) > 8) vdCancel(); return; }
+    VD.g.style.left = (x - VD.dx) + "px"; VD.g.style.top = (y - VD.dy) + "px";
+    var k = vdTarget(x, y), sh = document.querySelector('.vs .vsshelf[data-sh="' + k + '"]'), row = sh.querySelector(".vsrow"), sr = sh.getBoundingClientRect();
+    if (x < sr.left + 24) sh.scrollLeft -= 8; else if (x > sr.right - 24) sh.scrollLeft += 8; /* am Rand des Bretts weiterrollen */
+    var its = Array.prototype.filter.call(row.querySelectorAll(".vsit"), function (b) { return b !== VD.b; }), bef = null;
+    for (var i = 0; i < its.length; i++) { var r = its[i].getBoundingClientRect(); if (r.left + r.width / 2 > x) { bef = its[i]; break; } }
+    if (VD.m.parentNode !== row || VD.m.nextSibling !== bef) row.insertBefore(VD.m, bef); VD.k = k; }
+  function vdCancel() { if (!VD) return; clearTimeout(VD.tm); if (VD.g) VD.g.remove(); if (VD.m) VD.m.remove(); if (VD.b) VD.b.classList.remove("vsdrag"); VD = null; }
+  function vdEnd() { if (!VD) return; var on = VD.on, id = VD.id, m = VD.m, k = VD.k; if (!on || !m.parentNode) { vdCancel(); return; }
+    var lay = [0, 1, 2].map(function (n) { var row = document.querySelector('.vs .vsshelf[data-sh="' + n + '"] .vsrow'), out = [];
+      Array.prototype.forEach.call(row.children, function (c) { if (c === m) out.push(id); else if (c.classList.contains("vsit") && c.dataset.id !== id) out.push(c.dataset.id); }); return out; });
+    vdCancel(); VDCLICK = Date.now(); var fdo = clone(foodDoc()); fdo.vso = { s: lay[0], a: lay[1], b: lay[2] }; var yo = window.scrollY; foodSave(fdo); renderData(); window.scrollTo(0, yo); }
+  function vdBind() { document.querySelectorAll(".vs:not([data-vdb])").forEach(function (v) { v.dataset.vdb = "1";
+    v.addEventListener("touchstart", function (ev) { if (ev.touches.length !== 1) { vdCancel(); return; } vdDown(ev, ev.touches[0].clientX, ev.touches[0].clientY); }, { passive: true });
+    v.addEventListener("touchmove", function (ev) { if (!VD) return; if (VD.on) ev.preventDefault(); vdMove(ev.touches[0].clientX, ev.touches[0].clientY); }, { passive: false });
+    v.addEventListener("touchend", vdEnd); v.addEventListener("touchcancel", vdCancel);
+    v.addEventListener("mousedown", function (ev) { if (ev.button === 0 && !("ontouchstart" in window)) vdDown(ev, ev.clientX, ev.clientY); }); }); }
+  document.addEventListener("mousemove", function (ev) { if (VD) vdMove(ev.clientX, ev.clientY); }); document.addEventListener("mouseup", function () { if (VD) vdEnd(); });
+  document.addEventListener("click", function (ev) { if (Date.now() - VDCLICK < 400) { ev.stopPropagation(); ev.preventDefault(); } }, true);
+  var ndBindT = 0; new MutationObserver(function () { if (!ndBindT) ndBindT = setTimeout(function () { ndBindT = 0; ndBind(); vdBind(); }, 0); }).observe(document.body, { childList: true, subtree: true }); /* v281: auch der Vorratsschrank */
   ndBind();
   document.addEventListener("touchend", ndEnd); document.addEventListener("touchcancel", ndCancel);
   document.addEventListener("mousedown", function (ev) { if (ev.button === 0 && !("ontouchstart" in window && ev.sourceCapabilities && ev.sourceCapabilities.firesTouchEvents)) ndDown(ev, ev.clientX, ev.clientY); });
@@ -7220,7 +7265,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   document.addEventListener("contextmenu", function (ev) { if (ND && ND.on || (ev.target.closest && ev.target.closest(".nlist li.nent"))) ev.preventDefault(); });
   document.addEventListener("click", function (ev) { if (Date.now() - NDCLICK < 400) { ev.stopPropagation(); ev.preventDefault(); } }, true);
   var swBlocked = function (el) {
-    if ((ND && ND.on) || document.querySelector(".overlay:not([hidden])") || document.body.classList.contains("reporting") || document.body.classList.contains("touring") || ($("setup") && !$("setup").hidden)) return true;
+    if ((ND && ND.on) || (VD && VD.on) || document.querySelector(".overlay:not([hidden])") || document.body.classList.contains("reporting") || document.body.classList.contains("touring") || ($("setup") && !$("setup").hidden)) return true;
     for (var n = el; n && n !== document.body; n = n.parentElement) {
       if (/^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName) || n.classList.contains("tabs") || n.classList.contains("cbres") || n.id === "lookpop") return true;
       if (n.scrollWidth > n.clientWidth + 2) { var ox = getComputedStyle(n).overflowX; if (ox === "auto" || ox === "scroll") return true; }
