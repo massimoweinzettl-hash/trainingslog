@@ -861,6 +861,12 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 [data-skin="quark"][data-noon][data-tab="prog"] .top::after { background-image: url("maskottchen/quark-mittag-prog.png") }
 [data-skin="quark"][data-noon][data-tab="body"] .top::after { background-image: url("maskottchen/quark-mittag-body.png") }
 [data-skin="quark"][data-noon][data-tab="plan"] .top::after { background-image: url("maskottchen/quark-mittag-plan.png") }
+/* v271: Kaffeezeit (html[data-coffee], 15–17 Uhr) Becher mit Kaffee und Kuchen */
+[data-skin="quark"][data-coffee] .top::after { background-image: url("maskottchen/quark-kaffee-home.png") }
+[data-skin="quark"][data-coffee][data-tab="train"] .top::after { background-image: url("maskottchen/quark-kaffee-train.png") }
+[data-skin="quark"][data-coffee][data-tab="prog"] .top::after { background-image: url("maskottchen/quark-kaffee-prog.png") }
+[data-skin="quark"][data-coffee][data-tab="body"] .top::after { background-image: url("maskottchen/quark-kaffee-body.png") }
+[data-skin="quark"][data-coffee][data-tab="plan"] .top::after { background-image: url("maskottchen/quark-kaffee-plan.png") }
 [data-skin="quark"][data-tab="set"] .top::after, [data-skin="quark"] .top:has(.sync.err)::after { display: none } [data-skin="quark"][data-tab="set"] .top { min-height: 0 }
 @media (max-width: 380px) { [data-skin="quark"] .top::after { left: 92px; width: 90px; height: 80px; top: -2px } [data-skin="quark"] .top.haski::after { left: 50% } }
 /* v259 (Vorlage des Nutzers aus ChatGPT): Design „Hähnchen, Reis & Brokkoli“ – warmes Creme, Orange als Akzent, Grün als Zweitfarbe,
@@ -1068,8 +1074,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 270; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 271; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 271, tab: "home", text: "Kaffeezeit: Von 15 bis 17 Uhr gönnen sich die Quarkbecher Kaffee und Kuchen – mit Hantelbank-Pause, Pokal, Maßband und Coach-Klemmbrett." },
     { v: 270, tab: "home", text: "Mahlzeit: Von 11 bis halb drei machen die Quarkbecher Mittagspause – mit Mittagessen, Shake, Wochenplan, Maßband und Meal-Prep-Box." },
     { v: 269, tab: "home", text: "Guten Morgen: Von 6 bis 10 Uhr sind die Quarkbecher frisch aufgestanden – mit Sonne, Kaffee, Frühstück, Morgen-Stretching, Waage und Wecker." },
     { v: 268, tab: "home", text: "Magerquark ist jetzt das Standard-Design (das bisherige heißt „Klassisch“ und bleibt wählbar). Und nachts schlafen die Quarkbecher: ab deiner Schlafenszeit bis 6 Uhr liegen sie in jedem Reiter im Sternenbett." },
@@ -2147,7 +2154,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
      (Start: alle 30 min, Rückkehr in die App: alle 5 min), erscheint der Hinweis #upd in der Mitte (seit v85). */
   /* Seit v100 (Fable-Prüfung): Update leert den Cache nicht mehr (sonst fehlten offline zxing/Körperkarte), sondern legt die neue
      index.html vorher in den Cache. Ohne Netz kein Neuladen, damit keine leere Seite entsteht. SWC muss zu CACHE in sw.js passen. */
-  var SWC = "trainingslog-v9", SWF = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./inter.woff2", "./space-grotesk.woff2", "./zxing.min.js", "./koerperkarte.png", "./koerperkarte-licht.jpg", "./maskottchen/quark-home.png", "./maskottchen/quark-train.png", "./maskottchen/quark-prog.png", "./maskottchen/quark-body.png", "./maskottchen/quark-plan.png", "./maskottchen/quark-nacht-home.png", "./maskottchen/quark-nacht-train.png", "./maskottchen/quark-nacht-prog.png", "./maskottchen/quark-nacht-body.png", "./maskottchen/quark-nacht-plan.png", "./maskottchen/quark-morgen-home.png", "./maskottchen/quark-morgen-train.png", "./maskottchen/quark-morgen-prog.png", "./maskottchen/quark-morgen-body.png", "./maskottchen/quark-morgen-plan.png", "./maskottchen/quark-mittag-home.png", "./maskottchen/quark-mittag-train.png", "./maskottchen/quark-mittag-prog.png", "./maskottchen/quark-mittag-body.png", "./maskottchen/quark-mittag-plan.png"];
+  var SWC = "trainingslog-v10", SWF = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./inter.woff2", "./space-grotesk.woff2", "./zxing.min.js", "./koerperkarte.png", "./koerperkarte-licht.jpg", "./maskottchen/quark-home.png", "./maskottchen/quark-train.png", "./maskottchen/quark-prog.png", "./maskottchen/quark-body.png", "./maskottchen/quark-plan.png", "./maskottchen/quark-nacht-home.png", "./maskottchen/quark-nacht-train.png", "./maskottchen/quark-nacht-prog.png", "./maskottchen/quark-nacht-body.png", "./maskottchen/quark-nacht-plan.png", "./maskottchen/quark-morgen-home.png", "./maskottchen/quark-morgen-train.png", "./maskottchen/quark-morgen-prog.png", "./maskottchen/quark-morgen-body.png", "./maskottchen/quark-morgen-plan.png", "./maskottchen/quark-mittag-home.png", "./maskottchen/quark-mittag-train.png", "./maskottchen/quark-mittag-prog.png", "./maskottchen/quark-mittag-body.png", "./maskottchen/quark-mittag-plan.png", "./maskottchen/quark-kaffee-home.png", "./maskottchen/quark-kaffee-train.png", "./maskottchen/quark-kaffee-prog.png", "./maskottchen/quark-kaffee-body.png", "./maskottchen/quark-kaffee-plan.png"];
   function cacheHeal() { /* fehlende Offline-Dateien nachladen (z. B. nach altem Update mit Cache-Leeren) */
     if (!window.caches || navigator.onLine === false || location.protocol === "file:" || !("serviceWorker" in navigator)) return;
     caches.open(SWC).then(function (c) { SWF.forEach(function (f) { c.match(f, { ignoreSearch: true }).then(function (h) { if (!h) c.add(f).catch(function () {}); }); }); }).catch(function () {});
@@ -6585,7 +6592,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   function cafLatest(room, bedMs, now) { if (room <= 0 || cafAmt(90, bedMs - now) > room) return now; var lo = now, hi2 = bedMs; for (var it = 0; it < 40; it++) { var md = (lo + hi2) / 2; if (cafAmt(90, bedMs - md) <= room) lo = md; else hi2 = md; } return lo; }
   function bedTime() { var b = S.person && HMRE.test(S.person.bed || "") ? S.person.bed : "23:00", d = new Date(), m = /^(\d{2}):(\d{2})$/.exec(b); d.setHours(+m[1], +m[2], 0, 0); if (+m[1] < 12) d.setDate(d.getDate() + 1); return { ms: d.getTime(), hm: b }; }
   /* v268 (Wunsch des Nutzers): Nachts schlafen die Quarkbecher – von der Schlafenszeit (Einstellungen, sonst 23:00) bis 6 Uhr.
-     Setzt html[data-night]; die Bilder wechseln per CSS nur im Design Magerquark (hell und dunkel). v269: dazu html[data-morning] 6–10 Uhr, v270 html[data-noon] 11:00–14:30. */
+     Setzt html[data-night]; die Bilder wechseln per CSS nur im Design Magerquark (hell und dunkel). v269: dazu html[data-morning] 6–10 Uhr, v270 html[data-noon] 11:00–14:30, v271 html[data-coffee] 15–17 Uhr. */
   function nightSet() {
     var b = S.person && HMRE.test(S.person.bed || "") ? S.person.bed : "23:00", m = /^(\d{2}):(\d{2})$/.exec(b), bm = +m[1] * 60 + +m[2],
       d = new Date(), nm = d.getHours() * 60 + d.getMinutes(), on = bm >= 360 ? (nm >= bm || nm < 360) : (nm >= bm && nm < 360), de = document.documentElement;
@@ -6594,6 +6601,8 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     if (mo !== (de.dataset.morning === "1")) { if (mo) de.dataset.morning = "1"; else delete de.dataset.morning; }
     var no = !on && nm >= 660 && nm < 870; /* v270: mittags 11:00–14:30 (wie Mahlzeit „Mittag“) Becher beim Mittagessen (html[data-noon]) */
     if (no !== (de.dataset.noon === "1")) { if (no) de.dataset.noon = "1"; else delete de.dataset.noon; }
+    var co = !on && nm >= 900 && nm < 1020; /* v271: Kaffeezeit 15–17 Uhr, Becher mit Kaffee und Kuchen (html[data-coffee]) */
+    if (co !== (de.dataset.coffee === "1")) { if (co) de.dataset.coffee = "1"; else delete de.dataset.coffee; }
   }
   /* v112 (Wunsch des Nutzers): Koffeinspiegel über den Tag. Jede Einnahme hebt sofort an, Abbau mit CAF_HL. Von der ersten Einnahme (volle Stunde) bis 1 h nach der Schlafenszeit. */
   /* v127 (Nutzer: Energy um 22 Uhr, nach Mitternacht stand der Zähler auf null): Einnahmen tragen eine absolute Zeit (cafMs),

@@ -5,7 +5,8 @@ const files = ["index.html", "manifest.webmanifest", "sw.js", "inter.woff2", "sp
   "maskottchen/quark-home.png", "maskottchen/quark-train.png", "maskottchen/quark-prog.png", "maskottchen/quark-body.png", "maskottchen/quark-plan.png",
   "maskottchen/quark-nacht-home.png", "maskottchen/quark-nacht-train.png", "maskottchen/quark-nacht-prog.png", "maskottchen/quark-nacht-body.png", "maskottchen/quark-nacht-plan.png",
   "maskottchen/quark-morgen-home.png", "maskottchen/quark-morgen-train.png", "maskottchen/quark-morgen-prog.png", "maskottchen/quark-morgen-body.png", "maskottchen/quark-morgen-plan.png",
-  "maskottchen/quark-mittag-home.png", "maskottchen/quark-mittag-train.png", "maskottchen/quark-mittag-prog.png", "maskottchen/quark-mittag-body.png", "maskottchen/quark-mittag-plan.png"];
+  "maskottchen/quark-mittag-home.png", "maskottchen/quark-mittag-train.png", "maskottchen/quark-mittag-prog.png", "maskottchen/quark-mittag-body.png", "maskottchen/quark-mittag-plan.png",
+  "maskottchen/quark-kaffee-home.png", "maskottchen/quark-kaffee-train.png", "maskottchen/quark-kaffee-prog.png", "maskottchen/quark-kaffee-body.png", "maskottchen/quark-kaffee-plan.png"];
 rmSync("www", { recursive: true, force: true });
 mkdirSync("www");
 mkdirSync("www/maskottchen");   // v265: Quark-Maskottchen

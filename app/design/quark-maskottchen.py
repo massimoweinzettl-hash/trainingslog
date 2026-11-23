@@ -2,12 +2,12 @@
 # Quelle: Einzelbilder des Nutzers aus ChatGPT (1254 × 1254 px, transparent, ohne Markennamen) in
 # app/design/quark-vorlagen/{home,train,prog,body,plan}.png (Tag) und nacht-{…}.png (schlafend, ab Schlafenszeit bis 6 Uhr;
 # bei nacht-home war ein Karomuster ins Bild gemalt – einmalig entfernt) und morgen-{…}.png (6–10 Uhr, seit v269) und mittag-{…}.png (11:00–14:30, seit v270; aus einem Sammelbild
-# zerlegt und hochskaliert, damit der Deckeltext gleich breit ist).
-# Dieses Skript richtet alle zwanzig Becher aneinander aus
+# zerlegt und hochskaliert, damit der Deckeltext gleich breit ist) und kaffee-{…}.png (15–17 Uhr, seit v271, ebenso).
+# Dieses Skript richtet alle 25 Becher aneinander aus
 # (Mitte und Unterkante des Deckeltexts „Speisequark Magerstufe“), schneidet alle fünf auf dieselbe Fläche zu und
 # schreibt kleine PNGs mit 256 Farben:
 #   python3 app/design/quark-maskottchen.py app/design/quark-vorlagen maskottchen
-# Ergebnis: maskottchen/quark-{…}.png, quark-nacht-{…}.png, quark-morgen-{…}.png und quark-mittag-{…}.png, eingebunden in index.html über
+# Ergebnis: maskottchen/quark-{…}.png, quark-nacht-{…}.png, quark-morgen-{…}.png quark-mittag-{…}.png und quark-kaffee-{…}.png, eingebunden in index.html über
 # [data-skin="quark"] … .top::after, offline über sw.js (FILES) und SWF in index.html, iPhone-App über app/copy-web.mjs.
 import sys
 import numpy as np
@@ -28,7 +28,7 @@ def anchor(a):
     ty, tx = np.where(txt)
     return (tx.min() + tx.max()) / 2, ty.max(), tx.max() - tx.min()
 
-SETS = [("", "quark-"), ("nacht-", "quark-nacht-"), ("morgen-", "quark-morgen-"), ("mittag-", "quark-mittag-")]      # (Vorlagen-Präfix, Ausgabe-Präfix)
+SETS = [("", "quark-"), ("nacht-", "quark-nacht-"), ("morgen-", "quark-morgen-"), ("mittag-", "quark-mittag-"), ("kaffee-", "quark-kaffee-")]      # (Vorlagen-Präfix, Ausgabe-Präfix)
 
 def main(src, out):
     jobs = [(pre_in + n, pre_out + n) for pre_in, pre_out in SETS for n in NAMES]
