@@ -706,7 +706,6 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 .vsim img { display: block; width: auto; max-width: none; filter: drop-shadow(0 .25cqw .25cqw rgba(60, 30, 0, .35)) }
 .vsit.sel img { filter: drop-shadow(0 0 .7cqw #fff) drop-shadow(0 0 .5cqw var(--accent)) }
 .vsit.off img { opacity: .45; filter: grayscale(.7) }
-.vsit.sit { flex-direction: row; align-items: flex-start } .vsit.sit .vstw { margin-top: var(--ia); margin-left: -.6cqw } /* v278: sitzender Quark – Plakette rechts neben den Füßen */
 .vstw { position: relative; z-index: 1; height: var(--ta); display: flex; align-items: center; justify-content: center; overflow: visible } /* über dem Bild (filter malt sonst darüber) */
 .vstag { font: 700 9.5px/1 var(--body); color: #5a3410; background: #fff6e6; border: 1px solid #c98a44; border-radius: 4px; padding: 2px 4px; white-space: nowrap; font-variant-numeric: tabular-nums }
 .vstag.low { background: #e5484d; color: #fff; border-color: #b8292e } .vstag.off { background: #f1e6d6; color: #8a6a48 }
@@ -1099,8 +1098,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 278; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 279; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 279, tab: "home", text: "Vorratsschrank: Beim Quark steht die Plakette mit den Tagen jetzt vor seinen Beinen." },
     { v: 278, tab: "home", text: "Im Vorratsschrank sitzt jetzt unser Quark-Maskottchen auf dem Brett, wenn du Quark auf Vorrat hast – die Beine baumeln über die Kante." },
     { v: 277, tab: "home", text: "Neuer Vorratsschrank unter Ernährung → Vorrat: Supplemente oben, Lebensmittel-Vorräte darunter, jeder als Behälter im Regal. Die Zahl auf dem Brett zeigt, wie viele Tage es noch reicht. Antippen öffnet die Angaben, der Einkaufszettel an der Tür zeigt, was bald leer ist. Der Bereich „Supplemente“ ist darin aufgegangen." },
     { v: 276, tab: "home", text: "Die Reiterleiste oben zittert beim Scrollen nicht mehr (Lösung aus deinem Test B). Der Testschalter an der Versionsnummer ist wieder weg." },
@@ -6990,7 +6990,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   function vsIt(fd, it, sup, k) {
     var ic = vsIcon(fd, it, sup), ar = VS_AR[ic], sh = VS_SH[k], hh = (sh[1] - sh[0]) * 0.86 * VS_REL[ic], tg = vsTag(fd, it, sup), op = S.fOpen === it.id;
     var al = esc(it.name) + (tg ? ", " + (tg[0] === "–" ? "noch kein Verbrauch" : tg[0] === "Pause" ? "pausiert" : tg[0] === "leer" ? "leer" : "reicht noch " + tg[0].replace(" T", " Tage")) : "");
-    return '<button class="vsit' + (op ? " sel" : "") + (ic === "quark" ? " sit" : "") + (sup && !suppAct(fd, it.id) ? " off" : "") + '" data-act="fiopen" data-id="' + it.id + '" aria-expanded="' + op + '" aria-label="' + al + '">' +
+    return '<button class="vsit' + (op ? " sel" : "") + (sup && !suppAct(fd, it.id) ? " off" : "") + '" data-act="fiopen" data-id="' + it.id + '" aria-expanded="' + op + '" aria-label="' + al + '">' +
       '<span class="vsim"><img src="vorrat/' + ic + '.png" width="' + ar[0] + '" height="' + ar[1] + '" alt="" style="height:' + (hh / 13.16).toFixed(2) + "cqw" + (ic === "quark" ? ";margin-bottom:-" + ((hh * (1 - VS_SEAT) - 6) / 13.16).toFixed(2) + "cqw" : "") + '"></span>' + /* v278: Quark sitzt, Beine hängen über die Brettkante */
       '<span class="vstw">' + (tg ? '<span class="vstag ' + tg[1] + '">' + tg[0] + "</span>" : "") + "</span></button>";
   }
