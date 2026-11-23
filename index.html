@@ -348,6 +348,13 @@ body.cardioonly .tabs button[data-tab="plan"] { display: none }
 .lab { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 500; color: var(--muted) }
 
 .tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; gap: 4px; background: var(--bg); padding-block: 6px } /* v273: kein eigener Scrollbereich und keine eigene Ebene mehr (overflow/translateZ aus v261 ließen die klebende Leiste in Safari beim Scrollen zittern); fünf Reiter passen immer in die Breite */
+/* v275 TEST (vorübergehend, Reiterleiste zittert in Safari): Variante per Antippen der Versionsnummer, Merker trainingslog-bartest.
+   B = Seitenrahmen ohne overflow-x: clip, C = keine Unschärfe (backdrop-filter), D = Leiste per position: fixed statt sticky. Nach der Entscheidung wieder entfernen. */
+html[data-bt="b"] .wrap { overflow-x: visible }
+html[data-bt="c"] *, html[data-bt="c"] *::before, html[data-bt="c"] *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important }
+html[data-bt="d"] .tabs { position: relative; top: auto }
+html[data-bt="d"] .tabs.btfix { position: fixed; top: env(safe-area-inset-top, 0px); z-index: 20 }
+.ver.btv { color: var(--accent) !important; font-weight: 600 }
 .tabs button { flex: 1 1 auto; white-space: nowrap; border-radius: 0; padding: 10px 6px; border: 0; border-bottom: 2px solid var(--line); background: none; color: var(--muted);
   font: 600 14px var(--body); cursor: pointer }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent) }
@@ -1074,8 +1081,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 274; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 275; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 275, tab: "home", text: "Testversion für die zitternde Reiterleiste: Versionsnummer oben rechts antippen schaltet zwischen Test A, B, C und D um." },
     { v: 274, tab: "home", text: "Zweiter Anlauf gegen die zitternde Reiterleiste: Das Scrollen wartet nicht mehr auf die Wisch- und Verschiebe-Gesten der App." },
     { v: 273, tab: "home", text: "Die Reiterleiste oben sollte beim Scrollen nicht mehr zittern." },
     { v: 272, tab: "home", text: "Neue Zeiten für die Quarkbecher: Morgen 6–9 Uhr, Tag 9–12 Uhr, Mittag 12–14:30 Uhr, Kaffeezeit 15–17 Uhr." },
@@ -1710,6 +1718,28 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   window.addEventListener("scroll", function () { var y = window.scrollY, de = document.documentElement, was = de.classList.contains("scr"), on = was ? y > 24 : y > 48; if (was !== on) de.classList.toggle("scr", on); }, { passive: true });
   /* v133 (Wunsch des Nutzers): Versionsnummer immer sichtbar unter dem Speicherstatus */
   try { document.getElementById("ver").textContent = "v" + APP_VERSION; document.getElementById("ver").title = "Version " + APP_VERSION; } catch (e) {}
+  /* v275 TEST (vorübergehend): Varianten gegen das Zittern der Reiterleiste. Antippen der Versionsnummer schaltet A → B → C → D → A. */
+  var BT = "a"; try { BT = localStorage.getItem("trainingslog-bartest") || "a"; } catch (e) {}
+  var btPh = null, btOn = false, btSafe = 0;
+  function btSafeTop() { var p = document.createElement("div"); p.style.cssText = "position:fixed;top:0;height:env(safe-area-inset-top,0px);visibility:hidden"; document.body.appendChild(p); btSafe = p.offsetHeight; p.remove(); }
+  function btFix() {
+    var t = document.querySelector(".tabs"); if (!t) return;
+    if (BT !== "d") { if (btPh) { btPh.remove(); btPh = null; } t.classList.remove("btfix"); t.style.left = t.style.width = ""; btOn = false; return; }
+    if (!btPh) { btPh = document.createElement("div"); btPh.className = "btph"; btPh.style.display = "none"; t.parentNode.insertBefore(btPh, t); }
+    var r = (btOn ? btPh : t).getBoundingClientRect(), on = r.top <= btSafe; /* Platzhalter nur sichtbar, solange die Leiste fest ist (sonst zusätzlicher Abstand) */
+    if (on !== btOn) { btOn = on; btPh.style.height = t.offsetHeight + "px"; btPh.style.display = on ? "" : "none"; t.classList.toggle("btfix", on); if (on) r = btPh.getBoundingClientRect(); }
+    if (on) { t.style.left = r.left + "px"; t.style.width = r.width + "px"; } else t.style.left = t.style.width = "";
+  }
+  function btApply() {
+    document.documentElement.dataset.bt = BT; var v = document.getElementById("ver");
+    if (v) { v.textContent = "v" + APP_VERSION + " · Test " + BT.toUpperCase(); v.classList.add("btv"); }
+    btFix();
+  }
+  btSafeTop(); btApply();
+  window.addEventListener("scroll", btFix, { passive: true }); window.addEventListener("resize", function () { btSafeTop(); btOn = !btOn; btFix(); btOn = !btOn; btFix(); });
+  document.getElementById("ver").addEventListener("click", function () {
+    BT = { a: "b", b: "c", c: "d", d: "a" }[BT] || "a"; try { localStorage.setItem("trainingslog-bartest", BT); } catch (e) {} btApply(); haptic();
+  });
   function setSync(t, err) { var el = $("sync"); el.textContent = t; el.classList.toggle("err", !!err); }
   function notice(t) { var el = $("notice"); el.hidden = !t; el.textContent = t || ""; }
   function applyDocs(list) {

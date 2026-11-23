@@ -2,7 +2,7 @@
 
 Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Repo arbeiten (Claude, ChatGPT/Codex). **Zuerst lesen, bei jeder Änderung mitpflegen.** Kurz halten: nur der aktuelle Stand, keine Geschichte (die steht in `VERLAUF.md`). Das Repo ist öffentlich – hier nichts Persönliches eintragen.
 
-**Stand:** v274 (23.11.2026)
+**Stand:** v275 (23.11.2026)
 
 ## Vor jeder Arbeit
 1. `git pull` und `git log --oneline -15`: Hat der andere Assistent seit dem letzten Mal etwas geändert? Dann diese Änderungen zuerst durchsehen und Auffälligkeiten dem Besitzer melden, nicht ungefragt im fremden Bereich umbauen.
@@ -58,6 +58,7 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
 - **Rundgang** (`TOUR`): Willkommen → Ernährung → Training → Fortschritt → Körper → Plan → Zahnrad → Einstellungen.
 
 ## Offen
+- **Vorübergehender Test v275 (Reiterleiste zittert in Safari):** Antippen der Versionsnummer schaltet `html[data-bt]` a–d (b: `.wrap` ohne `overflow-x: clip`, c: ohne `backdrop-filter`, d: Leiste per `position: fixed` statt sticky), Merker `trainingslog-bartest`. Nach der Entscheidung des Besitzers die passende Variante fest einbauen und den Test samt Merker entfernen (sonst bricht `app/freunde-build.py` ab).
 - **Rundgang (v241–v246):** (1) „Zahnrad oben rechts“ ist seit v256 behoben; (2) Station „Fortschritt“ erscheint im Modus „Nur Ernährung“, obwohl der Reiter fehlt; (3) Start aus einem anderen Ernährungsbereich lässt diesen offen, die Karte erklärt aber „Heute“. Der Besitzer entscheidet, wer das behebt.
 - Markenprodukte ohne Nährstoffwerte (z. B. Haferflocken einer Marke) haben keine Ballaststoffe/Vitamine – Übernahme vom Grundlebensmittel angeboten, nicht beauftragt.
 - Kohlenhydrat-Mint und das Grün abgehakter Supplemente liegen nah beieinander – Besitzer prüft.
