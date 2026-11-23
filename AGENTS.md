@@ -2,7 +2,7 @@
 
 Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Repo arbeiten (Claude, ChatGPT/Codex). **Zuerst lesen, bei jeder Änderung mitpflegen.** Kurz halten: nur der aktuelle Stand, keine Geschichte (die steht in `VERLAUF.md`). Das Repo ist öffentlich – hier nichts Persönliches eintragen.
 
-**Stand:** v275 (23.11.2026)
+**Stand:** v276 (23.11.2026)
 
 ## Vor jeder Arbeit
 1. `git pull` und `git log --oneline -15`: Hat der andere Assistent seit dem letzten Mal etwas geändert? Dann diese Änderungen zuerst durchsehen und Auffälligkeiten dem Besitzer melden, nicht ungefragt im fremden Bereich umbauen.
@@ -44,7 +44,7 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
 - Vor dem Veröffentlichen den Weg des Nutzers selbst durchklicken, nicht nur die neue Funktion.
 
 ## Aufbau der App
-- **Reiterleiste bleibt oben** (Reiter unten wurde in v255 getestet und vom Besitzer verworfen). Sie klebt per `position: sticky`; seit v273 bewusst ohne `overflow`, `transform`/`translateZ` oder `will-change` – das ließ sie in Safari beim Scrollen zittern. **Keine nicht-passiven `touchmove`/`wheel`-Hörer an `document`/`window`** (v274): Safari wartet sonst bei jedem Scrollen auf das Skript, die Leiste zittert. Wischen zwischen Reitern läuft passiv über `section.tab { touch-action: pan-y }`, Drag and drop der Essenseinträge hört nicht-passiv nur an `.nlist` (`ndBind`).
+- **Reiterleiste bleibt oben** (Reiter unten wurde in v255 getestet und vom Besitzer verworfen). Sie klebt per `position: sticky`; seit v273 bewusst ohne `overflow`, `transform`/`translateZ` oder `will-change` – das ließ sie in Safari beim Scrollen zittern. **Kein `overflow` (außer `visible`) an Vorfahren der Leiste** (v276, Ursache des Zitterns): seitliches Abschneiden fürs Reiter-Wischen nur über `.tabclip` um die `section.tab`. **Keine nicht-passiven `touchmove`/`wheel`-Hörer an `document`/`window`** (v274): Safari wartet sonst bei jedem Scrollen auf das Skript, die Leiste zittert. Wischen zwischen Reitern läuft passiv über `section.tab { touch-action: pan-y }`, Drag and drop der Essenseinträge hört nicht-passiv nur an `.nlist` (`ndBind`).
 - **Kopfzeile:** oben links Zahnrad (Einstellungen), KI-Knopf (nur iPhone-App), Glocke (Hinweise, neue Version); rechts Status und Versionsnummer.
 - **Reiter:** Ernährung · Training · Fortschritt · Körper · Plan (Wischen zwischen Reitern).
   - **Ernährung** mit Bereichen Heute · Lebensmittel · Meal Prep (Gerichte eingeklappt als Zeile, `S.mpEx`, Aktion `fmtog`) · Supplemente · Vorrat. *Heute:* Koffein, Trinken, Kalorien und Makros, Eintragen (Suche, Scan, Schätzen, Gericht berechnen), Liste nach Mahlzeiten (Frühstück, Mittag, Abendessen, Snacks; automatisch nach Uhrzeit `mzAuto`, fest über `e.mz`; je Gruppe einklappbar, Merker `trainingslog-mzopen` (Heute f|m|a|s, Rückblick rf|rm|ra|rs); Verschieben per Gedrückthalten + Ziehen oder Auswahl im Eintrag; Tagessumme bleibt), Vitamine & Mineralstoffe (Zeile antippen = Quellen), Essen im Rückblick (immer offen, Nachtragen für frühere Tage).
@@ -58,7 +58,6 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
 - **Rundgang** (`TOUR`): Willkommen → Ernährung → Training → Fortschritt → Körper → Plan → Zahnrad → Einstellungen.
 
 ## Offen
-- **Vorübergehender Test v275 (Reiterleiste zittert in Safari):** Antippen der Versionsnummer schaltet `html[data-bt]` a–d (b: `.wrap` ohne `overflow-x: clip`, c: ohne `backdrop-filter`, d: Leiste per `position: fixed` statt sticky), Merker `trainingslog-bartest`. Nach der Entscheidung des Besitzers die passende Variante fest einbauen und den Test samt Merker entfernen (sonst bricht `app/freunde-build.py` ab).
 - **Rundgang (v241–v246):** (1) „Zahnrad oben rechts“ ist seit v256 behoben; (2) Station „Fortschritt“ erscheint im Modus „Nur Ernährung“, obwohl der Reiter fehlt; (3) Start aus einem anderen Ernährungsbereich lässt diesen offen, die Karte erklärt aber „Heute“. Der Besitzer entscheidet, wer das behebt.
 - Markenprodukte ohne Nährstoffwerte (z. B. Haferflocken einer Marke) haben keine Ballaststoffe/Vitamine – Übernahme vom Grundlebensmittel angeboten, nicht beauftragt.
 - Kohlenhydrat-Mint und das Grün abgehakter Supplemente liegen nah beieinander – Besitzer prüft.
