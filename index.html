@@ -849,13 +849,13 @@ button, select, input { touch-action: manipulation } body:not(.reporting) { touc
 [data-skin="quark"][data-night][data-tab="prog"] .top::after { background-image: url("maskottchen/quark-nacht-prog.png") }
 [data-skin="quark"][data-night][data-tab="body"] .top::after { background-image: url("maskottchen/quark-nacht-body.png") }
 [data-skin="quark"][data-night][data-tab="plan"] .top::after { background-image: url("maskottchen/quark-nacht-plan.png") }
-/* v269: morgens (html[data-morning], 6–10 Uhr) wache Becher mit Sonne, Kaffee und Frühstück */
+/* v269: morgens (html[data-morning], seit v272 6–9 Uhr) wache Becher mit Sonne, Kaffee und Frühstück */
 [data-skin="quark"][data-morning] .top::after { background-image: url("maskottchen/quark-morgen-home.png") }
 [data-skin="quark"][data-morning][data-tab="train"] .top::after { background-image: url("maskottchen/quark-morgen-train.png") }
 [data-skin="quark"][data-morning][data-tab="prog"] .top::after { background-image: url("maskottchen/quark-morgen-prog.png") }
 [data-skin="quark"][data-morning][data-tab="body"] .top::after { background-image: url("maskottchen/quark-morgen-body.png") }
 [data-skin="quark"][data-morning][data-tab="plan"] .top::after { background-image: url("maskottchen/quark-morgen-plan.png") }
-/* v270: mittags (html[data-noon], 11:00–14:30) Becher mit Mittagessen, Shake, Plan, Maßband und Meal Prep */
+/* v270: mittags (html[data-noon], seit v272 12:00–14:30) Becher mit Mittagessen, Shake, Plan, Maßband und Meal Prep */
 [data-skin="quark"][data-noon] .top::after { background-image: url("maskottchen/quark-mittag-home.png") }
 [data-skin="quark"][data-noon][data-tab="train"] .top::after { background-image: url("maskottchen/quark-mittag-train.png") }
 [data-skin="quark"][data-noon][data-tab="prog"] .top::after { background-image: url("maskottchen/quark-mittag-prog.png") }
@@ -1074,8 +1074,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 271; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 272; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 272, tab: "home", text: "Neue Zeiten für die Quarkbecher: Morgen 6–9 Uhr, Tag 9–12 Uhr, Mittag 12–14:30 Uhr, Kaffeezeit 15–17 Uhr." },
     { v: 271, tab: "home", text: "Kaffeezeit: Von 15 bis 17 Uhr gönnen sich die Quarkbecher Kaffee und Kuchen – mit Hantelbank-Pause, Pokal, Maßband und Coach-Klemmbrett." },
     { v: 270, tab: "home", text: "Mahlzeit: Von 11 bis halb drei machen die Quarkbecher Mittagspause – mit Mittagessen, Shake, Wochenplan, Maßband und Meal-Prep-Box." },
     { v: 269, tab: "home", text: "Guten Morgen: Von 6 bis 10 Uhr sind die Quarkbecher frisch aufgestanden – mit Sonne, Kaffee, Frühstück, Morgen-Stretching, Waage und Wecker." },
@@ -6592,14 +6593,14 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   function cafLatest(room, bedMs, now) { if (room <= 0 || cafAmt(90, bedMs - now) > room) return now; var lo = now, hi2 = bedMs; for (var it = 0; it < 40; it++) { var md = (lo + hi2) / 2; if (cafAmt(90, bedMs - md) <= room) lo = md; else hi2 = md; } return lo; }
   function bedTime() { var b = S.person && HMRE.test(S.person.bed || "") ? S.person.bed : "23:00", d = new Date(), m = /^(\d{2}):(\d{2})$/.exec(b); d.setHours(+m[1], +m[2], 0, 0); if (+m[1] < 12) d.setDate(d.getDate() + 1); return { ms: d.getTime(), hm: b }; }
   /* v268 (Wunsch des Nutzers): Nachts schlafen die Quarkbecher – von der Schlafenszeit (Einstellungen, sonst 23:00) bis 6 Uhr.
-     Setzt html[data-night]; die Bilder wechseln per CSS nur im Design Magerquark (hell und dunkel). v269: dazu html[data-morning] 6–10 Uhr, v270 html[data-noon] 11:00–14:30, v271 html[data-coffee] 15–17 Uhr. */
+     Setzt html[data-night]; die Bilder wechseln per CSS nur im Design Magerquark (hell und dunkel). v269: dazu html[data-morning] 6–9 Uhr, v270 html[data-noon] 12:00–14:30, v271 html[data-coffee] 15–17 Uhr. */
   function nightSet() {
     var b = S.person && HMRE.test(S.person.bed || "") ? S.person.bed : "23:00", m = /^(\d{2}):(\d{2})$/.exec(b), bm = +m[1] * 60 + +m[2],
       d = new Date(), nm = d.getHours() * 60 + d.getMinutes(), on = bm >= 360 ? (nm >= bm || nm < 360) : (nm >= bm && nm < 360), de = document.documentElement;
     if (on !== (de.dataset.night === "1")) { if (on) de.dataset.night = "1"; else delete de.dataset.night; }
-    var mo = !on && nm >= 360 && nm < 600; /* v269: morgens 6–10 Uhr wache Becher mit Sonne und Frühstück (html[data-morning]) */
+    var mo = !on && nm >= 360 && nm < 540; /* v269: morgens 6–10 Uhr, seit v272 6–9 Uhr, wache Becher mit Sonne und Frühstück (html[data-morning]) */
     if (mo !== (de.dataset.morning === "1")) { if (mo) de.dataset.morning = "1"; else delete de.dataset.morning; }
-    var no = !on && nm >= 660 && nm < 870; /* v270: mittags 11:00–14:30 (wie Mahlzeit „Mittag“) Becher beim Mittagessen (html[data-noon]) */
+    var no = !on && nm >= 720 && nm < 870; /* v270: mittags 11:00–14:30, seit v272 12:00–14:30 Becher beim Mittagessen (html[data-noon]) */
     if (no !== (de.dataset.noon === "1")) { if (no) de.dataset.noon = "1"; else delete de.dataset.noon; }
     var co = !on && nm >= 900 && nm < 1020; /* v271: Kaffeezeit 15–17 Uhr, Becher mit Kaffee und Kuchen (html[data-coffee]) */
     if (co !== (de.dataset.coffee === "1")) { if (co) de.dataset.coffee = "1"; else delete de.dataset.coffee; }
