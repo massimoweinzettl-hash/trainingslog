@@ -352,7 +352,7 @@ body.cardioonly .tabs button[data-tab="plan"] { display: none }
   font: 600 14px var(--body); cursor: pointer }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent) }
 
-section.tab { display: flex; flex-direction: column; gap: 16px }
+section.tab { display: flex; flex-direction: column; gap: 16px; touch-action: pan-y } /* v274: waagerechtes Wischen übernimmt das Skript, ohne das Scrollen zu blockieren (seitlich scrollende Bereiche behalten pan-x) */
 .block { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0 }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end }
 .row > * { min-width: 0 }
@@ -1074,8 +1074,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 273; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 274; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 274, tab: "home", text: "Zweiter Anlauf gegen die zitternde Reiterleiste: Das Scrollen wartet nicht mehr auf die Wisch- und Verschiebe-Gesten der App." },
     { v: 273, tab: "home", text: "Die Reiterleiste oben sollte beim Scrollen nicht mehr zittern." },
     { v: 272, tab: "home", text: "Neue Zeiten für die Quarkbecher: Morgen 6–9 Uhr, Tag 9–12 Uhr, Mittag 12–14:30 Uhr, Kaffeezeit 15–17 Uhr." },
     { v: 271, tab: "home", text: "Kaffeezeit: Von 15 bis 17 Uhr gönnen sich die Quarkbecher Kaffee und Kuchen – mit Hantelbank-Pause, Pokal, Maßband und Coach-Klemmbrett." },
@@ -7144,7 +7145,12 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     ND.tm = setTimeout(function () { if (ND && !ND.on) ndStart(li, ND.x, ND.y); }, 450);
   }
   document.addEventListener("touchstart", function (ev) { if (ev.touches.length !== 1) { ndCancel(); return; } ndDown(ev, ev.touches[0].clientX, ev.touches[0].clientY); }, { passive: true });
-  document.addEventListener("touchmove", function (ev) { if (!ND) return; if (ND.on) ev.preventDefault(); ndMove(ev.touches[0].clientX, ev.touches[0].clientY); }, { passive: false });
+  /* v274: Der nicht-passive touchmove-Hörer hing an der ganzen Seite – Safari musste bei jedem Scrollen auf das Skript warten, die klebende
+     Reiterleiste zitterte (Meldung des Nutzers). Jetzt nur noch an den Essenslisten (.nlist), überall sonst scrollt Safari frei. */
+  function ndTouchMove(ev) { if (!ND) return; if (ND.on) ev.preventDefault(); ndMove(ev.touches[0].clientX, ev.touches[0].clientY); }
+  function ndBind() { document.querySelectorAll(".nlist:not([data-ndb])").forEach(function (u) { u.dataset.ndb = "1"; u.addEventListener("touchmove", ndTouchMove, { passive: false }); }); }
+  var ndBindT = 0; new MutationObserver(function () { if (!ndBindT) ndBindT = setTimeout(function () { ndBindT = 0; ndBind(); }, 0); }).observe(document.body, { childList: true, subtree: true });
+  ndBind();
   document.addEventListener("touchend", ndEnd); document.addEventListener("touchcancel", ndCancel);
   document.addEventListener("mousedown", function (ev) { if (ev.button === 0 && !("ontouchstart" in window && ev.sourceCapabilities && ev.sourceCapabilities.firesTouchEvents)) ndDown(ev, ev.clientX, ev.clientY); });
   document.addEventListener("mousemove", function (ev) { if (ND) ndMove(ev.clientX, ev.clientY); }); document.addEventListener("mouseup", ndEnd);
@@ -7168,11 +7174,10 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     if (!SW || ev.touches.length !== 1) return;
     var tc = ev.touches[0], dx = tc.clientX - SW.x, dy = tc.clientY - SW.y;
     if (!SW.dir) { if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return; SW.dir = Math.abs(dx) > Math.abs(dy) * 1.3 ? 1 : -1; }
-    if (SW.dir < 0) return;
-    ev.preventDefault();
+    if (SW.dir < 0) return; /* v274: passiv – waagerecht scrollt die Seite dank touch-action: pan-y ohnehin nicht */
     var i = TABS.indexOf(S.tab), edge = (dx > 0 && i === 0) || (dx < 0 && i === TABS.length - 1);
     SW.dx = dx; SW.el.style.transition = "none"; SW.el.style.transform = "translateX(" + (edge ? dx / 4 : dx) + "px)"; SW.el.style.opacity = String(1 - Math.min(0.4, Math.abs(dx) / window.innerWidth * 0.6));
-  }, { passive: false });
+  }, { passive: true });
   document.addEventListener("touchend", function () {
     if (!SW || SW.dir !== 1) { SW = null; return; }
     var s = SW, el = s.el, w = window.innerWidth, i = TABS.indexOf(S.tab), fast = Math.abs(s.dx) > 50 && Date.now() - s.t < 300;
