@@ -143,6 +143,23 @@
           "text": "Zahlenfelder markieren beim Antippen den alten Wert – einfach lostippen. Neue Symbole in der Reiterleiste und viele kleine Verbesserungen."
         }
       ]
+    },
+    {
+      "v": 284,
+      "punkte": [
+        {
+          "tab": "home",
+          "text": "Neu unter Ernährung → Vorrat: ein Vorratsschrank für Supplemente (oberes Brett) und Lebensmittel wie Whey. Jeder Behälter zeigt, wie viele Tage er noch reicht, die rote Zahl am Bereich „Vorrat“ und der Einkaufszettel an der Tür, was bald leer ist. Gedrückt halten und ziehen sortiert, die Größe stellst du im Behälter ein. Die Bereiche heißen jetzt Heute · Vorrat · Meal Prep · Lebensmittel."
+        },
+        {
+          "tab": "home",
+          "text": "Der Quarkbecher macht jetzt auch Mittagspause (12–14:30 Uhr) und Kaffeepause (15–17 Uhr)."
+        },
+        {
+          "tab": "data",
+          "text": "Das Eingabefeld unter Ernährung ist nach dem Eintragen wieder leer, damit nichts versehentlich doppelt eingetragen wird. Die Reiterleiste zittert beim Scrollen nicht mehr. Dazu viele kleine Verbesserungen."
+        }
+      ]
     }
   ]
 }
