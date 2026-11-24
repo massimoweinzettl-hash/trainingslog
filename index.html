@@ -431,6 +431,7 @@ button.danger, button.ghost.danger { color: var(--bad); font-weight: 650 } butto
 .chart .ar { fill: var(--accent); opacity: .12 }
 .chart .pt { fill: var(--surface); stroke: var(--accent); stroke-width: 2 }
 .chart .end { fill: var(--accent) }
+.wscroll svg * { pointer-events: none } /* v291: Berührungen landen immer am <svg> (Zwei-Finger-Zoom) */
 .chart .ln.lnday { stroke-width: 1.5; opacity: .4 } .chart .pt.ptday { opacity: .55 } .chart .tarr { font-size: 14px; font-weight: 750; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round } .chart .t-good { fill: var(--good) } .chart .t-warn { fill: var(--warn) } .chart .t-bad { fill: var(--bad) } .chart .t-flat { fill: var(--muted) }
 .chart .wavg { fill: none; stroke: var(--accent); stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round } /* v287 */
 .chart text { fill: var(--muted); font: 12px var(--body) }
@@ -1112,8 +1113,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 290; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 291; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 291, tab: "body", text: "Zoomen im Gewichtsdiagramm: Schrift und Punkte werden beim Ziehen nicht mehr verzerrt, das Diagramm wird gleich sauber neu gezeichnet." },
     { v: 290, tab: "home", text: "Die App dreht sich nicht mehr ins Querformat: In der iPhone-App ist sie fest auf Hochformat (nach dem nächsten Bauen in Xcode), in der Web-App erscheint quer ein Hinweis – Safari erlaubt dort kein echtes Sperren. Das Diagramm-Vollbild geht weiterhin quer." },
     { v: 289, tab: "body", text: "Das Gewichtsdiagramm nutzt jetzt die ganze Breite des Kastens." },
     { v: 288, tab: "body", text: "Gewichtsdiagramm: mit zwei Fingern die Zeitachse zoomen, um mehr oder weniger Tage zu sehen. Und oben rechts ⤢ öffnet es im Vollbild quer – Handy einfach drehen." },
@@ -5378,19 +5380,23 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     var P = null, dist = function (t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); };
     sc.addEventListener("touchstart", function (e) { if (e.touches.length !== 2) return; var a = (wcAlong(box, e.touches[0].clientX, e.touches[0].clientY) + wcAlong(box, e.touches[1].clientX, e.touches[1].clientY)) / 2;
       P = { d0: dist(e.touches), day0: WC.DAY, a: a, k: (sc.scrollLeft + a - WC.PL) / WC.DAY }; }, { passive: true });
+    /* v291: während der Geste sauber neu zeichnen statt strecken. Damit die Finger ihr Ziel nicht verlieren, bleibt das <svg> selbst
+       bestehen (nur Inhalt und Maße wechseln) und seine Kinder nehmen keine Berührungen an (CSS pointer-events: none). */
+    var zpaint = function (Pq) {
+      var sv = sc.querySelector("svg"), tmp = document.createElement("div"); tmp.innerHTML = weightCorridor(list, { box: box, h: o.h, full: o.full, day: Pq.nd }).html;
+      var ns = tmp.querySelector(".wscroll"), nsv = ns && ns.querySelector("svg"); if (!sv || !nsv) return;
+      ["width", "height", "viewBox"].forEach(function (at) { var v = nsv.getAttribute(at); if (v != null) sv.setAttribute(at, v); });
+      sv.innerHTML = nsv.innerHTML; sc.dataset.today = ns.dataset.today; S.wDay = Pq.nd;
+      sc.scrollLeft = Math.max(0, Pq.k * Pq.nd + WC.PL - Pq.a); wSelPaint();
+    }, zraf = 0;
     sc.addEventListener("touchmove", function (e) {
       if (!P || e.touches.length !== 2) return; e.preventDefault();
-      P.nd = Math.max(5, Math.min(80, P.day0 * dist(e.touches) / P.d0)); var sv = sc.querySelector("svg"); if (!sv) return;
-      sv.style.transformOrigin = (P.k * P.day0 + WC.PL).toFixed(1) + "px 0"; sv.style.transform = "scaleX(" + (P.nd / P.day0).toFixed(4) + ")"; /* nur strecken, Element bleibt */
+      P.nd = Math.max(5, Math.min(80, P.day0 * dist(e.touches) / P.d0)); var Pq = P;
+      if (!zraf) zraf = requestAnimationFrame(function () { zraf = 0; if (Math.abs(Pq.nd - WC.DAY) >= 0.3) zpaint(Pq); });
     }, { passive: false });
     sc.addEventListener("touchend", function (e) {
-      if (!P || e.touches.length >= 2) return; var Pq = P; P = null; var sv = sc.querySelector("svg"); if (sv) sv.style.transform = "";
-      if (!Pq.nd || Math.abs(Pq.nd - WC.DAY) < 0.3) return;
-      setTimeout(function () { /* nach dem Loslassen neu zeichnen – dann dürfen die Elemente wechseln */
-        S.wDay = Pq.nd; var tmp = document.createElement("div"); tmp.innerHTML = weightCorridor(list, { box: box, h: o.h, full: o.full, day: Pq.nd }).html;
-        var ns = tmp.querySelector(".wscroll"); if (!ns) return; sc.innerHTML = ns.innerHTML; sc.dataset.today = ns.dataset.today;
-        sc.scrollLeft = Math.max(0, Pq.k * Pq.nd + WC.PL - Pq.a); wSelPaint();
-      }, 0);
+      if (!P || e.touches.length >= 2) return; var Pq = P; P = null;
+      if (Pq.nd && Math.abs(Pq.nd - WC.DAY) >= 0.3) zpaint(Pq); /* letzten Stand sicher zeichnen */
     }, { passive: true });
     ["gesturestart", "gesturechange"].forEach(function (ev) { sc.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false }); }); /* Safari: Seiten-Zoom im Diagramm verhindern */
     wSelPaint();
