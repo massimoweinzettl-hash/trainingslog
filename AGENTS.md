@@ -2,7 +2,7 @@
 
 Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Repo arbeiten (Claude, ChatGPT/Codex). **Zuerst lesen, bei jeder Änderung mitpflegen.** Kurz halten: nur der aktuelle Stand, keine Geschichte (die steht in `VERLAUF.md`). Das Repo ist öffentlich – hier nichts Persönliches eintragen.
 
-**Stand:** v285 (24.11.2026)
+**Stand:** v286 (24.11.2026)
 
 ## Vor jeder Arbeit
 1. `git pull` und `git log --oneline -15`: Hat der andere Assistent seit dem letzten Mal etwas geändert? Dann diese Änderungen zuerst durchsehen und Auffälligkeiten dem Besitzer melden, nicht ungefragt im fremden Bereich umbauen.
@@ -33,6 +33,7 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
 - **Farben nur über CSS-Tokens** (`:root`, Dunkel-Blöcke, Design-Blöcke `data-look`/`data-skin`). Makros: Protein `--pr` Orange, Fett `--m-f` Gelb, Kohlenhydrate `--m-c` Neon Mint, Koffein `--caf` Lila.
 - Klick-Handler reagiert auf `button[data-act]`; Ausnahmen mit eigenem Zweig davor (`[data-eat]`, `.nutrow[data-ns]`).
 - Lebensmittel: Bibliothek `FOODLIB` im Code, Nährstoffe `NUTR` (Bundeslebensmittelschlüssel 4.0), Markenprodukte `PROD` (Open Food Facts). Eigene Lebensmittel ohne Nährstoffwerte nutzen die Bibliothekswerte gleichen Namens (`nutSrc`/`nutTwin`).
+- **Verbrauch (`energy()`):** Formel (Grundumsatz × Aktivität), ab 14 Tagen Gewicht + Essen gemessen (Zufuhr − Trend × 1100). Die feste Angabe „Aktuelle Kalorien“ zählt nur ohne Essenseinträge; der gemessene Wert wird gleitend eingemischt (`E.mw`: 14 Tage ⅓, 28 Tage ganz, v286).
 - Keine persönlichen Daten in den Code. Keine fremden Bilder; Piktogramme und Symbole sind eigene SVGs.
 - **iPhone-App:** Capacitor (`package.json`, `capacitor.config.json`, `app/copy-web.mjs`); `ios/`, `www/`, `node_modules/` nur lokal beim Besitzer. Lokale KI „Frag die App“ nur dort (Plugin `app/ki-plugin`, Apples On-Device-Modell); in der Web-App kein KI-Knopf.
 - **Freunde-Version** `freunde/` (Stand v284): eingefrorene Kopie, nur auf ausdrückliche Ansage des Besitzers neu erzeugen (`python3 app/freunde-build.py`, Zusammenfassung in `app/freunde-neu.json`; neue `"trainingslog…"`-Speicherschlüssel dort in `STORE` eintragen, sonst bricht das Skript ab).

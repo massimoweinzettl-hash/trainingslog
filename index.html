@@ -1101,8 +1101,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 285; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 286; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 286, tab: "body", text: "Verbrauch: Wenn du Essen einträgst, zählt nur noch das Eingetragene, nicht mehr die feste Angabe aus der Einrichtung. Und die App wechselt jetzt gleitend von der Formel zum gemessenen Verbrauch (nach 2 Wochen zu einem Drittel, ab 4 Wochen ganz) – keine großen Sprünge mehr." },
     { v: 285, tab: "home", text: "Vorrat: Neben „+ Lebensmittel suchen“ gibt es jetzt den Scan-Knopf – gescannte Produkte landen direkt im Vorratsschrank." },
     { v: 284, tab: "home", text: "Das Eingabefeld unter Ernährung ist nach dem Eintragen wieder leer und startet leer – „Eintragen“ trägt nichts mehr versehentlich ein." },
     { v: 283, tab: "home", text: "Handbuch und „Frag die App“ kennen jetzt den neuen Vorratsschrank: Ordnen per Ziehen, Größe, Einkaufszettel und die rote Zahl am Vorrat." },
@@ -2569,13 +2570,15 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     try { seen = localStorage.getItem(key); } catch (e) {}
     if (!mp) {
       if (!seen) { seen = today(); try { localStorage.setItem(key, seen); } catch (e) {} }
-      return seen > addDays(today(), -3) ? '<p class="mline mok">✓ Verbrauch jetzt gemessen aus Gewicht und Essen' + ib("meas") + "</p>" + itx("meas", "Die App hat genug Daten: Aus deinem Gewichtsverlauf und dem, was du gegessen hast, berechnet sie deinen echten Verbrauch. Das ist meist genauer als die Formel. Die Aufstellung siehst du am i neben „Verbrauch“.") : "";
+      return seen > addDays(today(), -3) ? '<p class="mline mok">✓ Verbrauch jetzt gemessen aus Gewicht und Essen' + ib("meas") + "</p>" + itx("meas", "Die App hat genug Daten: Aus deinem Gewichtsverlauf und dem, was du gegessen hast, berechnet sie deinen echten Verbrauch. Das ist meist genauer als die Formel. Der Wechsel geschieht gleitend: Nach 2 Wochen zählt der gemessene Wert zu einem Drittel, ab 4 Wochen ganz. Die Aufstellung siehst du am i neben „Verbrauch“.") : "";
     }
     if (seen) { try { localStorage.removeItem(key); } catch (e) {} }
     var how = "Bis dahin rechnet die App mit einer Formel (Grundumsatz × Alltag). Danach berechnet sie deinen echten Verbrauch aus Gewichtsverlauf und Essen – das ist meist genauer.<br><br>Stand: Essen an " + mp.n + " von 14 Tagen eingetragen (mindestens 70 % der Tage, je ein ganzer Tag), Gewicht über " + mp.span + " von 14 Tagen (" + mp.wn + (mp.wn === 1 ? " Messung" : " Messungen") + ", mindestens 3).";
     if (mp.odd) return '<p class="mline">Verbrauch geschätzt · Messung unplausibel' + ib("meas") + "</p>" + itx("meas", "Genug Daten sind da, aber der berechnete Verbrauch wirkt unrealistisch (zum Beispiel durch lückenhafte Einträge oder Wasserschwankungen). Die App bleibt deshalb bei der Formel. Trag möglichst jeden Tag vollständig ein.<br><br>" + how);
     return '<p class="mline">Verbrauch geschätzt · gemessen ab ≈ ' + dfmt(mp.date) + ib("meas") + "</p>" + itx("meas", "Das Datum gilt, wenn du ab jetzt jeden Tag dein Essen einträgst und dich regelmäßig wiegst. " + how);
   }
+  /* v286: Erklärung zum gleitenden Wechsel (nur solange der gemessene Wert noch nicht voll zählt). */
+  function mwTxt(E) { return E.mw < 1 ? ". Übergang: Der gemessene Wert zählt erst zu " + Math.round(E.mw * 100) + " %, der Rest kommt aus der Formel – nach 2 Wochen Gewichtsverlauf zu einem Drittel, ab 4 Wochen ganz. So verfälscht der Wasserverlust am Anfang einer Diät die Rechnung weniger. Ergebnis: " + kc(E.maint) : ""; }
   function energy(list) {
     var P = S.person, w = null; list.forEach(function (x) { if (x.weight != null) w = x.weight; });
     if (!P || w == null || !P.sex || !isN(P.year) || !isN(P.height) || !isN(P.act)) return null; /* v100: unvollständige Angaben (Einrichtung übersprungen) → keine Rechnung statt NaN */
@@ -2587,11 +2590,17 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     if (first) { var from0 = addDays(today(), -28); if (first > from0) from0 = first; lf = intakeLog(from0, bmr); if (lf) lf.from = from0; }
     var tr = null, src = null, kin = null;
     if (lf) { tr = trendOf(list, lf.from); kin = lf.avg; src = "log"; }
-    if (!(tr && tr.span >= 14 && tr.n >= 3) && P.intake && P.since) { tr = trendOf(list, P.since); kin = P.intake; src = "fixed"; }
+    /* v286 (Wunsch des Nutzers): Die feste Angabe „Aktuelle Kalorien“ gilt nur noch, solange es keine Essenseinträge gibt –
+       sonst rechnete die App mit einem veralteten Wert aus der Einrichtung (Fall 24.11.: 2700 fest statt Ø 2280 eingetragen → 3100 kcal Ziel). */
+    var hasLog = false; if (first) { for (var dl = from0; dl < today(); dl = addDays(dl, 1)) { var ndl = S.nutri["n_" + dl]; if (ndl && (ndl.entries || []).reduce(function (a, e) { return a + (e.kcal || 0); }, 0) >= bmr * 0.5) { hasLog = true; break; } } }
+    if (!(tr && tr.span >= 14 && tr.n >= 3) && P.intake && P.since && !hasLog) { tr = trendOf(list, P.since); kin = P.intake; src = "fixed"; }
     var measured = tr && tr.span >= 14 && tr.n >= 3 ? kin - tr.perWeek * 1100 : null;
     if (measured != null && (measured < bmr || measured > formula * 1.6)) measured = null;
     if (measured == null) src = null;
-    var maint = measured || formula, k = 11 * w; /* k: kcal pro Tag für 1 % Körpergewicht pro Woche */
+    /* v286 (Wunsch des Nutzers): gleitender Wechsel von der Formel zum gemessenen Verbrauch. Anteil des gemessenen Werts
+       wächst mit der Länge des Gewichtsverlaufs: nach 14 Tagen 1/3, nach 28 Tagen ganz. Wasserverlust am Diätstart wiegt so weniger. */
+    var mw = measured != null ? Math.min(1, Math.max(0, (tr.span - 7) / 21)) : 0;
+    var maint = measured != null ? formula + mw * (measured - formula) : formula, k = 11 * w; /* k: kcal pro Tag für 1 % Körpergewicht pro Woche */
     var range = { cut: [Math.max(bmr, maint - k), Math.max(bmr, maint - 0.5 * k)], bulk: [maint + 0.25 * k, maint + 0.5 * k] };
     var target = { maintain: maint, cut: range.cut[1], bulk: range.bulk[0] }, cols = {};
     /* Eiweiß (seit v66): bei viel Körperfett nicht aufs ganze Gewicht, sondern aufs Gewicht bei 15 % (Frauen 25 %) Körperfett
@@ -2602,7 +2611,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
        Wochenschnitt bleibt beim Zielwert. Ohne gewählte Trainingstage gilt an jedem Tag der Schnitt. */
     var n = (P.tdays || []).length, d = n ? 3.5 * w : 0;
     var split = function (t) { return { train: target[t] + d * (7 - n) / 7, rest: Math.max(bmr, target[t] - d * n / 7) }; };
-    return { w: w, pw: pw, bmr: bmr, formula: formula, measured: measured, maint: maint, range: range, cols: cols, clip: maint - k < bmr, target: target, n: n, d: d, split: split, kf: kf, src: src, log: lf, kin: kin };
+    return { w: w, pw: pw, bmr: bmr, formula: formula, measured: measured, maint: maint, range: range, cols: cols, mw: mw, clip: maint - k < bmr, target: target, n: n, d: d, split: split, kf: kf, src: src, log: lf, kin: kin };
   }
   /* Makros: Eiweiß nach Körpergewicht, Fett 1 g pro kg, höchstens 30 % der Kalorien (DGE), Kohlenhydrate als Rest. */
   /* Makro-Einstellungen: Eiweiß in g pro kg je Phase, Fett als Anteil der Kalorien. Änderbar im Tab „Körper“. */
@@ -2653,7 +2662,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     var sg = function (n) { n = Math.round(n); return (n < 0 ? "−" : "+") + Math.abs(n).toLocaleString("de-DE"); }, r = function (l, v, sum) { return '<span class="kst' + (sum ? " sum" : "") + '"><span>' + l + "</span><b>" + v + "</b></span>"; };
     var P = S.person || {}, tgt = E.target[di.type], bsrc = E.kf ? "aus Gewicht und " + fmt(E.kf.v) + " % Körperfett" + (E.kf.src === "scale" ? " (Waage)" : E.kf.src === "tape" ? " (Maßband)" : " (Körperbau)") : "aus Gewicht, Größe, Alter, Geschlecht";
     var h = '<span class="ksteps">' + r("Grundumsatz <i>" + bsrc + "</i>", kc(E.bmr)) +
-      r("Alltag und Training <i>" + (E.measured != null ? "gemessen aus Gewichtsverlauf und Essen" : "Faktor " + fmt(Math.round(P.act * 100) / 100) + ", geschätzt") + "</i>", sg(E.maint - E.bmr)) + r("Erhaltung", kc(E.maint), 1);
+      r("Alltag und Training <i>" + (E.measured != null ? (E.mw < 1 ? "zu " + Math.round(E.mw * 100) + " % gemessen (" + kc(E.measured) + "), Rest Formel (" + kc(E.formula) + ")" : "gemessen aus Gewichtsverlauf und Essen") : "Faktor " + fmt(Math.round(P.act * 100) / 100) + ", geschätzt") + "</i>", sg(E.maint - E.bmr)) + r("Erhaltung", kc(E.maint), 1);
     if (di.type !== "maintain") h += r(PH[di.type] + " <i>" + (di.type === "cut" ? "0,5 % Abnahme pro Woche" : "0,25 % Zunahme pro Woche") + "</i>", sg(tgt - E.maint)) + r("Ziel im Wochenschnitt", kc(tgt), 1);
     var ro = di.ramp ? di.ramp.off : 0;
     if (di.ramp) h += r("Übergang vom " + PH[di.ramp.prev] + " <i>Tag " + di.ramp.n + " von " + di.ramp.days + ", volles Ziel ab " + dfmt(di.ramp.end) + "</i>", sg(ro));
@@ -2689,8 +2698,8 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
       (cur && cur !== "maintain" ? "<div><b>" + nf(a.kcal) + "</b><span>Ziel im " + head[cur] + " (kcal)</span></div>" : "") + "</div>" +
       '<div class="tablewrap"><table class="macro"><thead><tr><th></th>' + order.map(function (t) { return "<th" + on(t) + ">" + head[t] + "</th>"; }).join("") + "</tr></thead><tbody>" +
       row(E.n ? "Kalorien Ø" : "Kalorien", "kcal", "") + (E.n ? srow("Trainingstag", "train") + srow("Ruhetag", "rest") : "") + row(E.n ? "Eiweiß Ø" : "Eiweiß", "p", " g") + row(E.n ? "Fett Ø" : "Fett", "f", " g") + row(E.n ? "Kohlenhydrate Ø" : "Kohlenhydrate", "c", " g") + "</tbody></table></div>" + kcalToday(E) +
-      tip("ksrc", "Schätzwerte – woher kommen die Zahlen?", (E.n ? "Ø ist der Wochenschnitt, „Heute“ dein Ziel unter „Ernährung“.<br><br>" : "") + head[cur || "maintain"] + ": " + a.p + " g Eiweiß = " + nf(a.p * 4) + " kcal, " + a.f + " g Fett = " + nf(a.f * 9) + " kcal, " + a.c + " g Kohlenhydrate = " + nf(a.c * 4) + " kcal.<br><br>Erhaltung " + (E.src === "log" ? "abgeleitet aus deinem Gewichtsverlauf und deinen Essenseinträgen (Ø " + kc(E.kin) + " kcal an " + E.log.n + " von " + E.log.days + " Tagen; nach Formel wären es " + kc(E.formula) + ")"
-        : E.src === "fixed" ? "abgeleitet aus deinem Gewichtsverlauf bei " + P.intake.toLocaleString("de-DE") + " kcal pro Tag (nach Formel wären es " + kc(E.formula) + ")"
+      tip("ksrc", "Schätzwerte – woher kommen die Zahlen?", (E.n ? "Ø ist der Wochenschnitt, „Heute“ dein Ziel unter „Ernährung“.<br><br>" : "") + head[cur || "maintain"] + ": " + a.p + " g Eiweiß = " + nf(a.p * 4) + " kcal, " + a.f + " g Fett = " + nf(a.f * 9) + " kcal, " + a.c + " g Kohlenhydrate = " + nf(a.c * 4) + " kcal.<br><br>Erhaltung " + (E.src === "log" ? "abgeleitet aus deinem Gewichtsverlauf und deinen Essenseinträgen (Ø " + kc(E.kin) + " kcal an " + E.log.n + " von " + E.log.days + " Tagen: " + kc(E.measured) + "; nach Formel wären es " + kc(E.formula) + ")" + mwTxt(E)
+        : E.src === "fixed" ? "abgeleitet aus deinem Gewichtsverlauf bei " + P.intake.toLocaleString("de-DE") + " kcal pro Tag: " + kc(E.measured) + " (nach Formel wären es " + kc(E.formula) + ")" + mwTxt(E)
         : E.kf ? "geschätzt über deine fettfreie Masse (Katch-McArdle) mit " + fmt(E.kf.v) + " % Körperfett " + (E.kf.src === "scale" ? "von der Waage" : E.kf.src === "tape" ? "aus Taille und Hals (Maßband)" : "laut Körperbau „" + BUILD[P.build][0] + "“") + ", dazu Aktivität"
         : "geschätzt nach der Mifflin-St-Jeor-Formel aus " + fmt(E.w) + " kg, Größe, Alter, Alltag und Training") +
       ". Cut: " + kc(E.range.cut[0]) + "–" + kc(E.range.cut[1]) + " kcal für 0,5–1 % Abnahme pro Woche. Aufbau: " + kc(E.range.bulk[0]) + "–" + kc(E.range.bulk[1]) + " kcal für 0,25–0,5 % Zunahme. Die Tabelle nutzt jeweils das mildere Ende." +
