@@ -25,4 +25,12 @@ if (existsSync(plist)) {
     console.log("Kamera-Berechtigung in Info.plist eingetragen");
   }
 }
+// v290 (Wunsch des Nutzers): App nicht drehen – auf dem iPhone nur Hochformat (Tablet-Eintrag ~ipad bleibt unverändert).
+if (existsSync(plist)) {
+  let p = readFileSync(plist, "utf8");
+  const portrait = "<key>UISupportedInterfaceOrientations</key>\n\t<array>\n\t\t<string>UIInterfaceOrientationPortrait</string>\n\t</array>";
+  const re = /<key>UISupportedInterfaceOrientations<\/key>\s*<array>[\s\S]*?<\/array>/;
+  const np = re.test(p) ? p.replace(re, portrait) : p.slice(0, p.lastIndexOf("</dict>")) + "\t" + portrait + "\n" + p.slice(p.lastIndexOf("</dict>"));
+  if (np !== p) { writeFileSync(plist, np); console.log("Ausrichtung: nur Hochformat"); }
+}
 console.log("www/ bereit: " + files.length + " Dateien");
