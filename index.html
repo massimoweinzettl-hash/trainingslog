@@ -432,7 +432,7 @@ button.danger, button.ghost.danger { color: var(--bad); font-weight: 650 } butto
 .chart .pt { fill: var(--surface); stroke: var(--accent); stroke-width: 2 }
 .chart .end { fill: var(--accent) }
 /* v292 (Vorlage des Nutzers „Variante B“): Gewichtsdiagramm als eigene Fläche. Farben aus vorhandenen Tokens gemischt → passt sich Hell/Dunkel und den Designs an. Nur .wchart. */
-.wchart { --wc-edge: color-mix(in srgb, var(--accent) 22%, transparent); --wc-grid: color-mix(in srgb, var(--accent) 11%, transparent); background: color-mix(in srgb, var(--accent) 3%, var(--surface)); border: 1px solid var(--wc-edge); border-radius: 16px; box-shadow: 0 8px 22px -14px color-mix(in srgb, var(--accent) 45%, transparent); padding: 6px 0 }
+.wchart { --wc-edge: color-mix(in srgb, var(--accent) 12%, transparent); --wc-grid: color-mix(in srgb, var(--accent) 11%, transparent); background: color-mix(in srgb, var(--accent) 3%, var(--surface)); border: 1px solid var(--wc-edge); border-radius: 16px; padding: 6px 0 } /* v293: ohne Schatten, Rand blasser (Nutzer: dezenter) */
 #wcorr .wchart { margin-inline: -6px } .wfull .wchart { box-shadow: none }
 .wchart .grid, .wchart line.grid { stroke: var(--wc-grid) } .wchart .vday { stroke: var(--wc-grid); opacity: 1 }
 .wchart .todaycol { fill: var(--accent); opacity: .08 }
@@ -441,11 +441,11 @@ button.danger, button.ghost.danger { color: var(--bad); font-weight: 650 } butto
 .wchart .wlabg rect { fill: var(--surface); fill-opacity: .94; stroke: var(--wc-edge); stroke-width: 1 } .wchart .wlab { fill: var(--ink); stroke: none; font-size: 11.5px; letter-spacing: -.2px; font-weight: 700; paint-order: normal }
 .wchart .kfa { stroke-width: 1.6; opacity: .85 }
 .wchart .kfalabg rect { fill: color-mix(in srgb, var(--s3) 12%, var(--surface)); stroke: color-mix(in srgb, var(--s3) 30%, transparent); stroke-width: 1 } .wchart .kfalab { stroke: none; font-size: 11.5px; font-weight: 700 }
-.wchart .tcap rect { stroke-width: 1.5 } .wchart .tcap text { font-size: 13px; font-weight: 750 } .wchart .tico path { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round }
-.wchart .tcap.t-good rect { fill: color-mix(in srgb, var(--good) 14%, var(--surface)); stroke: color-mix(in srgb, var(--good) 50%, transparent) } .wchart .tcap.t-good text { fill: var(--good) } .wchart .tcap.t-good .tico path { stroke: var(--good) }
-.wchart .tcap.t-warn rect { fill: color-mix(in srgb, var(--warn) 14%, var(--surface)); stroke: color-mix(in srgb, var(--warn) 50%, transparent) } .wchart .tcap.t-warn text { fill: var(--warn) } .wchart .tcap.t-warn .tico path { stroke: var(--warn) }
-.wchart .tcap.t-bad rect { fill: color-mix(in srgb, var(--bad) 12%, var(--surface)); stroke: color-mix(in srgb, var(--bad) 45%, transparent) } .wchart .tcap.t-bad text { fill: var(--bad) } .wchart .tcap.t-bad .tico path { stroke: var(--bad) }
-.wchart .tcap.t-flat rect { fill: color-mix(in srgb, var(--muted) 12%, var(--surface)); stroke: color-mix(in srgb, var(--muted) 40%, transparent) } .wchart .tcap.t-flat text { fill: var(--muted) } .wchart .tcap.t-flat .tico path { stroke: var(--muted) }
+.wchart .tcap rect { stroke-width: 1 } .wchart .tcap text { font-size: 12px; font-weight: 600 } .wchart .tico path { fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round }
+.wchart .tcap.t-good rect { fill: color-mix(in srgb, var(--good) 5%, var(--surface)); stroke: color-mix(in srgb, var(--good) 22%, transparent) } .wchart .tcap.t-good text { fill: var(--good) } .wchart .tcap.t-good .tico path { stroke: var(--good) }
+.wchart .tcap.t-warn rect { fill: color-mix(in srgb, var(--warn) 5%, var(--surface)); stroke: color-mix(in srgb, var(--warn) 22%, transparent) } .wchart .tcap.t-warn text { fill: var(--warn) } .wchart .tcap.t-warn .tico path { stroke: var(--warn) }
+.wchart .tcap.t-bad rect { fill: color-mix(in srgb, var(--bad) 5%, var(--surface)); stroke: color-mix(in srgb, var(--bad) 22%, transparent) } .wchart .tcap.t-bad text { fill: var(--bad) } .wchart .tcap.t-bad .tico path { stroke: var(--bad) }
+.wchart .tcap.t-flat rect { fill: color-mix(in srgb, var(--muted) 5%, var(--surface)); stroke: color-mix(in srgb, var(--muted) 22%, transparent) } .wchart .tcap.t-flat text { fill: var(--muted) } .wchart .tcap.t-flat .tico path { stroke: var(--muted) }
 .wscroll svg * { pointer-events: none } /* v291: Berührungen landen immer am <svg> (Zwei-Finger-Zoom) */
 .chart .ln.lnday { stroke-width: 1.5; opacity: .4 } .chart .pt.ptday { opacity: .55 } .chart .tarr { font-size: 14px; font-weight: 750; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round } .chart .t-good { fill: var(--good) } .chart .t-warn { fill: var(--warn) } .chart .t-bad { fill: var(--bad) } .chart .t-flat { fill: var(--muted) }
 .chart .wavg { fill: none; stroke: var(--accent); stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round } /* v287 */
@@ -1128,8 +1128,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 292; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 293; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 293, tab: "body", text: "Gewichtsdiagramm dezenter: Fläche ohne Schatten, Vergleich zur Vorwoche zurückhaltender." },
     { v: 292, tab: "body", text: "Neues Aussehen fürs Gewichtsdiagramm: eigene Fläche, Messwerte und Körperfett in kleinen Etiketten, Vergleich zur Vorwoche als farbige Kapsel." },
     { v: 291, tab: "body", text: "Zoomen im Gewichtsdiagramm: Schrift und Punkte werden beim Ziehen nicht mehr verzerrt, das Diagramm wird gleich sauber neu gezeichnet." },
     { v: 290, tab: "home", text: "Die App dreht sich nicht mehr ins Querformat: In der iPhone-App ist sie fest auf Hochformat (nach dem nächsten Bauen in Xcode), in der Web-App erscheint quer ein Hinweis – Safari erlaubt dort kein echtes Sperren. Das Diagramm-Vollbild geht weiterhin quer." },
