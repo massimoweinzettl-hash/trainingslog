@@ -484,8 +484,8 @@ button.danger, button.ghost.danger { color: var(--bad); font-weight: 650 } butto
 .chart .cline.ph-cut { stroke: var(--ph-cut) } .chart .cline.ph-bulk { stroke: var(--ph-bulk) } .chart .cline.ph-maintain { stroke: var(--ph-maint) }
 .chart .xt { stroke: var(--line); stroke-width: 1 }
 .wchart { display: flex; align-items: flex-start }
-.wchart .yax { flex: none; width: 32px; height: auto }
-.wchart .yax2 { flex: none; width: 30px; height: auto } .wchart .yax2 text { fill: var(--s3); font-size: 11px }
+.wchart .yax { flex: none; width: 28px; height: auto } #wcorr .wchart { margin-inline: -12px } /* v289: Diagramm bis an den Kastenrand (Wunsch des Nutzers) */
+.wchart .yax2 { flex: none; width: 27px; height: auto } .wchart .yax2 text { fill: var(--s3); font-size: 11px }
 .chart .kfa { fill: none; stroke: var(--s3); stroke-width: 2; stroke-dasharray: 5 4; stroke-linejoin: round; stroke-linecap: round } .chart .kfapt { fill: var(--s3) }
 .chart text.kfalab { fill: var(--s3); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round }
 .wleg { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px } .wleg .lgw, .wleg .lgf { display: inline-block; width: 16px; height: 0; border-top: 2.5px solid var(--accent) } .wleg .lgf { border-top: 2px dashed var(--s3); margin-left: 8px } .wleg .lga { display: inline-block; width: 16px; height: 0; border-top: 3.5px solid var(--accent) } .wleg .lgd { opacity: .45; border-top-width: 1.5px; margin-left: 8px }
@@ -1109,8 +1109,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 288; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 289; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 289, tab: "body", text: "Das Gewichtsdiagramm nutzt jetzt die ganze Breite des Kastens." },
     { v: 288, tab: "body", text: "Gewichtsdiagramm: mit zwei Fingern die Zeitachse zoomen, um mehr oder weniger Tage zu sehen. Und oben rechts ⤢ öffnet es im Vollbild quer – Handy einfach drehen." },
     { v: 287, tab: "body", text: "Gewicht: Im Diagramm zeigt eine kräftige Linie den 7-Tage-Schnitt, die Tageswerte stehen blass dahinter. Unter dem Trend steht der Schnitt der letzten 7 Tage gegen die 7 Tage davor. Und der Trend im Cut/Aufbau lässt die erste Woche weg (vor allem Wasser)." },
     { v: 286, tab: "body", text: "Verbrauch: Wenn du Essen einträgst, zählt nur noch das Eingetragene, nicht mehr die feste Angabe aus der Einrichtung. Und die App wechselt jetzt gleitend von der Formel zum gemessenen Verbrauch (nach 2 Wochen zu einem Drittel, ab 4 Wochen ganz) – keine großen Sprünge mehr." },
@@ -5433,7 +5434,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     var raw = (hi - lo) / 5, mag = Math.pow(10, Math.floor(Math.log10(raw))), step = [1, 2, 2.5, 5, 10].filter(function (m) { return m * mag >= raw; })[0] * mag, g = "", yl = "";
     for (var v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) {
       g += '<line class="grid" x1="0" x2="' + W + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/>';
-      yl += '<text x="29" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end">' + fmt(Math.round(v * 10) / 10) + "</text>";
+      yl += '<text x="25" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end">' + fmt(Math.round(v * 10) / 10) + "</text>";
     }
     var tx = X(Date.parse(t)), vg = "", dl = "";
     var lstep = DAY >= 28 ? 1 : DAY >= 12 ? 7 : DAY >= 6 ? 14 : 28, mon0 = null; /* v288: beim Herauszoomen nur Montage (bzw. jeder 2./4.) beschriften */
@@ -5486,14 +5487,14 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     if (goal != null && gIn) {
       var gy = Y(goal).toFixed(1), lab = function (x) { return '<text class="glab" x="' + x.toFixed(1) + '" y="' + (Y(goal) - 6).toFixed(1) + '">Ziel ' + fmt(goal) + " kg</text>"; };
       gl = '<line class="goalline" x1="0" x2="' + W + '" y1="' + gy + '" y2="' + gy + '"/>' + lab(PL + 4) + (tx - PL > 160 ? lab(tx + DAY / 2 + 6) : "");
-      yl += '<text class="glab" x="29" y="' + (Y(goal) + 4).toFixed(1) + '" text-anchor="end">' + fmt(goal) + "</text>";
-    } else if (goal != null) yl += '<text class="glab" x="29" y="' + (goal < lo ? H - B : T + 10) + '" text-anchor="end">' + (goal < lo ? "↓" : "↑") + fmt(goal) + "</text>";
-    var svg = '<div class="chart wchart"><svg class="yax" width="32" height="' + H + '" aria-hidden="true">' + yl + '</svg><div class="wscroll" data-today="' + tx.toFixed(0) + '"><svg width="' + W + '" height="' + H + '" role="img" aria-label="Gewichtsverlauf' + (rates ? " mit Zielkorridor" : "") + '">' +
+      yl += '<text class="glab" x="25" y="' + (Y(goal) + 4).toFixed(1) + '" text-anchor="end">' + fmt(goal) + "</text>";
+    } else if (goal != null) yl += '<text class="glab" x="25" y="' + (goal < lo ? H - B : T + 10) + '" text-anchor="end">' + (goal < lo ? "↓" : "↑") + fmt(goal) + "</text>";
+    var svg = '<div class="chart wchart"><svg class="yax" width="28" height="' + H + '" aria-hidden="true">' + yl + '</svg><div class="wscroll" data-today="' + tx.toFixed(0) + '"><svg width="' + W + '" height="' + H + '" role="img" aria-label="Gewichtsverlauf' + (rates ? " mit Zielkorridor" : "") + '">' +
       '<rect class="todaycol" x="' + (tx - DAY / 2).toFixed(1) + '" y="' + T + '" width="' + DAY + '" height="' + (H - T - 4) + '" rx="6"/>' + g + vg + band + gl +
       fk + (pts.length > 1 ? '<path class="ln' + (avg ? " lnday" : "") + '" d="' + d + '"/>' : "") + (avg ? '<path class="wavg" d="' + da + '"/>' : "") + tarr +
       pts.filter(function (p, i) { return DAY >= 30 || i === pts.length - 1; }).map(function (p) { return '<text class="wlab" x="' + X(Date.parse(p.date)).toFixed(1) + '" y="' + (Y(p.weight) - 10).toFixed(1) + '" text-anchor="middle">' + fmt(p.weight) + "</text>"; }).join("") +
       pts.map(function (p, i) { var e = i === pts.length - 1; return '<circle class="' + (e ? "end" : "pt") + (avg ? " ptday" : "") + '" cx="' + X(Date.parse(p.date)).toFixed(1) + '" cy="' + Y(p.weight).toFixed(1) + '" r="' + (e ? 5 : DAY >= 20 ? 3.5 : 2) + '"><title>' + dfmt(p.date, 1) + ": " + fmt(p.weight) + " kg</title></circle>"; }).join("") +
-      dl + "</svg></div>" + (fk ? '<svg class="yax2" width="30" height="' + H + '" aria-hidden="true">' + fax + "</svg>" : "") + "</div>" +
+      dl + "</svg></div>" + (fk ? '<svg class="yax2" width="27" height="' + H + '" aria-hidden="true">' + fax + "</svg>" : "") + "</div>" +
       '<p class="small muted wleg"' + (fk || avg ? "" : " hidden") + ">" + (WC.leg = (avg ? '<span class="lga"></span>Ø 7 Tage <span class="lgw lgd"></span>Tageswert' + (fk ? " " : "") : "") + (fk ? '<span class="lgf"></span>Körperfett (%, rechts)' + ib("kfaw") : "")) + "</p>" + (fk ? itx("kfaw", "Körperfett von der Waage schwankt mit dem Wasserhaushalt oft um 1–2 % von Tag zu Tag. Deshalb zeigt die Linie den Schnitt der letzten 7 Tage. Im Cut sollte sie mit dem Gewicht sinken. Im Aufbau steigt sie im besten Fall kaum: Das Gewicht kommt dann vor allem aus fettfreier Masse (eigenes Diagramm weiter unten). Tippst du einen Tag an, steht hier der Schnitt und in Klammern der Waagenwert dieses Tages.") : "") + '<p class="small muted">Tag antippen für die Werte' + (nD > 7 ? ", seitlich wischen zum Blättern" : "") + ".</p>";
     var info = "", short = "";
     if (rates) {
