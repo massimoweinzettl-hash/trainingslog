@@ -1101,8 +1101,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 283; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 284; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 284, tab: "home", text: "Das Eingabefeld unter Ernährung ist nach dem Eintragen wieder leer und startet leer – „Eintragen“ trägt nichts mehr versehentlich ein." },
     { v: 283, tab: "home", text: "Handbuch und „Frag die App“ kennen jetzt den neuen Vorratsschrank: Ordnen per Ziehen, Größe, Einkaufszettel und die rote Zahl am Vorrat." },
     { v: 282, tab: "home", text: "Vorratsschrank: Jeder Behälter hat jetzt eine „Größe im Schrank“ (klein, mittel, groß) in seinen Angaben, und die Abstände sind enger – so passt mehr aufs Brett." },
     { v: 281, tab: "home", text: "Vorratsschrank: Behälter kurz gedrückt halten und ziehen, um die Reihenfolge zu ändern – Lebensmittel auch aufs andere Brett. Am Bereich „Vorrat“ zeigt eine rote Zahl, wie viel bald leer ist." },
@@ -6345,10 +6346,10 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     d.entries.push(e); put(id, d);
   }
   function foodSave(fd) { put("food", fd); }
-  /* Auswahl beim Eintragen: S.nSel = "m:<Mahlzeit>" oder "i:<Lebensmittel>", sonst die erste Mahlzeit bzw. das erste Lebensmittel. */
+  /* Auswahl beim Eintragen: S.nSel = "m:<Mahlzeit>" oder "i:<Lebensmittel>", sonst leer (v284, Wunsch des Nutzers: kein vorbelegtes Feld, damit „Eintragen“ nichts versehentlich einträgt). */
   function niSel(fd) {
     var s = S.nSel || "", ok = s.indexOf("m:") === 0 ? fd.meals.some(function (m) { return m.id === s.slice(2); }) : s.indexOf("i:") === 0 && !!foodItem(fd, s.slice(2));
-    return ok ? s : fd.meals[0] ? "m:" + fd.meals[0].id : (fd.fav || [])[0] && foodItem(fd, fd.fav[0]) ? "i:" + fd.fav[0] : fd.items[0] ? "i:" + fd.items[0].id : "";
+    return ok ? s : "";
   }
   function selName(fd, s) {
     if (s.indexOf("m:") === 0) { var m = fd.meals.filter(function (x) { return x.id === s.slice(2); })[0]; return m ? m.name : ""; }
@@ -7779,13 +7780,14 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     else if (a === "nform") { S.ckEdit = null; S.nForm = S.nForm === id ? null : id; if (S.nForm === "cook" && !cookDraft(foodDoc())) { var fdc = clone(foodDoc()); cookNew(fdc); foodSave(fdc); } renderHome(); if (S.nForm === "cook") { var cf0 = document.querySelector(".cookf"); if (cf0) cf0.scrollIntoView({ block: "nearest", behavior: "smooth" }); } var nf0 = document.querySelector(".nform input, .nform select"); if (nf0 && id === "item") nf0.focus(); }
     else if (a === "nadd") { delete FDRAFT["ni-amt"]; /* v238 */
       var fdn = foodDoc(), sv = niSel(fdn), ref = sv.slice(2);
+      if (!sv) { var qn = $("ni-q"); if (qn) qn.focus(); return; } /* v284: leeres Feld – nichts eintragen */
       if (sv.indexOf("m:") === 0) { var mn = fdn.meals.filter(function (m) { return m.id === ref; })[0]; if (!mn) return; var vn = mealPortion(fdn, mn), mnn = mealNut(fdn, mn); nutriAdd(nDay(), { use: useOf(mn.parts, mealPortions(mn)), caf: mnn.caf, n: mnn.n, nk: mnn.nk, name: mn.name + (mealPortions(mn) > 1 ? " (1 Portion)" : ""), p: vn.p, kcal: vn.kcal, f: vn.f, c: vn.c }); }
       else {
         var itn = foodItem(fdn, ref), amn = num($("ni-amt").value); if (!itn) return; if (amn == null) amn = itn.amt;
         if (!(amn > 0)) { $("ni-amt").focus(); return; }
         nutriAdd(nDay(), itemVals(itn, amn)); /* v181: Produkt + Menge merken */
       }
-      S.nSel = sv; renderHome();
+      S.nSel = ""; renderHome(); /* v284: Feld nach dem Eintragen leeren */
     }
     else if (/^ck(del|eat|x|rest|rx)$/.test(a)) {
       var fdk = clone(foodDoc()), ck2 = cookCur(fdk);
