@@ -441,7 +441,7 @@ button.danger, button.ghost.danger { color: var(--bad); font-weight: 650 } butto
 .wchart .wlabg rect { fill: var(--surface); fill-opacity: .94; stroke: var(--wc-edge); stroke-width: 1 } .wchart .wlab { fill: var(--ink); stroke: none; font-size: 11.5px; letter-spacing: -.2px; font-weight: 700; paint-order: normal }
 .wchart .kfa { stroke-width: 1.6; opacity: .85 }
 .wchart .kfalabg rect { fill: color-mix(in srgb, var(--s3) 12%, var(--surface)); stroke: color-mix(in srgb, var(--s3) 30%, transparent); stroke-width: 1 } .wchart .kfalab { stroke: none; font-size: 11.5px; font-weight: 700 }
-.wchart .tcap rect { stroke-width: 1 } .wchart .tcap text { font-size: 12px; font-weight: 600 } .wchart .tico path { fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round }
+.wchart .tcap rect { stroke-width: 1 } .wchart .tcap text { font-size: 10.5px; font-weight: 600 } .wchart .tico path { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
 .wchart .tcap.t-good rect { fill: color-mix(in srgb, var(--good) 5%, var(--surface)); stroke: color-mix(in srgb, var(--good) 22%, transparent) } .wchart .tcap.t-good text { fill: var(--good) } .wchart .tcap.t-good .tico path { stroke: var(--good) }
 .wchart .tcap.t-warn rect { fill: color-mix(in srgb, var(--warn) 5%, var(--surface)); stroke: color-mix(in srgb, var(--warn) 22%, transparent) } .wchart .tcap.t-warn text { fill: var(--warn) } .wchart .tcap.t-warn .tico path { stroke: var(--warn) }
 .wchart .tcap.t-bad rect { fill: color-mix(in srgb, var(--bad) 5%, var(--surface)); stroke: color-mix(in srgb, var(--bad) 22%, transparent) } .wchart .tcap.t-bad text { fill: var(--bad) } .wchart .tcap.t-bad .tico path { stroke: var(--bad) }
@@ -1128,8 +1128,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 293; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 294; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 294, tab: "body", text: "Gewichtsdiagramm: Vergleich zur Vorwoche als kleinere Kapsel." },
     { v: 293, tab: "body", text: "Gewichtsdiagramm dezenter: Fläche ohne Schatten, Vergleich zur Vorwoche zurückhaltender." },
     { v: 292, tab: "body", text: "Neues Aussehen fürs Gewichtsdiagramm: eigene Fläche, Messwerte und Körperfett in kleinen Etiketten, Vergleich zur Vorwoche als farbige Kapsel." },
     { v: 291, tab: "body", text: "Zoomen im Gewichtsdiagramm: Schrift und Punkte werden beim Ziehen nicht mehr verzerrt, das Diagramm wird gleich sauber neu gezeichnet." },
@@ -5490,9 +5491,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     var avg = pts.length >= 3, wdl = weekDelta(list), tc = avg ? arrowCls(ph, wdl) : null, la = apts[apts.length - 1], tarr = "";
     /* v292 (Vorlage des Nutzers, Variante B): Vergleich als Kapsel mit gezeichnetem Pfeil, Zahl ohne Vorzeichen + „kg“. */
     if (tc && la) {
-      var tdd = wdl.dd, flat = Math.abs(tdd) < 0.1, num = flat ? "±0 kg" : fmt(Math.abs(tdd)) + " kg", cw = 34 + num.length * 7.4, ch = 26, tlx = X(Date.parse(la.date)) + 14, tly = Y(la.v), ax = tlx + 10, ay = tly;
-      var ico = flat ? '<path d="M' + ax + " " + ay + "h12m-5 -5l5 5l-5 5" + '"/>' : '<g transform="rotate(' + (tdd < 0 ? 0 : 180) + " " + (ax + 6) + " " + ay + ')"><path d="M' + (ax + 6) + " " + (ay - 6.5) + "v13M" + (ax + 1) + " " + (ay + 2) + "l5 5l5 -5" + '"/></g>';
-      tarr = '<g class="tcap t-' + tc + '"><title>Ø letzte 7 Tage gegen die 7 Tage davor</title><rect x="' + tlx.toFixed(1) + '" y="' + (tly - ch / 2).toFixed(1) + '" width="' + cw.toFixed(1) + '" height="' + ch + '" rx="' + ch / 2 + '"/><g class="tico">' + ico + '</g><text x="' + (tlx + 28).toFixed(1) + '" y="' + (tly + 4.6).toFixed(1) + '">' + num + "</text></g>";
+      var tdd = wdl.dd, flat = Math.abs(tdd) < 0.1, num = flat ? "±0 kg" : fmt(Math.abs(tdd)) + " kg", cw = 26 + num.length * 6, ch = 19, tlx = X(Date.parse(la.date)) + 10, tly = Y(la.v), ax = tlx + 7, ay = tly; /* v294: Kapsel kleiner (Nutzer: „immer noch zu groß“) */
+      var ico = flat ? '<path d="M' + ax + " " + ay + "h9m-3.8 -3.8l3.8 3.8l-3.8 3.8" + '"/>' : '<g transform="rotate(' + (tdd < 0 ? 0 : 180) + " " + (ax + 4.5) + " " + ay + ')"><path d="M' + (ax + 4.5) + " " + (ay - 5) + "v10M" + (ax + 0.7) + " " + (ay + 1.2) + "l3.8 3.8l3.8 -3.8" + '"/></g>';
+      tarr = '<g class="tcap t-' + tc + '"><title>Ø letzte 7 Tage gegen die 7 Tage davor</title><rect x="' + tlx.toFixed(1) + '" y="' + (tly - ch / 2).toFixed(1) + '" width="' + cw.toFixed(1) + '" height="' + ch + '" rx="' + ch / 2 + '"/><g class="tico">' + ico + '</g><text x="' + (tlx + 19).toFixed(1) + '" y="' + (tly + 3.8).toFixed(1) + '">' + num + "</text></g>";
     }
     var da = apts.map(function (q, i) { return (i ? "L" : "M") + X(Date.parse(q.date)).toFixed(1) + " " + Y(q.v).toFixed(1); }).join(" ");
     /* v105 (Wunsch des Nutzers): Körperfett als zweite Linie, 7-Tage-Schnitt (Waagen-KFA schwankt mit dem Wasser), eigene Skala rechts. */
