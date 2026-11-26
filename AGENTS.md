@@ -36,7 +36,7 @@ Diese Datei ist der gemeinsame Stand für alle KI-Assistenten, die an diesem Rep
 - **Verbrauch (`energy()`):** Formel (Grundumsatz × Aktivität), ab 14 Tagen Gewicht + Essen gemessen (Zufuhr − Trend × 1100). Die feste Angabe „Aktuelle Kalorien“ zählt nur ohne Essenseinträge; der gemessene Wert wird gleitend eingemischt (`E.mw`: 14 Tage ⅓, 28 Tage ganz, v286).
 - Keine persönlichen Daten in den Code. Keine fremden Bilder; Piktogramme und Symbole sind eigene SVGs.
 - **iPhone-App:** Capacitor (`package.json`, `capacitor.config.json`, `app/copy-web.mjs`); `ios/`, `www/`, `node_modules/` nur lokal beim Besitzer. Lokale KI „Frag die App“ nur dort (Plugin `app/ki-plugin`, Apples On-Device-Modell); in der Web-App kein KI-Knopf.
-- **Freunde-Version** `freunde/` (Stand v284): eingefrorene Kopie, nur auf ausdrückliche Ansage des Besitzers neu erzeugen (`python3 app/freunde-build.py`, Zusammenfassung in `app/freunde-neu.json`; neue `"trainingslog…"`-Speicherschlüssel dort in `STORE` eintragen, sonst bricht das Skript ab).
+- **Freunde-Version** `freunde/` (Stand v296): eingefrorene Kopie, nur auf ausdrückliche Ansage des Besitzers neu erzeugen (`python3 app/freunde-build.py`, Zusammenfassung in `app/freunde-neu.json`; neue `"trainingslog…"`-Speicherschlüssel dort in `STORE` eintragen, sonst bricht das Skript ab).
 
 ## Tests
 - Playwright/Chromium in iPhone-Größe (440 × 956, Touch, hell und dunkel) über `file:///…/index.html`.
