@@ -160,6 +160,23 @@
           "text": "Das Eingabefeld unter Ernährung ist nach dem Eintragen wieder leer, damit nichts versehentlich doppelt eingetragen wird. Die Reiterleiste zittert beim Scrollen nicht mehr. Dazu viele kleine Verbesserungen."
         }
       ]
+    },
+    {
+      "v": 296,
+      "punkte": [
+        {
+          "tab": "body",
+          "text": "Gewichtsverlauf neu: kräftige Linie zeigt den 7-Tage-Schnitt, Pfeil zeigt die Veränderung zur Vorwoche; mit zwei Fingern zoomen."
+        },
+        {
+          "tab": "train",
+          "text": "Fehlerbehebungen: Trainingstage gehen beim Wechsel der Trainingsart nicht mehr verloren, ein eingeplantes Training bleibt im Kalender sicher stehen."
+        },
+        {
+          "tab": "home",
+          "text": "Dazu Darstellungs- und Komfortverbesserungen."
+        }
+      ]
     }
   ]
 }
