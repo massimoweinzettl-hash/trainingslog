@@ -1128,8 +1128,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 294; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 295; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 295, tab: "train", text: "Kalender: Wer unter „Anderen Trainingstag“ den schon eingeplanten Tag antippt, entfernt die Planung nicht mehr versehentlich (heute galt dann als Ruhetag)." },
     { v: 294, tab: "body", text: "Gewichtsdiagramm: Vergleich zur Vorwoche als kleinere Kapsel." },
     { v: 293, tab: "body", text: "Gewichtsdiagramm dezenter: Fläche ohne Schatten, Vergleich zur Vorwoche zurückhaltender." },
     { v: 292, tab: "body", text: "Neues Aussehen fürs Gewichtsdiagramm: eigene Fläche, Messwerte und Körperfett in kleinen Etiketten, Vergleich zur Vorwoche als farbige Kapsel." },
@@ -7649,11 +7650,11 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     }
     else if (a === "calnew") { S.trainView = "edit"; S.date = id; S.dayId = null; draft = null; showTab("train"); goSess(); }
     else if (a === "calplan") {
-      /* Training für den gewählten Kalendertag einplanen; erneutes Antippen entfernt die Planung. Alte Einträge (über 60 Tage) fallen weg. */
+      /* Training für den gewählten Kalendertag einplanen. v295: Antippen des schon eingeplanten Tags ändert nichts mehr (entfernte vorher still die Planung, heute galt dann als Ruhetag) – Entfernen nur über „Planung entfernen“. Alte Einträge (über 60 Tage) fallen weg. */
       var sc = clone(S.sched || {}), lim = new Date(Date.parse(today()) - 60 * 864e5).toISOString().slice(0, 10);
-      if (sc[S.calSel] === id) delete sc[S.calSel]; else sc[S.calSel] = id; S.calPlanOpen = false; /* v178: nach der Wahl zuklappen */
+      sc[S.calSel] = id; S.calPlanOpen = false; /* v178: nach der Wahl zuklappen */
       Object.keys(sc).forEach(function (k) { if (k < lim) delete sc[k]; });
-      S.sched = sc; saveSettings(); renderCal();
+      S.sched = sc; saveSettings(); renderCal(); if (S.tab === "home") renderHome();
     }
     else if (a === "wfopen") wfOpen();
     else if (a === "wfclose") wfClose();
