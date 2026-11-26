@@ -1128,8 +1128,9 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   /* Neuerungen: Bei jeder Änderung an der App APP_VERSION um 1 erhöhen und unten einen Eintrag mit dem
      betroffenen Reiter (train, prog, body, plan, data) ergänzen. Nach einem Update zeigt die App die neuen
      Einträge einmal an und markiert die Reiter bis zum nächsten Öffnen mit einem gelben Punkt. */
-  var APP_VERSION = 295; window.TL_VER = APP_VERSION;
+  var APP_VERSION = 296; window.TL_VER = APP_VERSION;
   var CHANGES = [
+    { v: 296, tab: "body", text: "Trainingsart: Wer kurz auf „gar nicht“ (nur Ernährung) und wieder zurück stellt, behält jetzt seine Trainingstage." },
     { v: 295, tab: "train", text: "Kalender: Wer unter „Anderen Trainingstag“ den schon eingeplanten Tag antippt, entfernt die Planung nicht mehr versehentlich (heute galt dann als Ruhetag)." },
     { v: 294, tab: "body", text: "Gewichtsdiagramm: Vergleich zur Vorwoche als kleinere Kapsel." },
     { v: 293, tab: "body", text: "Gewichtsdiagramm dezenter: Fläche ohne Schatten, Vergleich zur Vorwoche zurückhaltender." },
@@ -4997,7 +4998,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
   }
   function setupSave() {
     var P = clone(S.person || {}), yr = num(SU.year), hg = num(SU.height), w = num(SU.w), f = num(SU.fat), g = num(SU.goal), t = today();
-    if (SU.sex) P.sex = SU.sex; if (yr) P.year = Math.round(yr); if (hg) P.height = hg; if (SU.notrain) SU.tdays = []; P.tdays = SU.tdays.slice(); P.tmin = SU.tmin; P.notrain = SU.notrain ? 1 : null; P.ttype = SU.tt === "cardio" || SU.tt === "both" ? SU.tt : null; if (SU.job) { P.job = SU.job; P.act = actOf(SU.job, SU.tdays, SU.tmin); }
+    if (SU.sex) P.sex = SU.sex; if (yr) P.year = Math.round(yr); if (hg) P.height = hg; if (SU.notrain) { if ((P.tdays || []).length) P.tdays0 = P.tdays.slice(); SU.tdays = []; } else delete P.tdays0; P.tdays = SU.tdays.slice(); P.tmin = SU.tmin; P.notrain = SU.notrain ? 1 : null; P.ttype = SU.tt === "cardio" || SU.tt === "both" ? SU.tt : null; if (SU.job) { P.job = SU.job; P.act = actOf(SU.job, SU.tdays, SU.tmin); }
     P.build = SU.build || null; P.buildW = SU.build && w ? w : null;
     var ph = S.phases;
     if (SU.ph) { ph = S.phases.filter(function (x) { return x.start !== t; }); var np = { start: t, type: SU.ph }; if (g && SU.ph !== "maintain") np.goal = Math.round(g * 10) / 10; ph.push(np); ph.sort(function (a, b) { return a.start < b.start ? -1 : 1; }); }
@@ -5006,7 +5007,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
     renderAll(false);
   }
   function setupShow(i) {
-    if (!SU) { var P = S.person || {}; SU = { sex: P.sex || "", year: P.year ? String(P.year) : "", height: P.height ? fmt(P.height) : "", build: P.build || "", job: P.job || "", tmin: P.tmin || 60, tdays: (P.tdays || []).slice(), notrain: P.notrain ? 1 : 0, tt: P.notrain ? "none" : P.ttype === "cardio" || P.ttype === "both" ? P.ttype : "kraft", w: "", fat: "", ph: "", goal: "" }; }
+    if (!SU) { var P = S.person || {}; SU = { sex: P.sex || "", year: P.year ? String(P.year) : "", height: P.height ? fmt(P.height) : "", build: P.build || "", job: P.job || "", tmin: P.tmin || 60, tdays: ((P.tdays || []).length ? P.tdays : P.tdays0 || []).slice(), notrain: P.notrain ? 1 : 0, tt: P.notrain ? "none" : P.ttype === "cardio" || P.ttype === "both" ? P.ttype : "kraft", w: "", fat: "", ph: "", goal: "" }; }
     setupStep = i;
     var el = $("setup"); if (!el) { el = document.createElement("div"); el.id = "setup"; el.className = "overlay"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-labelledby", "su-h"); document.body.appendChild(el); }
     var chip = function (k, v, l, on) { return '<button type="button" data-act="sux" data-k="' + k + '" data-id="' + v + '" aria-pressed="' + !!on + '">' + l + "</button>"; };
@@ -7705,7 +7706,7 @@ body.ndragging, body.ndragging * { -webkit-user-select: none; user-select: none;
       var nt = id === "none"; $("pe-mode").querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.id === id)); });
       document.querySelectorAll(".petr").forEach(function (x) { x.hidden = nt; });
       if (S.person && ttype() !== id) {
-        var pm = clone(S.person); pm.notrain = nt ? 1 : null; pm.ttype = id === "cardio" || id === "both" ? id : null; if (nt) pm.tdays = []; if (pm.job && actOf(pm.job, pm.tdays, pm.tmin)) pm.act = actOf(pm.job, pm.tdays, pm.tmin);
+        var pm = clone(S.person); pm.notrain = nt ? 1 : null; pm.ttype = id === "cardio" || id === "both" ? id : null; /* v296: Trainingstage beim Wechsel zu „gar nicht“ merken (tdays0) und beim Zurückwechseln wiederherstellen */ if (nt) { if ((pm.tdays || []).length) pm.tdays0 = pm.tdays.slice(); pm.tdays = []; } else { if (!(pm.tdays || []).length && Array.isArray(pm.tdays0)) pm.tdays = pm.tdays0.slice(); delete pm.tdays0; } if (pm.job && actOf(pm.job, pm.tdays, pm.tmin)) pm.act = actOf(pm.job, pm.tdays, pm.tmin);
         saveSettings(null, pm); renderAll(false);
         var pmm = nt ? "Nur Ernährung: Training, Fortschritt und Plan sind ausgeblendet." : id === "cardio" ? "Ausdauer: Unter Training trägst du Laufen, Rad & Co. ein. Plan und Fortschritt sind ausgeblendet." : id === "both" ? "Krafttraining und Ausdauer: Ausdauer trägst du unter Training unter dem Kalender ein." : "Krafttraining.";
         if (!nt && !(pm.tdays || []).length) pmm += " Wähle deine Trainingstage unter Körper → Angaben.";
